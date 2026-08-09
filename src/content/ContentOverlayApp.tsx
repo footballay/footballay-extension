@@ -5,11 +5,8 @@ import { LeftMatchDrawer } from "./components/leftDrawer/LeftMatchDrawer";
 import { OverlayButton } from "./components/overlayControls/OverlayButton";
 import { SideDrawerHandle } from "./components/overlayControls/SideDrawerHandle";
 import { RightLineupDrawer } from "./components/rightDrawer/RightLineupDrawer";
-import { useContentOverlayRegistration } from "./hooks/useContentOverlayRegistration";
 import { useContentOverlayRuntime } from "./hooks/useContentOverlayRuntime";
 import { useContentOverlayShortcuts } from "./hooks/useContentOverlayShortcuts";
-import { updateContentOverlaySettings } from "@/content/actions/contentOverlayActions";
-import { persistCurrentSiteOverlayDrawerSide } from "@/content/actions/contentOverlayActions";
 import { selectShouldRenderOverlayControl } from "@/content/selectors/contentOverlaySelectors";
 import { useContentLiveDataStore } from "@/content/stores/contentLiveDataStore";
 import { useContentOverlayViewStore } from "@/content/stores/contentOverlayViewStore";
@@ -24,12 +21,14 @@ export function ContentOverlayApp() {
   const pageUrl = useContentPageOverlayStore((state) => state.pageUrl);
   const siteOverlayVisible = useContentPageOverlayStore((state) => state.siteOverlayVisible);
   const drawerSide = useContentOverlayViewStore((state) => state.drawerSide);
+  const overlayCollapsed = useContentOverlayViewStore((state) => state.overlayCollapsed);
   const selectedPlayerUid = useContentOverlayViewStore((state) => state.selectedPlayerUid);
   const clearSelectedPlayer = useContentOverlayViewStore((state) => state.clearSelectedPlayer);
   const closeDrawer = useContentOverlayViewStore((state) => state.closeDrawer);
   const openLeftDrawer = useContentOverlayViewStore((state) => state.openLeftDrawer);
   const openRightDrawer = useContentOverlayViewStore((state) => state.openRightDrawer);
   const selectPlayer = useContentOverlayViewStore((state) => state.selectPlayer);
+  const setOverlayCollapsed = useContentOverlayViewStore((state) => state.setOverlayCollapsed);
   const shouldRenderControl = selectShouldRenderOverlayControl({
     isSupportedPage,
     pageUrl,
@@ -37,16 +36,7 @@ export function ContentOverlayApp() {
   });
 
   useContentOverlayRuntime();
-  useContentOverlayRegistration();
-  useContentOverlayShortcuts(shouldRenderControl && settings.extensionEnabled && !settings.overlayCollapsed);
-
-  useEffect(() => {
-    return useContentOverlayViewStore.subscribe((state, previousState) => {
-      if (state.drawerSide !== previousState.drawerSide) {
-        persistCurrentSiteOverlayDrawerSide(state.drawerSide);
-      }
-    });
-  }, []);
+  useContentOverlayShortcuts(shouldRenderControl && settings.extensionEnabled && !overlayCollapsed);
 
   const shellClassName = useMemo(
     () => `footballay-overlay-shell ${getOverlayPositionClass(settings.overlayPosition)}`,
@@ -57,18 +47,18 @@ export function ContentOverlayApp() {
     return null;
   }
 
-  const shouldRenderDrawerHandles = settings.extensionEnabled && !settings.overlayCollapsed;
+  const shouldRenderDrawerHandles = settings.extensionEnabled && !overlayCollapsed;
 
   return (
     <>
       <div className={shellClassName}>
-        {settings.overlayCollapsed ? (
-          <OverlayButton onClick={() => void updateContentOverlaySettings({ overlayCollapsed: false })} />
+        {overlayCollapsed ? (
+          <OverlayButton onClick={() => setOverlayCollapsed(false)} />
         ) : (
           <CompactOverlay
             data={data}
             settings={settings}
-            onCollapse={() => void updateContentOverlaySettings({ overlayCollapsed: true })}
+            onCollapse={() => setOverlayCollapsed(true)}
           />
         )}
       </div>

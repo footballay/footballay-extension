@@ -1,76 +1,29 @@
-import type { AvailableLeague, FixtureLookupMode, FixtureSummary, LiveMatchOverlayData } from "@/domain/live-match/types";
-import type { ExtensionSettings } from "@/shared/overlay/types";
+import type {
+  AvailableLeagueResponse,
+  FixtureByLeagueResponse,
+  FixtureEventsResponse,
+  FixtureInfoResponse,
+  FixtureLineupResponse,
+  FixtureLiveStatusResponse,
+  FixtureStatisticsResponse
+} from "@/domain/live-match/backendTypes";
+import type { FixtureLookupMode } from "@/domain/live-match/types";
 
-export type RuntimeSettingsPatch = Partial<
-  Omit<ExtensionSettings, "fixtureDate" | "selectedFixtureDate" | "selectedFixtureUid" | "selectedLeagueUid">
-> & {
-  fixtureDate?: string | null;
-  selectedFixtureDate?: string | null;
-  selectedFixtureUid?: string | null;
-  selectedLeagueUid?: string | null;
-};
-
-export type PageOverlayState = {
-  isSupportedPage: boolean;
-  siteOverlayVisible: boolean;
-  visible: boolean;
-  url: string;
-};
-
-export type RuntimeOverlayDrawerSide = "left" | "right";
+type Etagged<T> = { type: "updated"; data: T; etag?: string } | { type: "not-modified"; etag?: string };
 
 export type RuntimeMessage =
-  | { type: "GET_SETTINGS" }
-  | { type: "UPDATE_SETTINGS"; payload: RuntimeSettingsPatch }
   | { type: "GET_AVAILABLE_LEAGUES" }
-  | {
-      type: "GET_FIXTURES_BY_LEAGUE";
-      payload: {
-        leagueUid: string;
-        date?: string;
-        mode: FixtureLookupMode;
-        timezone: string;
-      };
-    }
-  | {
-      type: "SELECT_LEAGUE";
-      payload: {
-        leagueUid: string;
-        date?: string;
-        mode: FixtureLookupMode;
-        timezone: string;
-      };
-    }
-  | { type: "SELECT_FIXTURE"; payload: { fixtureDate?: string; fixtureUid: string } }
-  | { type: "START_POLLING" }
-  | { type: "STOP_POLLING" }
-  | { type: "GET_LATEST_MATCH_DATA" }
-  | { type: "GET_SITE_OVERLAY_DRAWER"; payload: { url: string } }
-  | { type: "GET_SITE_OVERLAY_VISIBILITY"; payload: { url: string } }
-  | { type: "REGISTER_CONTENT_OVERLAY" }
-  | { type: "SET_SITE_OVERLAY_DRAWER"; payload: { drawerSide?: RuntimeOverlayDrawerSide; url: string } }
-  | { type: "SET_SITE_OVERLAY_VISIBILITY"; payload: { url: string; visible: boolean } }
-  | { type: "UNREGISTER_CONTENT_OVERLAY" }
-  | { type: "GET_PAGE_OVERLAY_STATE" }
-  | { type: "SHOW_PAGE_OVERLAY" }
-  | { type: "HIDE_PAGE_OVERLAY" }
-  | { type: "SETTINGS_UPDATED"; payload: ExtensionSettings }
-  | { type: "LIVE_MATCH_DATA_UPDATED"; payload: LiveMatchOverlayData | null };
+  | { type: "GET_FIXTURES"; payload: { leagueUid: string; date?: string; mode: FixtureLookupMode; timezone: string } }
+  | { type: "GET_FIXTURE_INFO"; payload: { fixtureUid: string } }
+  | { type: "GET_FIXTURE_STATUS"; payload: { fixtureUid: string; etag?: string } }
+  | { type: "GET_FIXTURE_STATISTICS"; payload: { fixtureUid: string; etag?: string } }
+  | { type: "GET_FIXTURE_EVENTS"; payload: { fixtureUid: string; etag?: string } }
+  | { type: "GET_FIXTURE_LINEUP"; payload: { fixtureUid: string; etag?: string } };
 
 export type RuntimeResponse =
-  | { ok: true; settings: ExtensionSettings }
-  | { ok: true; data: LiveMatchOverlayData | null }
-  | { ok: true; leagues: AvailableLeague[] }
-  | { ok: true; fixtures: FixtureSummary[] }
-  | { ok: true; settings: ExtensionSettings; fixtures: FixtureSummary[] }
-  | { ok: true; drawerSide?: RuntimeOverlayDrawerSide }
-  | { ok: true; pageOverlayState: PageOverlayState }
-  | { ok: true; visible: boolean }
-  | { ok: true }
+  | { ok: true; data: AvailableLeagueResponse[] | FixtureByLeagueResponse[] | FixtureInfoResponse | Etagged<FixtureLiveStatusResponse> | Etagged<FixtureStatisticsResponse> | Etagged<FixtureEventsResponse> | Etagged<FixtureLineupResponse> }
   | { ok: false; error: string };
 
-export async function sendRuntimeMessage<TResponse extends RuntimeResponse>(
-  message: RuntimeMessage
-): Promise<TResponse> {
+export function sendRuntimeMessage<TResponse extends RuntimeResponse>(message: RuntimeMessage): Promise<TResponse> {
   return chrome.runtime.sendMessage(message) as Promise<TResponse>;
 }

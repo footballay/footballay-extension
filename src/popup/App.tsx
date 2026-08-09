@@ -1,42 +1,23 @@
-import { useEffect } from "react";
-import { PopupView } from "./PopupView";
-import { useFixtureScheduleState } from "./hooks/useFixtureScheduleState";
-import { useFixtureSelectionState } from "./hooks/useFixtureSelectionState";
-import { useLeaguePickerState } from "./hooks/useLeaguePickerState";
-import { useOverlaySettingsState } from "./hooks/useOverlaySettingsState";
-import { usePageOverlayControl } from "./hooks/usePageOverlayControl";
-import { usePopupLifecycle } from "./hooks/usePopupLifecycle";
-import { usePopupShell } from "./hooks/usePopupShell";
-import type { RuntimeMessage } from "@/shared/messages";
+import { useEffect, useState } from "react";
+import { OverlaySettingsSection } from "./components/OverlaySettingsSection";
+import { defaultSettings } from "@/shared/constants";
+import type { ExtensionSettings } from "@/shared/overlay/types";
+import { readSettings, writeSettings } from "@/shared/storage";
 
 export function App() {
-  const lifecycle = usePopupLifecycle();
-  const shell = usePopupShell();
-  const leaguePicker = useLeaguePickerState();
-  const fixtureSchedule = useFixtureScheduleState();
-  const fixtureSelection = useFixtureSelectionState();
-  const pageOverlay = usePageOverlayControl();
-  const overlaySettings = useOverlaySettingsState();
+  const [settings, setSettings] = useState<ExtensionSettings>(defaultSettings);
 
   useEffect(() => {
-    lifecycle.loadState();
-
-    const listener = (message: RuntimeMessage) => {
-      lifecycle.handleRuntimeMessage(message);
-    };
-
-    chrome.runtime.onMessage.addListener(listener);
-    return () => chrome.runtime.onMessage.removeListener(listener);
-  }, [lifecycle]);
+    void readSettings().then(setSettings);
+  }, []);
 
   return (
-    <PopupView
-      fixtureSchedule={fixtureSchedule}
-      fixtureSelection={fixtureSelection}
-      leaguePicker={leaguePicker}
-      overlaySettings={overlaySettings}
-      pageOverlay={pageOverlay}
-      shell={shell}
-    />
+    <main className="footballay-popup">
+      <OverlaySettingsSection
+        extensionEnabled={settings.extensionEnabled}
+        overlayPosition={settings.overlayPosition}
+        onChangeSettings={(patch) => void writeSettings(patch).then(setSettings)}
+      />
+    </main>
   );
 }

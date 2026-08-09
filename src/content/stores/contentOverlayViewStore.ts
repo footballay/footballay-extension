@@ -6,6 +6,7 @@ export type OverlayViewMode = "compact" | "drawer" | "fullscreen";
 
 type ContentOverlayViewState = {
   drawerSide?: OverlayDrawerSide;
+  overlayCollapsed: boolean;
   selectedPlayerUid?: string;
   viewMode: OverlayViewMode;
 };
@@ -16,6 +17,7 @@ type ContentOverlayViewActions = {
   openLeftDrawer: () => void;
   openRightDrawer: () => void;
   restoreDrawerSide: (drawerSide?: OverlayDrawerSide) => void;
+  setOverlayCollapsed: (overlayCollapsed: boolean) => void;
   selectPlayer: (matchPlayerUid: string) => void;
   setViewMode: (viewMode: OverlayViewMode) => void;
 };
@@ -24,6 +26,7 @@ type ContentOverlayViewStore = ContentOverlayViewState & ContentOverlayViewActio
 
 export const useContentOverlayViewStore = create<ContentOverlayViewStore>((set) => ({
   drawerSide: undefined,
+  overlayCollapsed: true,
   selectedPlayerUid: undefined,
   viewMode: "compact",
 
@@ -49,6 +52,10 @@ export const useContentOverlayViewStore = create<ContentOverlayViewStore>((set) 
       selectedPlayerUid: undefined,
       viewMode: drawerSide ? "drawer" : "compact"
     });
+  },
+
+  setOverlayCollapsed(overlayCollapsed) {
+    set({ overlayCollapsed });
   },
 
   selectPlayer(matchPlayerUid) {

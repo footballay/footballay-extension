@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { ContentOverlayApp } from "@/content/ContentOverlayApp";
 
 export default defineContentScript({
-  matches: ["http://*/*", "https://*/*"],
+  matches: ["https://www.coupangplay.com/*", "https://www.spotvnow.co.kr/*"],
   main(ctx) {
     const rootElement = document.createElement("div");
     rootElement.id = "footballay-overlay-root";

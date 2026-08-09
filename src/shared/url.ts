@@ -1,4 +1,4 @@
-import { supportedStreamingHosts } from "./constants";
+import { isSupportedStreamingUrl } from "./page-identity";
 
 export function getHostname(url: string): string | null {
   try {
@@ -8,7 +8,4 @@ export function getHostname(url: string): string | null {
   }
 }
 
-export function isSupportedStreamingUrl(url: string): boolean {
-  const hostname = getHostname(url);
-  return hostname ? supportedStreamingHosts.includes(hostname) : false;
-}
+export { isSupportedStreamingUrl };

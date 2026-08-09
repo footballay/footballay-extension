@@ -25,8 +25,6 @@ export const overlayTickerStatCatalog: OverlayTickerStatKey[] = [
 
 export const defaultSettings: ExtensionSettings = {
   extensionEnabled: true,
-  fixtureLookupMode: "nearest",
-  overlayCollapsed: true,
   overlayLanguage: "auto",
   overlayPosition: "bottom-right",
   overlayTickerIntervalMs: 7000,
@@ -34,7 +32,7 @@ export const defaultSettings: ExtensionSettings = {
   overlayTickerStatsMode: "default",
   overlayTickerCustomStatKeys: [],
   overlayTickerKnownStatKeys: overlayTickerStatCatalog,
-  pollingIntervalMs: 30000
+  pollingIntervalMs: 5000
 };
 
 export const supportedStreamingMatches = [

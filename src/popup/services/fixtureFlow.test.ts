@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import type { FixtureSummary } from "@/domain/live-match/types";
-import { defaultSettings } from "@/shared/constants";
 import {
   getFixtureNavigationPatch,
   getQueryDate,
@@ -23,15 +22,15 @@ const fixture: FixtureSummary = {
 
 describe("popup fixture flow", () => {
   it("returns configured query date or today fallback", () => {
-    expect(getQueryDate({ ...defaultSettings, fixtureDate: "2026-05-20" })).toBe("2026-05-20");
-    expect(getQueryDate(defaultSettings)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(getQueryDate({ fixtureDate: "2026-05-20", fixtureLookupMode: "nearest" })).toBe("2026-05-20");
+    expect(getQueryDate({ fixtureLookupMode: "nearest" })).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it("creates previous and next fixture navigation patches", () => {
     expect(
       getFixtureNavigationPatch(
         {
-          ...defaultSettings,
+          fixtureLookupMode: "nearest",
           fixtureDate: "2026-05-20"
         },
         "previous"
@@ -44,7 +43,7 @@ describe("popup fixture flow", () => {
     expect(
       getFixtureNavigationPatch(
         {
-          ...defaultSettings,
+          fixtureLookupMode: "nearest",
           fixtureDate: "2026-05-20"
         },
         "next"
@@ -59,7 +58,6 @@ describe("popup fixture flow", () => {
     expect(
       resolveFixtureQuerySettingsPatch(
         {
-          ...defaultSettings,
           fixtureDate: "2026-05-22",
           fixtureLookupMode: "exact"
         },
@@ -79,7 +77,6 @@ describe("popup fixture flow", () => {
     expect(
       resolveFixtureQuerySettingsPatch(
         {
-          ...defaultSettings,
           fixtureDate: "2026-05-21",
           fixtureLookupMode: "nearest"
         },

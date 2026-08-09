@@ -1,29 +1,23 @@
-import type { FixtureLookupMode, FixtureSummary } from "@/domain/live-match/types";
-import type { RuntimeSettingsPatch } from "@/shared/messages";
-import { sendRuntimeMessage } from "@/shared/messages";
-import type { ExtensionSettings } from "@/shared/overlay/types";
+import type { FixtureSummary } from "@/domain/live-match/types";
+import type { PageSessionSnapshot } from "@/shared/page-session";
 import {
   addDaysToDateInputValue,
   getFixtureDateFromFixtures,
   getTodayDateInputValue
 } from "../utils/date";
-import { getBrowserTimezone } from "./runtimeClient";
-
-export type FixtureLoadResult =
-  | { ok: true; fixtures: FixtureSummary[] }
-  | { ok: false; error: string };
+export type FixtureQuery = Pick<PageSessionSnapshot, "fixtureDate" | "fixtureLookupMode">;
 
 // The fixture list always needs a query date; default to today's local date for first load.
-export function getQueryDate(settings: ExtensionSettings): string {
+export function getQueryDate(settings: FixtureQuery): string {
   return settings.fixtureDate ?? getTodayDateInputValue();
 }
 
 // The API searches from the adjacent date, not from the currently resolved match date itself.
 // Previous uses yesterday + previous mode; next uses tomorrow + nearest mode.
 export function getFixtureNavigationPatch(
-  settings: ExtensionSettings,
+  settings: FixtureQuery,
   direction: "previous" | "next"
-): Pick<ExtensionSettings, "fixtureDate" | "fixtureLookupMode"> {
+): FixtureQuery {
   const baseDate = getQueryDate(settings);
 
   return {
@@ -32,36 +26,10 @@ export function getFixtureNavigationPatch(
   };
 }
 
-export async function loadFixtures(nextSettings: ExtensionSettings): Promise<FixtureLoadResult> {
-  if (!nextSettings.selectedLeagueUid) {
-    return { fixtures: [], ok: true };
-  }
-
-  const response = await sendRuntimeMessage({
-    type: "GET_FIXTURES_BY_LEAGUE",
-    payload: {
-      leagueUid: nextSettings.selectedLeagueUid,
-      date: getQueryDate(nextSettings),
-      mode: nextSettings.fixtureLookupMode,
-      timezone: getBrowserTimezone()
-    }
-  });
-
-  if (response.ok && "fixtures" in response) {
-    return { fixtures: response.fixtures, ok: true };
-  }
-
-  if (!response.ok) {
-    return { error: response.error, ok: false };
-  }
-
-  return { error: "Unable to load fixtures", ok: false };
-}
-
 export function getResolvedFixtureDatePatch(
-  nextSettings: ExtensionSettings,
+  nextSettings: FixtureQuery,
   nextFixtures: FixtureSummary[] | null
-): Pick<ExtensionSettings, "fixtureDate"> | null {
+): Pick<FixtureQuery, "fixtureDate"> | null {
   if (nextSettings.fixtureLookupMode === "exact" || !nextFixtures) {
     return null;
   }
@@ -77,16 +45,17 @@ export function getResolvedFixtureDatePatch(
 // Exact date queries keep the requested date. Nearest/previous queries follow the date
 // resolved by returned fixtures to avoid flickering and stale date labels.
 export function resolveFixtureQuerySettingsPatch(
-  nextSettings: ExtensionSettings,
+  nextSettings: FixtureQuery,
   nextFixtures: FixtureSummary[],
-  requestedPatch: Partial<Pick<ExtensionSettings, "fixtureDate" | "fixtureLookupMode">>
-): RuntimeSettingsPatch {
+  requestedPatch: Partial<FixtureQuery>
+): FixtureQuery {
   const resolvedDate =
     nextSettings.fixtureLookupMode === "exact"
       ? nextSettings.fixtureDate
       : getFixtureDateFromFixtures(nextFixtures) ?? nextSettings.fixtureDate;
 
   return {
+    fixtureLookupMode: requestedPatch.fixtureLookupMode ?? nextSettings.fixtureLookupMode,
     ...requestedPatch,
     fixtureDate: resolvedDate
   };

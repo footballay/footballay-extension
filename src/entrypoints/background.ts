@@ -1,25 +1,8 @@
-import { createLiveMatchBackgroundController } from "@/background/liveMatchController";
-import type { RuntimeMessage } from "@/shared/messages";
-
-const liveMatchController = createLiveMatchBackgroundController();
+import { handleApiRequest } from "@/background/api/apiRequestHandler";
 
 export default defineBackground(() => {
-  chrome.runtime.onInstalled.addListener(() => {
-    void liveMatchController.initialize();
-  });
-
-  chrome.runtime.onStartup.addListener(() => {
-    void liveMatchController.initialize();
-  });
-
-  chrome.runtime.onMessage.addListener((message: RuntimeMessage, sender, sendResponse) => {
-    void liveMatchController.handleRuntimeMessage(message, sender).then(sendResponse);
+  chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+    void handleApiRequest(message).then(sendResponse);
     return true;
   });
-
-  chrome.tabs.onRemoved.addListener((tabId) => {
-    liveMatchController.handleTabRemoved(tabId);
-  });
-
-  void liveMatchController.initialize();
 });
