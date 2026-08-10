@@ -11,5 +11,6 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true
-  }
+  },
+  "exclude": ["archive"]
 }

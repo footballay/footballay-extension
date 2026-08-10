@@ -21,14 +21,6 @@ export default defineConfig({
                 128: 'footballay_icon.png',
             },
         },
-        permissions: ['storage', 'activeTab', 'scripting'],
-        host_permissions: [
-            'https://api.footballay.com/*',
-            'https://www.coupangplay.com/*',
-            'https://www.spotvnow.co.kr/*',
-        ],
-        content_security_policy: {
-            extension_pages: `script-src 'self'; font-src 'self' https://fonts.gstatic.com; object-src 'self';`,
-        },
+        permissions: [],
     },
 });
