@@ -4,7 +4,7 @@ export default defineConfig({
     srcDir: 'src',
     manifestVersion: 3,
     manifest: {
-        default_locale: 'en',
+        default_locale: 'ko',
         name: '__MSG_extension_name__',
         description: '__MSG_extension_description__',
         icons: {
@@ -21,6 +21,7 @@ export default defineConfig({
                 128: 'footballay_icon.png',
             },
         },
-        permissions: [],
+        permissions: ['storage', 'activeTab', 'scripting'],
+        host_permissions: ['https://api.footballay.com/*'],
     },
 });
