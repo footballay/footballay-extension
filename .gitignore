@@ -10,3 +10,4 @@ pnpm-debug.log*
 dist/
 .external/
 plan/
+.DS_Store

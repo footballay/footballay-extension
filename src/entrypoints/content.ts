@@ -1,8 +1,8 @@
-import { mountContentApp } from "@/content/bootstrap/mountContentApp";
+import { mountToPage } from "@/content/mountToPage";
 
 export default defineContentScript({
   matches: ["https://www.coupangplay.com/*"],
   main(ctx) {
-    mountContentApp(ctx);
+    mountToPage(ctx);
   }
 });

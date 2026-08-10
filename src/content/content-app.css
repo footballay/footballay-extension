@@ -5,7 +5,7 @@
   z-index: 2147483647;
 }
 
-.footballay-content-marker {
+.footballay-content-panel {
   box-sizing: border-box;
   margin: 0;
   padding: 8px 12px;
@@ -17,4 +17,43 @@
   font-size: 14px;
   font-weight: 700;
   line-height: 1.2;
+  min-width: 180px;
+}
+
+.footballay-content-title {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.footballay-content-status {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.footballay-content-status p {
+  margin: 0 0 8px;
+}
+
+.footballay-league-list {
+  display: grid;
+  gap: 4px;
+}
+
+.footballay-league-button,
+.footballay-content-status button {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.footballay-league-button--selected {
+  background: #ffffff;
+  color: #101828;
 }

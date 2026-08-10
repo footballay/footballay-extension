@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -8,7 +8,6 @@ export default defineConfig({
     }
   },
   test: {
-    environment: "node",
-    globals: false
+    include: ["src/**/*.test.{ts,tsx}"]
   }
 });
