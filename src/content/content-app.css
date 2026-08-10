@@ -1,0 +1,20 @@
+#footballay-content-root {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483647;
+}
+
+.footballay-content-marker {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  background: #101828;
+  color: #ffffff;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
