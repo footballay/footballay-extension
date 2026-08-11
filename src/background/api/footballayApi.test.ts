@@ -4,7 +4,7 @@ const axiosGet = vi.hoisted(() => vi.fn());
 const axiosCreate = vi.hoisted(() => vi.fn(() => ({ get: axiosGet })));
 vi.mock("axios", () => ({ default: { create: axiosCreate } }));
 
-import { getAvailableLeagues } from "./footballayApi";
+import { getAvailableLeagues, getFixtures } from "./footballayApi";
 
 describe("Footballay privileged API transport", () => {
   beforeEach(() => axiosGet.mockReset());
@@ -15,5 +15,20 @@ describe("Footballay privileged API transport", () => {
 
     await expect(getAvailableLeagues()).resolves.toEqual(response);
     expect(axiosGet).toHaveBeenCalledWith("/v1/football/leagues/available");
+  });
+
+  it("retrieves raw fixtures with the declared league query", async () => {
+    const response = [{ uid: "fixture-1" }];
+    axiosGet.mockResolvedValueOnce({ data: response });
+
+    await expect(getFixtures({
+      leagueUid: "league / 1",
+      date: "2026-08-11",
+      mode: "nearest",
+      timezone: "Asia/Seoul"
+    })).resolves.toEqual(response);
+    expect(axiosGet).toHaveBeenCalledWith(
+      "/v1/football/leagues/league%20%2F%201/fixtures?date=2026-08-11&mode=nearest&timezone=Asia%2FSeoul"
+    );
   });
 });

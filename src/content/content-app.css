@@ -40,7 +40,25 @@
   gap: 4px;
 }
 
+.footballay-fixture-section {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.footballay-fixture-title {
+  font-size: 12px;
+}
+
+.footballay-fixture-list {
+  display: grid;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
 .footballay-league-button,
+.footballay-fixture-button,
 .footballay-content-status button {
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 4px;
@@ -56,4 +74,17 @@
 .footballay-league-button--selected {
   background: #ffffff;
   color: #101828;
+}
+
+.footballay-fixture-button {
+  display: grid;
+  gap: 2px;
+}
+
+.footballay-fixture-button strong {
+  font-weight: 700;
+}
+
+.footballay-fixture-button--selected {
+  border-color: #ffffff;
 }

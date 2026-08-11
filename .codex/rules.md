@@ -88,6 +88,13 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - Use mapper/type modules between backend DTOs and UI-facing DTOs instead of shaping backend responses directly inside React components.
 - External libraries such as `zustand` or `axios` are allowed when they reduce real complexity, but do not introduce them speculatively.
 
+## Code Dump
+
+- When a `code dump` is requested, identify all changed files and append the **entire contents of those files** to the designated code dump file, located in a specific directory such as `{projectRoot}/plan`.
+- The dump must include all lines of each changed file, not only the modified lines.
+- To avoid unnecessary token usage, do **not** read the full contents of the changed files into the model context just to create the dump.
+- Instead of reading the files and patching their contents into the code dump file, use shell commands to copy or append the file contents directly.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
