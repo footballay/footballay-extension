@@ -3,7 +3,8 @@ import {
   requestAvailableLeagues,
   requestFixtures,
   type AvailableLeagueDto,
-  type FixtureDto
+  type FixtureDto,
+  type GetFixturesPayload
 } from "@/shared/footballayApiProtocol";
 
 export type LoadStatus = "idle" | "loading" | "ready" | "error";
@@ -16,15 +17,63 @@ type MatchPickerState = {
   fixtureStatus: LoadStatus;
   fixtureError?: string;
   selectedLeagueUid?: string;
+  selectedDate?: string;
   selectedFixtureUid?: string;
   loadAvailableLeagues: () => Promise<void>;
   selectLeagueAndLoadFixtures: (leagueUid: string) => Promise<void>;
+  navigateFixtureDate: (direction: "previous" | "next") => Promise<void>;
+  selectDateAndLoadFixtures: (date: string) => Promise<void>;
   selectFixture: (fixtureUid: string) => void;
 };
 
 let latestFixtureRequestId = 0;
 
-export const useMatchPickerStore = create<MatchPickerState>((set) => ({
+function toDateInputValue(date: Date): string {
+  const timezoneOffsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
+}
+
+export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
+  async function loadFixtures(leagueUid: string, date: string, mode: GetFixturesPayload["mode"]): Promise<void> {
+    const requestId = ++latestFixtureRequestId;
+    set({
+      selectedDate: date,
+      selectedFixtureUid: undefined,
+      fixtures: [],
+      fixtureStatus: "loading",
+      fixtureError: undefined
+    });
+
+    try {
+      const response = await requestFixtures({
+        leagueUid,
+        date,
+        mode,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+      });
+      if (requestId !== latestFixtureRequestId) return;
+
+      if (!response.ok) {
+        set({ fixtureStatus: "error", fixtureError: response.error });
+        return;
+      }
+
+      const kickoff = response.data.find((fixture) => fixture.kickoff)?.kickoff;
+      const resolvedDate = mode === "exact" || !kickoff
+        ? date
+        : toDateInputValue(new Date(kickoff));
+      set({ fixtures: response.data, selectedDate: resolvedDate, fixtureStatus: "ready", fixtureError: undefined });
+    } catch (error) {
+      if (requestId !== latestFixtureRequestId) return;
+
+      set({
+        fixtureStatus: "error",
+        fixtureError: error instanceof Error ? error.message : "Unable to load fixtures"
+      });
+    }
+  }
+
+  return {
   leagues: [],
   leagueStatus: "idle",
   fixtures: [],
@@ -48,41 +97,26 @@ export const useMatchPickerStore = create<MatchPickerState>((set) => ({
     }
   },
   selectLeagueAndLoadFixtures: async (leagueUid) => {
-    const requestId = ++latestFixtureRequestId;
-    const now = new Date();
-    const date = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")]
-      .join("-");
     set({
       selectedLeagueUid: leagueUid,
-      selectedFixtureUid: undefined,
-      fixtures: [],
-      fixtureStatus: "loading",
-      fixtureError: undefined
+      selectedFixtureUid: undefined
     });
+    await loadFixtures(leagueUid, toDateInputValue(new Date()), "nearest");
+  },
+  navigateFixtureDate: async (direction) => {
+    const { selectedDate, selectedLeagueUid } = get();
+    if (!selectedLeagueUid || !selectedDate) return;
 
-    try {
-      const response = await requestFixtures({
-        leagueUid,
-        date,
-        mode: "nearest",
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
-      });
-      if (requestId !== latestFixtureRequestId) return;
+    const nextDate = new Date(`${selectedDate}T00:00:00`);
+    nextDate.setDate(nextDate.getDate() + (direction === "previous" ? -1 : 1));
+    await loadFixtures(selectedLeagueUid, toDateInputValue(nextDate), direction === "previous" ? "previous" : "nearest");
+  },
+  selectDateAndLoadFixtures: async (date) => {
+    const { selectedLeagueUid } = get();
+    if (!selectedLeagueUid) return;
 
-      if (!response.ok) {
-        set({ fixtureStatus: "error", fixtureError: response.error });
-        return;
-      }
-
-      set({ fixtures: response.data, fixtureStatus: "ready", fixtureError: undefined });
-    } catch (error) {
-      if (requestId !== latestFixtureRequestId) return;
-
-      set({
-        fixtureStatus: "error",
-        fixtureError: error instanceof Error ? error.message : "Unable to load fixtures"
-      });
-    }
+    await loadFixtures(selectedLeagueUid, date, "exact");
   },
   selectFixture: (selectedFixtureUid) => set({ selectedFixtureUid })
-}));
+};
+});

@@ -64,7 +64,7 @@ function parseGetFixturesPayload(payload: unknown): GetFixturesPayload | undefin
     !hasOnlyFields(value, ["leagueUid", "date", "mode", "timezone"])
     || !isNonEmptyString(value.leagueUid)
     || !isDateInputValue(value.date)
-    || value.mode !== "nearest"
+    || !["previous", "exact", "nearest"].includes(value.mode as string)
     || !isNonEmptyString(value.timezone)
   ) {
     return undefined;
@@ -73,7 +73,7 @@ function parseGetFixturesPayload(payload: unknown): GetFixturesPayload | undefin
   return {
     leagueUid: value.leagueUid,
     date: value.date,
-    mode: value.mode,
+    mode: value.mode as GetFixturesPayload["mode"],
     timezone: value.timezone
   };
 }

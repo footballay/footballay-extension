@@ -38,6 +38,7 @@ beforeEach(() => {
         fixtureStatus: 'idle',
         fixtureError: undefined,
         selectedLeagueUid: 'league-1',
+        selectedDate: '2026-08-11',
         selectedFixtureUid: undefined,
         loadAvailableLeagues,
         selectLeagueAndLoadFixtures,

@@ -18,6 +18,7 @@ describe('match picker store', () => {
             fixtureStatus: 'idle',
             fixtureError: undefined,
             selectedLeagueUid: undefined,
+            selectedDate: undefined,
             selectedFixtureUid: undefined,
         });
     });
@@ -71,6 +72,25 @@ describe('match picker store', () => {
             fixtureStatus: 'error',
             fixtureError: 'Network unavailable',
         });
+    });
+
+    it('uses archive-compatible modes for date navigation and direct selection', async () => {
+        requestFixtures.mockResolvedValue({ ok: true, data: [] });
+        useMatchPickerStore.setState({ selectedLeagueUid: 'league-1', selectedDate: '2026-08-11' });
+
+        await useMatchPickerStore.getState().navigateFixtureDate('previous');
+        await useMatchPickerStore.getState().navigateFixtureDate('next');
+        await useMatchPickerStore.getState().selectDateAndLoadFixtures('2026-08-20');
+
+        expect(requestFixtures).toHaveBeenNthCalledWith(1, expect.objectContaining({
+            leagueUid: 'league-1', date: '2026-08-10', mode: 'previous'
+        }));
+        expect(requestFixtures).toHaveBeenNthCalledWith(2, expect.objectContaining({
+            leagueUid: 'league-1', date: '2026-08-11', mode: 'nearest'
+        }));
+        expect(requestFixtures).toHaveBeenNthCalledWith(3, expect.objectContaining({
+            leagueUid: 'league-1', date: '2026-08-20', mode: 'exact'
+        }));
     });
 
     it('ignores a fixture response from an earlier league selection', async () => {

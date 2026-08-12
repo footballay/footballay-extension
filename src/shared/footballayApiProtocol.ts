@@ -32,7 +32,7 @@ export type FixtureTeamDto = {
 export type GetFixturesPayload = {
   leagueUid: string;
   date: string;
-  mode: "nearest";
+  mode: "previous" | "exact" | "nearest";
   timezone: string;
 };
 

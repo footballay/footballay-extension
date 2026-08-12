@@ -50,6 +50,42 @@
   font-size: 12px;
 }
 
+.footballay-fixture-date-navigation {
+  position: relative;
+  display: flex;
+  gap: 4px;
+}
+
+.footballay-fixture-date-navigation button,
+.footballay-fixture-date-button {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
+.footballay-fixture-date-button {
+  flex: 1;
+  text-align: center;
+}
+
+.footballay-fixture-calendar {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 1;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  background: #101828;
+  --rdp-accent-color: #ffffff;
+  --rdp-accent-background-color: #344054;
+}
+
 .footballay-fixture-list {
   display: grid;
   gap: 4px;

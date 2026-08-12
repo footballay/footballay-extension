@@ -3,6 +3,9 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
     srcDir: 'src',
     manifestVersion: 3,
+    webExt: {
+        startUrls: ['https://www.coupangplay.com/'],
+    },
     manifest: {
         default_locale: 'ko',
         name: '__MSG_extension_name__',
