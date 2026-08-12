@@ -1,3 +1,3 @@
-import { createRoot } from "react-dom/client";
+import { createRoot } from 'react-dom/client';
 
-createRoot(document.getElementById("root")!).render(<main>Footballay</main>);
+createRoot(document.getElementById('root')!).render(<main>Footballay</main>);

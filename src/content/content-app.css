@@ -124,3 +124,79 @@
 .footballay-fixture-button--selected {
   border-color: #ffffff;
 }
+
+.footballay-match-summary,
+.footballay-match-details {
+  position: fixed;
+  z-index: 2147483647;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  padding: 8px;
+  color: #ffffff;
+  background: #101828;
+  font:
+    12px/1.3 system-ui,
+    sans-serif;
+}
+
+.footballay-match-summary {
+  bottom: 16px;
+  left: 16px;
+  display: grid;
+  width: 150px;
+  min-height: 80px;
+}
+
+.footballay-match-summary strong {
+  text-align: center;
+}
+.footballay-match-summary em {
+  text-align: center;
+}
+
+.footballay-match-details {
+  top: 50%;
+  left: 16px;
+  width: 300px;
+  max-height: 60vh;
+  overflow: auto;
+  transform: translateY(-50%);
+}
+
+.footballay-match-details__tabs {
+  display: flex;
+  gap: 4px;
+}
+.footballay-match-details button {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+  padding: 4px 6px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+.footballay-match-details p {
+  margin: 8px 0;
+}
+.footballay-match-details ol {
+  padding-left: 20px;
+}
+.footballay-match-details li {
+  margin: 6px 0;
+}
+.footballay-match-details section {
+  margin-top: 8px;
+}
+.footballay-match-details dl {
+  margin: 8px 0 0;
+}
+.footballay-match-details dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 5px 0;
+}
+.footballay-match-details dd {
+  margin: 0;
+}
