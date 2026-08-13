@@ -1,9 +1,13 @@
 import axios from 'axios';
 import type {
   AvailableLeagueDto,
+  EtaggedResponse,
   FixtureDto,
+  FixtureEventsDto,
+  FixtureLineupDto,
+  FixtureStatisticsDto,
+  FixtureStatusDto,
   GetFixturesPayload,
-  MatchDataDto,
 } from '@/shared/footballayApiProtocol';
 
 const footballayApi = axios.create({
@@ -13,10 +17,6 @@ const footballayApi = axios.create({
   headers: { Accept: 'application/json' },
 });
 
-/**
- * Privileged HTTP transport only. It returns raw data for the extension
- * message contract and holds no Content application state.
- */
 export async function getAvailableLeagues(): Promise<AvailableLeagueDto[]> {
   const response = await footballayApi.get<AvailableLeagueDto[]>(
     '/v1/football/leagues/available',
@@ -37,20 +37,63 @@ export async function getFixtures({
   return response.data;
 }
 
-export async function getMatchData(fixtureUid: string): Promise<MatchDataDto> {
-  const fixturePath = `/v1/football/fixtures/${encodeURIComponent(fixtureUid)}`;
-  const [info, status, statistics, events, lineup] = await Promise.all([
-    footballayApi.get<MatchDataDto['info']>(`${fixturePath}/info`),
-    footballayApi.get<MatchDataDto['status']>(`${fixturePath}/status`),
-    footballayApi.get<MatchDataDto['statistics']>(`${fixturePath}/statistics`),
-    footballayApi.get<MatchDataDto['events']>(`${fixturePath}/events`),
-    footballayApi.get<MatchDataDto['lineup']>(`${fixturePath}/lineup`),
-  ]);
-  return {
-    info: info.data,
-    status: status.data,
-    statistics: statistics.data,
-    events: events.data,
-    lineup: lineup.data,
-  };
+export function getFixtureStatus(
+  fixtureUid: string,
+  etag?: string,
+): Promise<EtaggedResponse<FixtureStatusDto>> {
+  return getEtaggedJson(fixturePath(fixtureUid, 'status'), etag);
+}
+
+export function getFixtureLineup(
+  fixtureUid: string,
+  etag?: string,
+): Promise<EtaggedResponse<FixtureLineupDto>> {
+  return getEtaggedJson(fixturePath(fixtureUid, 'lineup'), etag);
+}
+
+export function getFixtureEvents(
+  fixtureUid: string,
+  etag?: string,
+): Promise<EtaggedResponse<FixtureEventsDto>> {
+  return getEtaggedJson(fixturePath(fixtureUid, 'events'), etag);
+}
+
+export function getFixtureStatistics(
+  fixtureUid: string,
+  etag?: string,
+): Promise<EtaggedResponse<FixtureStatisticsDto>> {
+  return getEtaggedJson(fixturePath(fixtureUid, 'statistics'), etag);
+}
+
+function fixturePath(fixtureUid: string, endpoint: string): string {
+  return `/v1/football/fixtures/${encodeURIComponent(fixtureUid)}/${endpoint}`;
+}
+
+function getEtaggedJson<T>(
+  path: string,
+  etag?: string,
+): Promise<EtaggedResponse<T>> {
+  return footballayApi
+    .get<T>(path, {
+      headers: etag ? { 'If-None-Match': etag } : undefined,
+      validateStatus: (status) =>
+        (status >= 200 && status < 300) || status === 304,
+    })
+    .then((response) => {
+      const nextEtag = getResponseHeader(response.headers, 'etag');
+      return response.status === 304
+        ? { type: 'not-modified', etag: nextEtag }
+        : { type: 'updated', data: response.data, etag: nextEtag };
+    });
+}
+
+function getResponseHeader(headers: unknown, name: string): string | undefined {
+  if (!headers || typeof headers !== 'object') return undefined;
+  const value =
+    (headers as { get?: (key: string) => unknown }).get?.(name) ??
+    (headers as Record<string, unknown>)[name.toLowerCase()] ??
+    (headers as Record<string, unknown>)[name];
+  if (Array.isArray(value))
+    return value[0] === undefined ? undefined : String(value[0]);
+  return value === undefined || value === null ? undefined : String(value);
 }

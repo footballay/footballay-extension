@@ -1,90 +1,111 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const requestMatchData = vi.hoisted(() => vi.fn());
-vi.mock('@/shared/footballayApiProtocol', () => ({ requestMatchData }));
+const requestFixtureStatus = vi.hoisted(() => vi.fn());
+const requestFixtureLineup = vi.hoisted(() => vi.fn());
+const requestFixtureEvents = vi.hoisted(() => vi.fn());
+const requestFixtureStatistics = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/footballayApiProtocol', () => ({
+  requestFixtureStatus,
+  requestFixtureLineup,
+  requestFixtureEvents,
+  requestFixtureStatistics,
+}));
 
-import { useMatchDataStore } from './matchDataStore';
+import { setMatchDataFixture, useMatchDataStore } from './matchDataStore';
 
-const response = {
+const updated = <T>(data: T, etag: string) => ({
   ok: true as const,
-  data: {
-    info: {
-      fixtureUid: 'fixture-1',
-      home: { name: 'Home', koreanName: '홈' },
-      away: { name: 'Away', koreanName: '원정' },
-    },
-    status: {
-      liveStatus: {
-        shortStatus: '1H',
-        elapsed: 12,
-        score: { home: 1, away: 0 },
-      },
-    },
-    statistics: {
-      home: {
-        teamStatistics: {
-          ballPossession: 55,
-          xg: [{ xg: '0.5' }],
-          totalShots: 4,
-          shotsOnGoal: 2,
-          cornerKicks: 1,
-          fouls: 3,
-        },
-      },
-    },
-    events: { events: [] },
-    lineup: { lineup: {} },
-  },
-};
+  data: { type: 'updated' as const, data, etag },
+});
 
 describe('match data store', () => {
   beforeEach(() => {
-    requestMatchData.mockReset();
-    useMatchDataStore.setState({
-      data: undefined,
-      status: 'idle',
-      error: undefined,
-    });
+    requestFixtureStatus.mockReset();
+    requestFixtureLineup.mockReset();
+    requestFixtureEvents.mockReset();
+    requestFixtureStatistics.mockReset();
+    setMatchDataFixture();
   });
 
-  it('loads and maps selected fixture data once', async () => {
-    requestMatchData.mockResolvedValueOnce(response);
+  it('loads four endpoint payloads and refreshes each with its own ETag', async () => {
+    requestFixtureStatus
+      .mockResolvedValueOnce(
+        updated(
+          { liveStatus: { shortStatus: '1H', score: { home: 1 } } },
+          's1',
+        ),
+      )
+      .mockResolvedValueOnce({
+        ok: true,
+        data: { type: 'not-modified', etag: 's2' },
+      });
+    requestFixtureLineup
+      .mockResolvedValueOnce(updated({ lineup: {} }, 'l1'))
+      .mockResolvedValueOnce({
+        ok: true,
+        data: { type: 'not-modified', etag: 'l2' },
+      });
+    requestFixtureEvents
+      .mockResolvedValueOnce(updated({ events: [] }, 'e1'))
+      .mockResolvedValueOnce(updated({ events: [{ sequence: 1 }] }, 'e2'));
+    requestFixtureStatistics
+      .mockResolvedValueOnce(updated({}, 't1'))
+      .mockResolvedValueOnce({ ok: false, error: 'temporary failure' });
 
-    await useMatchDataStore.getState().loadMatchData('fixture-1');
+    setMatchDataFixture('fixture-1');
+    await useMatchDataStore.getState().refreshMatchData();
+    await useMatchDataStore.getState().refreshMatchData();
 
-    expect(requestMatchData).toHaveBeenCalledWith('fixture-1');
+    expect(requestFixtureStatus).toHaveBeenLastCalledWith({
+      fixtureUid: 'fixture-1',
+      etag: 's1',
+    });
+    expect(requestFixtureEvents).toHaveBeenLastCalledWith({
+      fixtureUid: 'fixture-1',
+      etag: 'e1',
+    });
     expect(useMatchDataStore.getState()).toMatchObject({
+      fixtureUid: 'fixture-1',
       status: 'ready',
-      data: {
-        fixtureUid: 'fixture-1',
-        homeTeamName: '홈',
-        awayTeamName: '원정',
-        homeScore: 1,
-      },
+      etags: { status: 's2', lineup: 'l2', events: 'e2', statistics: 't1' },
+      statusData: { liveStatus: { shortStatus: '1H', score: { home: 1 } } },
+      events: { events: [{ sequence: 1 }] },
+      statistics: {},
     });
   });
 
-  it('ignores an earlier fixture response', async () => {
-    let resolveFirst!: (value: typeof response) => void;
-    requestMatchData
+  it('ignores a response after another fixture is selected', async () => {
+    let resolveStatus!: (value: unknown) => void;
+    requestFixtureStatus
       .mockReturnValueOnce(
         new Promise((resolve) => {
-          resolveFirst = resolve;
+          resolveStatus = resolve;
         }),
       )
-      .mockResolvedValueOnce(response);
-
-    const first = useMatchDataStore.getState().loadMatchData('fixture-old');
-    await useMatchDataStore.getState().loadMatchData('fixture-1');
-    resolveFirst({
-      ...response,
-      data: {
-        ...response.data,
-        info: { ...response.data.info, fixtureUid: 'fixture-old' },
-      },
+      .mockResolvedValue({ ok: true, data: { type: 'not-modified' } });
+    requestFixtureLineup.mockResolvedValue({
+      ok: true,
+      data: { type: 'not-modified' },
     });
-    await first;
+    requestFixtureEvents.mockResolvedValue({
+      ok: true,
+      data: { type: 'not-modified' },
+    });
+    requestFixtureStatistics.mockResolvedValue({
+      ok: true,
+      data: { type: 'not-modified' },
+    });
 
-    expect(useMatchDataStore.getState().data?.fixtureUid).toBe('fixture-1');
+    setMatchDataFixture('fixture-old');
+    const oldRefresh = useMatchDataStore.getState().refreshMatchData();
+    setMatchDataFixture('fixture-1');
+    await useMatchDataStore.getState().refreshMatchData();
+    resolveStatus(
+      updated({ liveStatus: { shortStatus: '1H', score: {} } }, 'old-status'),
+    );
+    await oldRefresh;
+
+    expect(useMatchDataStore.getState().fixtureUid).toBe('fixture-1');
+    expect(useMatchDataStore.getState().statusData).toBeUndefined();
   });
 });

@@ -6,8 +6,8 @@ vi.mock('axios', () => ({ default: { create: axiosCreate } }));
 
 import {
   getAvailableLeagues,
+  getFixtureStatus,
   getFixtures,
-  getMatchData,
 } from './footballayApi';
 
 describe('Footballay privileged API transport', () => {
@@ -40,28 +40,22 @@ describe('Footballay privileged API transport', () => {
     );
   });
 
-  it('retrieves all match data endpoints in one fixture load', async () => {
-    axiosGet
-      .mockResolvedValueOnce({ data: { fixtureUid: 'fixture-1' } })
-      .mockResolvedValueOnce({
-        data: { liveStatus: { shortStatus: 'NS', score: {} } },
-      })
-      .mockResolvedValueOnce({ data: {} })
-      .mockResolvedValueOnce({ data: { events: [] } })
-      .mockResolvedValueOnce({ data: { lineup: {} } });
+  it('uses the endpoint ETag and preserves a 304 response', async () => {
+    axiosGet.mockResolvedValueOnce({
+      status: 304,
+      headers: { etag: 'etag-2' },
+    });
 
-    await expect(getMatchData('fixture / 1')).resolves.toEqual({
-      info: { fixtureUid: 'fixture-1' },
-      status: { liveStatus: { shortStatus: 'NS', score: {} } },
-      statistics: {},
-      events: { events: [] },
-      lineup: { lineup: {} },
+    await expect(getFixtureStatus('fixture-1', 'etag-1')).resolves.toEqual({
+      type: 'not-modified',
+      etag: 'etag-2',
     });
     expect(axiosGet).toHaveBeenCalledWith(
-      '/v1/football/fixtures/fixture%20%2F%201/info',
-    );
-    expect(axiosGet).toHaveBeenCalledWith(
-      '/v1/football/fixtures/fixture%20%2F%201/lineup',
+      '/v1/football/fixtures/fixture-1/status',
+      expect.objectContaining({
+        headers: { 'If-None-Match': 'etag-1' },
+        validateStatus: expect.any(Function),
+      }),
     );
   });
 });

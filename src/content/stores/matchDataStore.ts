@@ -1,78 +1,136 @@
 import { create } from 'zustand';
 import {
-  requestMatchData,
-  type MatchDataDto,
+  requestFixtureEvents,
+  requestFixtureLineup,
+  requestFixtureStatistics,
+  requestFixtureStatus,
+  type FixtureEventsDto,
+  type FixtureLineupDto,
+  type FixtureStatisticsDto,
+  type FixtureStatusDto,
 } from '@/shared/footballayApiProtocol';
 import type { LoadStatus } from './matchPickerStore';
 
-export type MatchData = {
-  fixtureUid: string;
-  homeTeamName: string;
-  awayTeamName: string;
-  homeScore: number;
-  awayScore: number;
-  elapsed?: number | null;
-  status: string;
-  lineup: MatchDataDto['lineup']['lineup'];
-  events: MatchDataDto['events']['events'];
-  statistics: MatchDataDto['statistics'];
-};
-
 type MatchDataStore = {
-  data?: MatchData;
+  fixtureUid?: string;
+  statusData?: FixtureStatusDto;
+  lineup?: FixtureLineupDto;
+  events?: FixtureEventsDto;
+  statistics?: FixtureStatisticsDto;
+  etags: {
+    status?: string;
+    lineup?: string;
+    events?: string;
+    statistics?: string;
+  };
   status: LoadStatus;
   error?: string;
-  clearMatchData: () => void;
-  loadMatchData: (fixtureUid: string) => Promise<void>;
+  refreshMatchData: () => Promise<void>;
 };
 
 let latestRequestId = 0;
 
-export const useMatchDataStore = create<MatchDataStore>((set) => ({
-  status: 'idle',
-  clearMatchData: () => {
-    ++latestRequestId;
-    set({ data: undefined, status: 'idle', error: undefined });
-  },
-  loadMatchData: async (fixtureUid) => {
+export const useMatchDataStore = create<MatchDataStore>((set, get) => {
+  async function refreshMatchData() {
+    const { fixtureUid, etags } = get();
+    if (!fixtureUid) return;
+
     const requestId = ++latestRequestId;
-    set({ data: undefined, status: 'loading', error: undefined });
+    const results = await Promise.allSettled([
+      requestFixtureStatus({ fixtureUid, etag: etags.status }),
+      requestFixtureLineup({ fixtureUid, etag: etags.lineup }),
+      requestFixtureEvents({ fixtureUid, etag: etags.events }),
+      requestFixtureStatistics({ fixtureUid, etag: etags.statistics }),
+    ]);
+    if (requestId !== latestRequestId || get().fixtureUid !== fixtureUid)
+      return;
 
-    try {
-      const response = await requestMatchData(fixtureUid);
-      if (requestId !== latestRequestId) return;
-      if (!response.ok) {
-        set({ status: 'error', error: response.error });
-        return;
+    const errors = results.flatMap((result) => {
+      if (result.status === 'rejected') {
+        return result.reason instanceof Error
+          ? result.reason.message
+          : 'Unable to refresh match data';
       }
+      return result.value.ok ? [] : result.value.error;
+    });
+    const [status, lineup, events, statistics] = results;
+    set((state) => ({
+      statusData:
+        status.status === 'fulfilled' &&
+        status.value.ok &&
+        status.value.data.type === 'updated'
+          ? status.value.data.data
+          : state.statusData,
+      lineup:
+        lineup.status === 'fulfilled' &&
+        lineup.value.ok &&
+        lineup.value.data.type === 'updated'
+          ? lineup.value.data.data
+          : state.lineup,
+      events:
+        events.status === 'fulfilled' &&
+        events.value.ok &&
+        events.value.data.type === 'updated'
+          ? events.value.data.data
+          : state.events,
+      statistics:
+        statistics.status === 'fulfilled' &&
+        statistics.value.ok &&
+        statistics.value.data.type === 'updated'
+          ? statistics.value.data.data
+          : state.statistics,
+      etags: {
+        status:
+          status.status === 'fulfilled' &&
+          status.value.ok &&
+          (status.value.data.type === 'updated' ||
+            status.value.data.etag !== undefined)
+            ? status.value.data.etag
+            : state.etags.status,
+        lineup:
+          lineup.status === 'fulfilled' &&
+          lineup.value.ok &&
+          (lineup.value.data.type === 'updated' ||
+            lineup.value.data.etag !== undefined)
+            ? lineup.value.data.etag
+            : state.etags.lineup,
+        events:
+          events.status === 'fulfilled' &&
+          events.value.ok &&
+          (events.value.data.type === 'updated' ||
+            events.value.data.etag !== undefined)
+            ? events.value.data.etag
+            : state.etags.events,
+        statistics:
+          statistics.status === 'fulfilled' &&
+          statistics.value.ok &&
+          (statistics.value.data.type === 'updated' ||
+            statistics.value.data.etag !== undefined)
+            ? statistics.value.data.etag
+            : state.etags.statistics,
+      },
+      status: errors.length === 4 ? 'error' : 'ready',
+      error: errors[0],
+    }));
+  }
 
-      set({
-        data: mapMatchData(response.data),
-        status: 'ready',
-        error: undefined,
-      });
-    } catch (error) {
-      if (requestId !== latestRequestId) return;
-      set({
-        status: 'error',
-        error:
-          error instanceof Error ? error.message : 'Unable to load match data',
-      });
-    }
-  },
-}));
-
-function mapMatchData(data: MatchDataDto): MatchData {
   return {
-    fixtureUid: data.info.fixtureUid,
-    homeTeamName: data.info.home?.koreanName ?? data.info.home?.name ?? 'Home',
-    awayTeamName: data.info.away?.koreanName ?? data.info.away?.name ?? 'Away',
-    homeScore: data.status.liveStatus.score.home ?? 0,
-    awayScore: data.status.liveStatus.score.away ?? 0,
-    elapsed: data.status.liveStatus.elapsed,
-    status: data.status.liveStatus.shortStatus,
-    lineup: data.lineup.lineup,
-    events: data.events.events,
-    statistics: data.statistics,
+    etags: {},
+    status: 'idle',
+    refreshMatchData,
   };
+});
+
+export function setMatchDataFixture(fixtureUid?: string) {
+  ++latestRequestId;
+  useMatchDataStore.setState({
+    fixtureUid,
+    statusData: undefined,
+    lineup: undefined,
+    events: undefined,
+    statistics: undefined,
+    etags: {},
+    status: fixtureUid ? 'loading' : 'idle',
+    error: undefined,
+  });
 }

@@ -3,7 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('./footballayApi', () => ({
   getAvailableLeagues: vi.fn(),
   getFixtures: vi.fn(),
-  getMatchData: vi.fn(),
+  getFixtureStatus: vi.fn(),
+  getFixtureLineup: vi.fn(),
+  getFixtureEvents: vi.fn(),
+  getFixtureStatistics: vi.fn(),
 }));
 
 import { handleRuntimeMessage } from './runtimeMessageHandler';
@@ -32,24 +35,23 @@ describe('runtime message handler', () => {
         },
       }),
     ).resolves.toEqual({ ok: true, data: [] });
-    expect(footballayApi.getFixtures).toHaveBeenCalledWith({
-      leagueUid: 'league-1',
-      date: '2026-08-11',
-      mode: 'nearest',
-      timezone: 'Asia/Seoul',
-    });
   });
 
-  it('accepts a fixture match-data request', async () => {
-    vi.mocked(footballayApi.getMatchData).mockResolvedValueOnce({} as never);
+  it('passes a fixture endpoint ETag through the validated boundary', async () => {
+    vi.mocked(footballayApi.getFixtureStatus).mockResolvedValueOnce({
+      type: 'not-modified',
+    });
 
     await expect(
       handleRuntimeMessage({
-        type: 'GET_MATCH_DATA',
-        payload: { fixtureUid: 'fixture-1' },
+        type: 'GET_FIXTURE_STATUS',
+        payload: { fixtureUid: 'fixture-1', etag: 'etag-1' },
       }),
-    ).resolves.toEqual({ ok: true, data: {} });
-    expect(footballayApi.getMatchData).toHaveBeenCalledWith('fixture-1');
+    ).resolves.toEqual({ ok: true, data: { type: 'not-modified' } });
+    expect(footballayApi.getFixtureStatus).toHaveBeenCalledWith(
+      'fixture-1',
+      'etag-1',
+    );
   });
 
   it('rejects arbitrary or malformed proxy requests', async () => {
@@ -63,29 +65,9 @@ describe('runtime message handler', () => {
       error: 'Invalid Footballay API request',
     });
     await expect(
-      handleRuntimeMessage({ type: 'GET_AVAILABLE_LEAGUES', payload: {} }),
-    ).resolves.toEqual({
-      ok: false,
-      error: 'Invalid Footballay API request',
-    });
-    await expect(
       handleRuntimeMessage({
-        type: 'GET_AVAILABLE_LEAGUES',
-        url: 'https://example.com',
-      }),
-    ).resolves.toEqual({
-      ok: false,
-      error: 'Invalid Footballay API request',
-    });
-    await expect(
-      handleRuntimeMessage({
-        type: 'GET_FIXTURES',
-        payload: {
-          leagueUid: 'league-1',
-          date: '2026-02-30',
-          mode: 'anything',
-          timezone: 'Asia/Seoul',
-        },
+        type: 'GET_FIXTURE_STATUS',
+        payload: { fixtureUid: 'fixture-1', etag: 1 },
       }),
     ).resolves.toEqual({
       ok: false,

@@ -1,8 +1,10 @@
 export const GET_AVAILABLE_LEAGUES = 'GET_AVAILABLE_LEAGUES';
 export const GET_FIXTURES = 'GET_FIXTURES';
-export const GET_MATCH_DATA = 'GET_MATCH_DATA';
+export const GET_FIXTURE_STATUS = 'GET_FIXTURE_STATUS';
+export const GET_FIXTURE_LINEUP = 'GET_FIXTURE_LINEUP';
+export const GET_FIXTURE_EVENTS = 'GET_FIXTURE_EVENTS';
+export const GET_FIXTURE_STATISTICS = 'GET_FIXTURE_STATISTICS';
 
-/** Raw Footballay data transferred from the service worker to the Content App. */
 export type AvailableLeagueDto = {
   uid: string;
   name: string;
@@ -10,49 +12,23 @@ export type AvailableLeagueDto = {
   logo?: string | null;
 };
 
-/** Raw Footballay fixture data transferred from the service worker to the Content App. */
 export type FixtureDto = {
   uid: string;
   kickoff?: string | null;
   homeTeam?: FixtureTeamDto | null;
   awayTeam?: FixtureTeamDto | null;
-  status: {
+  status: { shortStatus: string };
+  score: { home?: number | null; away?: number | null };
+};
+
+export type FixtureTeamDto = { name: string; nameKo?: string | null };
+export type FixtureStatusDto = {
+  liveStatus: {
+    elapsed?: number | null;
     shortStatus: string;
-  };
-  score: {
-    home?: number | null;
-    away?: number | null;
+    score: { home?: number | null; away?: number | null };
   };
 };
-
-export type FixtureTeamDto = {
-  name: string;
-  nameKo?: string | null;
-};
-
-export type MatchDataDto = {
-  info: {
-    fixtureUid: string;
-    home?: MatchTeamDto | null;
-    away?: MatchTeamDto | null;
-  };
-  status: {
-    liveStatus: {
-      elapsed?: number | null;
-      shortStatus: string;
-      score: { home?: number | null; away?: number | null };
-    };
-  };
-  statistics: {
-    home?: MatchStatisticsTeamDto | null;
-    away?: MatchStatisticsTeamDto | null;
-  };
-  events: { events: MatchEventDto[] };
-  lineup: {
-    lineup: { home?: MatchLineupDto | null; away?: MatchLineupDto | null };
-  };
-};
-
 export type MatchTeamDto = { name: string; koreanName?: string | null };
 export type MatchStatisticsTeamDto = {
   teamStatistics: {
@@ -64,6 +40,10 @@ export type MatchStatisticsTeamDto = {
     fouls: number;
   };
 };
+export type FixtureStatisticsDto = {
+  home?: MatchStatisticsTeamDto | null;
+  away?: MatchStatisticsTeamDto | null;
+};
 export type MatchEventDto = {
   sequence: number;
   elapsed: number;
@@ -72,6 +52,7 @@ export type MatchEventDto = {
   team: MatchTeamDto;
   player?: MatchPlayerDto | null;
 };
+export type FixtureEventsDto = { events: MatchEventDto[] };
 export type MatchPlayerDto = { name: string; koreanName?: string | null };
 export type MatchLineupDto = {
   teamName: string;
@@ -81,6 +62,9 @@ export type MatchLineupDto = {
   substitutes: MatchLineupPlayerDto[];
 };
 export type MatchLineupPlayerDto = MatchPlayerDto & { number?: number | null };
+export type FixtureLineupDto = {
+  lineup: { home?: MatchLineupDto | null; away?: MatchLineupDto | null };
+};
 
 export type GetFixturesPayload = {
   leagueUid: string;
@@ -88,15 +72,29 @@ export type GetFixturesPayload = {
   mode: 'previous' | 'exact' | 'nearest';
   timezone: string;
 };
-
+export type FixtureEtagPayload = { fixtureUid: string; etag?: string };
 export type FootballayApiResponse<T> =
   { ok: true; data: T } | { ok: false; error: string };
+export type EtaggedResponse<T> =
+  | { type: 'updated'; data: T; etag?: string }
+  | { type: 'not-modified'; etag?: string };
 
 export type AvailableLeaguesResponse = FootballayApiResponse<
   AvailableLeagueDto[]
 >;
 export type FixturesResponse = FootballayApiResponse<FixtureDto[]>;
-export type MatchDataResponse = FootballayApiResponse<MatchDataDto>;
+export type FixtureStatusResponse = FootballayApiResponse<
+  EtaggedResponse<FixtureStatusDto>
+>;
+export type FixtureLineupResponse = FootballayApiResponse<
+  EtaggedResponse<FixtureLineupDto>
+>;
+export type FixtureEventsResponse = FootballayApiResponse<
+  EtaggedResponse<FixtureEventsDto>
+>;
+export type FixtureStatisticsResponse = FootballayApiResponse<
+  EtaggedResponse<FixtureStatisticsDto>
+>;
 
 export function requestAvailableLeagues(): Promise<AvailableLeaguesResponse> {
   return chrome.runtime.sendMessage({
@@ -113,11 +111,36 @@ export function requestFixtures(
   }) as Promise<FixturesResponse>;
 }
 
-export function requestMatchData(
-  fixtureUid: string,
-): Promise<MatchDataResponse> {
+function requestFixtureData<T>(
+  type: string,
+  payload: FixtureEtagPayload,
+): Promise<FootballayApiResponse<EtaggedResponse<T>>> {
   return chrome.runtime.sendMessage({
-    type: GET_MATCH_DATA,
-    payload: { fixtureUid },
-  }) as Promise<MatchDataResponse>;
+    type,
+    payload,
+  }) as Promise<FootballayApiResponse<EtaggedResponse<T>>>;
+}
+
+export function requestFixtureStatus(
+  payload: FixtureEtagPayload,
+): Promise<FixtureStatusResponse> {
+  return requestFixtureData(GET_FIXTURE_STATUS, payload);
+}
+
+export function requestFixtureLineup(
+  payload: FixtureEtagPayload,
+): Promise<FixtureLineupResponse> {
+  return requestFixtureData(GET_FIXTURE_LINEUP, payload);
+}
+
+export function requestFixtureEvents(
+  payload: FixtureEtagPayload,
+): Promise<FixtureEventsResponse> {
+  return requestFixtureData(GET_FIXTURE_EVENTS, payload);
+}
+
+export function requestFixtureStatistics(
+  payload: FixtureEtagPayload,
+): Promise<FixtureStatisticsResponse> {
+  return requestFixtureData(GET_FIXTURE_STATISTICS, payload);
 }

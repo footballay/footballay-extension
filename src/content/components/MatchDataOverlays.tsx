@@ -1,47 +1,74 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
-import {
-  useMatchDataStore,
-  type MatchData,
-} from '@/content/stores/matchDataStore';
+import { useMatchDataStore } from '@/content/stores/matchDataStore';
+import type {
+  FixtureEventsDto,
+  FixtureLineupDto,
+  FixtureStatisticsDto,
+  FixtureStatusDto,
+} from '@/shared/footballayApiProtocol';
 
 type DetailTab = 'lineup' | 'events' | 'statistics';
 
 export function MatchDataOverlays() {
   const fixtureUid = useMatchPickerStore((state) => state.selectedFixtureUid);
-  const loadMatchData = useMatchDataStore((state) => state.loadMatchData);
-  const clearMatchData = useMatchDataStore((state) => state.clearMatchData);
-  const data = useMatchDataStore((state) => state.data);
+  const fixture = useMatchPickerStore((state) =>
+    state.fixtures.find((item) => item.uid === fixtureUid),
+  );
+  const statusData = useMatchDataStore((state) => state.statusData);
+  const lineup = useMatchDataStore((state) => state.lineup);
+  const events = useMatchDataStore((state) => state.events);
+  const statistics = useMatchDataStore((state) => state.statistics);
   const status = useMatchDataStore((state) => state.status);
   const error = useMatchDataStore((state) => state.error);
-
-  useEffect(() => {
-    if (fixtureUid) void loadMatchData(fixtureUid);
-    else clearMatchData();
-  }, [clearMatchData, fixtureUid, loadMatchData]);
-
   if (!fixtureUid) return null;
 
   return (
     <>
-      <MatchSummary data={data} status={status} />
-      <MatchDetails data={data} status={status} error={error} />
+      <MatchSummary fixture={fixture} statusData={statusData} status={status} />
+      <MatchDetails
+        lineup={lineup}
+        events={events}
+        statistics={statistics}
+        status={status}
+        error={error}
+      />
     </>
   );
 }
 
-function MatchSummary({ data, status }: { data?: MatchData; status: string }) {
+function MatchSummary({
+  fixture,
+  statusData,
+  status,
+}: {
+  fixture?: {
+    homeTeam?: { name: string; nameKo?: string | null } | null;
+    awayTeam?: { name: string; nameKo?: string | null } | null;
+  };
+  statusData?: FixtureStatusDto;
+  status: string;
+}) {
+  const liveStatus = statusData?.liveStatus;
   return (
     <aside className="footballay-match-summary" aria-label="Match summary">
       {status === 'loading' && '경기 데이터를 불러오는 중입니다.'}
-      {data && (
+      {fixture && liveStatus && (
         <>
-          <span>{data.homeTeamName}</span>
+          <span>
+            {fixture.homeTeam?.nameKo ?? fixture.homeTeam?.name ?? 'Home'}
+          </span>
           <strong>
-            {data.homeScore} : {data.awayScore}
+            {liveStatus.score.home ?? 0} : {liveStatus.score.away ?? 0}
           </strong>
-          <span>{data.awayTeamName}</span>
-          <em>{data.elapsed ? `${data.elapsed}'` : data.status}</em>
+          <span>
+            {fixture.awayTeam?.nameKo ?? fixture.awayTeam?.name ?? 'Away'}
+          </span>
+          <em>
+            {liveStatus.elapsed
+              ? `${liveStatus.elapsed}'`
+              : liveStatus.shortStatus}
+          </em>
         </>
       )}
     </aside>
@@ -49,11 +76,15 @@ function MatchSummary({ data, status }: { data?: MatchData; status: string }) {
 }
 
 function MatchDetails({
-  data,
+  lineup,
+  events,
+  statistics,
   error,
   status,
 }: {
-  data?: MatchData;
+  lineup?: FixtureLineupDto;
+  events?: FixtureEventsDto;
+  statistics?: FixtureStatisticsDto;
   error?: string;
   status: string;
 }) {
@@ -81,15 +112,15 @@ function MatchDetails({
       {status === 'error' && (
         <p role="alert">경기 데이터를 불러오지 못했습니다: {error}</p>
       )}
-      {data && tab === 'lineup' && <Lineup data={data} />}
-      {data && tab === 'events' && <Events data={data} />}
-      {data && tab === 'statistics' && <Statistics data={data} />}
+      {tab === 'lineup' && <Lineup lineup={lineup} />}
+      {tab === 'events' && <Events events={events} />}
+      {tab === 'statistics' && <Statistics statistics={statistics} />}
     </aside>
   );
 }
 
-function Lineup({ data }: { data: MatchData }) {
-  const teams = [data.lineup.home, data.lineup.away].filter(Boolean);
+function Lineup({ lineup }: { lineup?: FixtureLineupDto }) {
+  const teams = [lineup?.lineup.home, lineup?.lineup.away].filter(Boolean);
   return (
     <div>
       {teams.length ? (
@@ -115,11 +146,11 @@ function Lineup({ data }: { data: MatchData }) {
   );
 }
 
-function Events({ data }: { data: MatchData }) {
+function Events({ events }: { events?: FixtureEventsDto }) {
   return (
     <ol>
-      {data.events.length ? (
-        data.events.map((event) => (
+      {events?.events.length ? (
+        events.events.map((event) => (
           <li key={event.sequence}>
             {event.elapsed}' ·{' '}
             {event.player?.koreanName ??
@@ -136,42 +167,42 @@ function Events({ data }: { data: MatchData }) {
   );
 }
 
-function Statistics({ data }: { data: MatchData }) {
+function Statistics({ statistics }: { statistics?: FixtureStatisticsDto }) {
   const rows = [
     [
       '점유율',
-      data.statistics.home?.teamStatistics.ballPossession,
-      data.statistics.away?.teamStatistics.ballPossession,
+      statistics?.home?.teamStatistics.ballPossession,
+      statistics?.away?.teamStatistics.ballPossession,
       '%',
     ],
     [
       'xG',
-      data.statistics.home?.teamStatistics.xg.at(-1)?.xg,
-      data.statistics.away?.teamStatistics.xg.at(-1)?.xg,
+      statistics?.home?.teamStatistics.xg.at(-1)?.xg,
+      statistics?.away?.teamStatistics.xg.at(-1)?.xg,
       '',
     ],
     [
       '슈팅',
-      data.statistics.home?.teamStatistics.totalShots,
-      data.statistics.away?.teamStatistics.totalShots,
+      statistics?.home?.teamStatistics.totalShots,
+      statistics?.away?.teamStatistics.totalShots,
       '',
     ],
     [
       '유효 슈팅',
-      data.statistics.home?.teamStatistics.shotsOnGoal,
-      data.statistics.away?.teamStatistics.shotsOnGoal,
+      statistics?.home?.teamStatistics.shotsOnGoal,
+      statistics?.away?.teamStatistics.shotsOnGoal,
       '',
     ],
     [
       '코너',
-      data.statistics.home?.teamStatistics.cornerKicks,
-      data.statistics.away?.teamStatistics.cornerKicks,
+      statistics?.home?.teamStatistics.cornerKicks,
+      statistics?.away?.teamStatistics.cornerKicks,
       '',
     ],
     [
       '파울',
-      data.statistics.home?.teamStatistics.fouls,
-      data.statistics.away?.teamStatistics.fouls,
+      statistics?.home?.teamStatistics.fouls,
+      statistics?.away?.teamStatistics.fouls,
       '',
     ],
   ];

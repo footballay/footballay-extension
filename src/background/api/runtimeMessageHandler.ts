@@ -2,7 +2,10 @@ import * as footballayApi from './footballayApi';
 import {
   GET_AVAILABLE_LEAGUES,
   GET_FIXTURES,
-  GET_MATCH_DATA,
+  GET_FIXTURE_EVENTS,
+  GET_FIXTURE_LINEUP,
+  GET_FIXTURE_STATISTICS,
+  GET_FIXTURE_STATUS,
   type GetFixturesPayload,
   type FootballayApiResponse,
 } from '@/shared/footballayApiProtocol';
@@ -48,35 +51,62 @@ export async function handleRuntimeMessage(
       }
     }
 
-    case GET_MATCH_DATA: {
-      const fixtureUid = parseFixtureUid(request.payload);
-      if (!fixtureUid) return invalidRequest();
-
-      try {
-        return { ok: true, data: await footballayApi.getMatchData(fixtureUid) };
-      } catch (error) {
-        return {
-          ok: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Footballay API request failed',
-        };
-      }
-    }
+    case GET_FIXTURE_STATUS:
+      return requestFixtureData(
+        request.payload,
+        footballayApi.getFixtureStatus,
+      );
+    case GET_FIXTURE_LINEUP:
+      return requestFixtureData(
+        request.payload,
+        footballayApi.getFixtureLineup,
+      );
+    case GET_FIXTURE_EVENTS:
+      return requestFixtureData(
+        request.payload,
+        footballayApi.getFixtureEvents,
+      );
+    case GET_FIXTURE_STATISTICS:
+      return requestFixtureData(
+        request.payload,
+        footballayApi.getFixtureStatistics,
+      );
 
     default:
       return invalidRequest();
   }
 }
 
-function parseFixtureUid(payload: unknown): string | undefined {
+async function requestFixtureData<T>(
+  payload: unknown,
+  request: (fixtureUid: string, etag?: string) => Promise<T>,
+): Promise<FootballayApiResponse<T>> {
+  const fixture = parseFixturePayload(payload);
+  if (!fixture) return invalidRequest();
+
+  try {
+    return { ok: true, data: await request(fixture.fixtureUid, fixture.etag) };
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Footballay API request failed',
+    };
+  }
+}
+
+function parseFixturePayload(
+  payload: unknown,
+): { fixtureUid: string; etag?: string } | undefined {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload))
     return undefined;
   const value = payload as Record<string, unknown>;
-  return hasOnlyFields(value, ['fixtureUid']) &&
-    isNonEmptyString(value.fixtureUid)
-    ? value.fixtureUid
+  return hasOnlyFields(value, ['fixtureUid', 'etag']) &&
+    isNonEmptyString(value.fixtureUid) &&
+    (value.etag === undefined || typeof value.etag === 'string')
+    ? { fixtureUid: value.fixtureUid, etag: value.etag }
     : undefined;
 }
 
