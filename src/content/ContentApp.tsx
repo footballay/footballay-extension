@@ -48,20 +48,22 @@ export function ContentApp() {
               >
                 <X />
               </button>
-              <button
-                className={`footballay-topbar-tab${view === 'League' ? ' footballay-topbar-tab--selected' : ''}`}
-                type="button"
-                onClick={() => setView('League')}
-              >
-                League
-              </button>
-              <button
-                className={`footballay-topbar-tab${view === 'Match' ? ' footballay-topbar-tab--selected' : ''}`}
-                type="button"
-                onClick={() => setView('Match')}
-              >
-                Match
-              </button>
+              <div className="footballay-topbar-tabs">
+                <button
+                  className={`footballay-topbar-tab${view === 'League' ? ' footballay-topbar-tab--selected' : ''}`}
+                  type="button"
+                  onClick={() => setView('League')}
+                >
+                  League
+                </button>
+                <button
+                  className={`footballay-topbar-tab${view === 'Match' ? ' footballay-topbar-tab--selected' : ''}`}
+                  type="button"
+                  onClick={() => setView('Match')}
+                >
+                  Match
+                </button>
+              </div>
               <div
                 className={`footballay-date-control${view === 'DatePicker' ? ' footballay-date-control--selected' : ''}`}
               >
@@ -92,11 +94,13 @@ export function ContentApp() {
                 </button>
               </div>
             </div>
-            {view === 'League' ? (
-              <LeaguePicker onSelect={() => setView('Match')} />
-            ) : (
-              <FixturePicker view={view} />
-            )}
+            <div className="footballay-match-select-content">
+              {view === 'League' ? (
+                <LeaguePicker onSelect={() => setView('Match')} />
+              ) : (
+                <FixturePicker view={view} />
+              )}
+            </div>
           </>
         )}
       </aside>

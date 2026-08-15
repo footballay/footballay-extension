@@ -19,7 +19,7 @@ export function LeaguePicker({ onSelect }: LeaguePickerProps) {
   );
 
   return (
-    <>
+    <section className="footballay-league-section">
       {leagueStatus === 'loading' && (
         <p className="footballay-content-status" role="status">
           리그를 불러오는 중입니다.
@@ -60,6 +60,6 @@ export function LeaguePicker({ onSelect }: LeaguePickerProps) {
           ))}
         </div>
       )}
-    </>
+    </section>
   );
 }
