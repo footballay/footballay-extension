@@ -1,6 +1,10 @@
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
 
-export function LeaguePicker() {
+type LeaguePickerProps = {
+  onSelect: () => void;
+};
+
+export function LeaguePicker({ onSelect }: LeaguePickerProps) {
   const leagues = useMatchPickerStore((state) => state.leagues);
   const leagueStatus = useMatchPickerStore((state) => state.leagueStatus);
   const leagueError = useMatchPickerStore((state) => state.leagueError);
@@ -46,7 +50,10 @@ export function LeaguePicker() {
               className={`footballay-league-button${league.uid === selectedLeagueUid ? ' footballay-league-button--selected' : ''}`}
               type="button"
               aria-pressed={league.uid === selectedLeagueUid}
-              onClick={() => void selectLeagueAndLoadFixtures(league.uid)}
+              onClick={() => {
+                onSelect();
+                void selectLeagueAndLoadFixtures(league.uid);
+              }}
             >
               {league.nameKo ?? league.name}
             </button>

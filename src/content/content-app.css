@@ -8,27 +8,53 @@
 .footballay-content-panel {
   box-sizing: border-box;
   margin: 0;
-  padding: 8px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 8px;
-  background: #101828;
-  color: #ffffff;
-  font-family: system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.2;
-  min-width: 180px;
+  width: 250px;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgb(10 16 31 / 70%);
+  color: #f4f7fb;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
 }
 
-.footballay-content-title {
-  display: block;
-  margin-bottom: 8px;
+.footballay-content-panel--collapsed {
+  width: 30px;
+  height: 30px;
+}
+
+.footballay-match-select-expand-button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 3px;
+  place-items: center;
+  background: rgb(10 16 31 / 70%);
+  color: #f4f7fb;
+  cursor: pointer;
+  padding: 0;
+}
+
+.footballay-match-select-expand-button svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2;
 }
 
 .footballay-content-status {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 171px;
   margin: 0;
+  padding: 8px 10px;
   font-size: 12px;
   font-weight: 400;
+  text-align: center;
 }
 
 .footballay-content-status p {
@@ -36,93 +62,254 @@
 }
 
 .footballay-league-list {
-  display: grid;
-  gap: 4px;
-}
-
-.footballay-fixture-section {
-  display: grid;
-  gap: 4px;
-  margin-top: 12px;
-}
-
-.footballay-fixture-title {
-  font-size: 12px;
-}
-
-.footballay-fixture-date-navigation {
-  position: relative;
   display: flex;
-  gap: 4px;
-}
-
-.footballay-fixture-date-navigation button,
-.footballay-fixture-date-button {
-  min-width: 0;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 4px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 12px;
-  padding: 4px 6px;
-}
-
-.footballay-fixture-date-button {
-  flex: 1;
-  text-align: center;
-}
-
-.footballay-fixture-calendar {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 1;
-  padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 6px;
-  background: #101828;
-  --rdp-accent-color: #ffffff;
-  --rdp-accent-background-color: #344054;
+  flex-direction: column;
+  gap: 8px;
+  margin: 9px 10px 0;
 }
 
 .footballay-fixture-list {
-  display: grid;
-  gap: 4px;
-  max-height: 240px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 171px;
+  padding: 8px 10px;
   overflow-y: auto;
+  scrollbar-color: #838b9e #45484c;
+  scrollbar-width: thin;
 }
 
 .footballay-league-button,
 .footballay-fixture-button,
 .footballay-content-status button {
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-sizing: border-box;
+  min-height: 40px;
+  border: 1px solid #848484;
   border-radius: 4px;
   background: transparent;
-  color: inherit;
+  color: #f4f7fb;
   cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  padding: 6px 8px;
+  font:
+    14px Inter,
+    sans-serif;
+  padding: 0 9px;
   text-align: left;
 }
 
 .footballay-league-button--selected {
-  background: #ffffff;
-  color: #101828;
+  border-color: #5865f3;
+  background: #2d333c;
+}
+
+.footballay-league-button:not(.footballay-league-button--selected):hover,
+.footballay-fixture-button:not(.footballay-fixture-button--selected):hover {
+  background: #aab4c5;
+  color: #2d333c;
 }
 
 .footballay-fixture-button {
   display: grid;
-  gap: 2px;
+  grid-template-columns: 40px 80px 80px;
+  align-items: center;
+  justify-content: start;
+  gap: 7px;
+  font-size: 12px;
+  padding: 0 5px;
+  text-align: center;
 }
 
 .footballay-fixture-button strong {
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .footballay-fixture-button--selected {
-  border-color: #ffffff;
+  border-color: #5865f3;
+  background: #2d333c;
+}
+
+.footballay-match-select-topbar {
+  position: relative;
+  box-sizing: border-box;
+  height: 29px;
+  border-bottom: 1px solid #353535;
+}
+
+.footballay-match-select-topbar button {
+  border: 0;
+  background: transparent;
+  color: #848484;
+  cursor: pointer;
+  font:
+    14px Inter,
+    sans-serif;
+}
+
+.footballay-close-button {
+  position: absolute;
+  top: 5px;
+  left: 6px;
+  display: grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  padding: 0;
+}
+
+.footballay-close-button svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2;
+}
+
+.footballay-close-button:hover {
+  border-radius: 3px;
+  background: #d9585a !important;
+  color: #fff !important;
+}
+
+.footballay-caret {
+  display: block;
+  width: 10px;
+  height: 12px;
+  background: #848484;
+}
+
+.footballay-caret--left {
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+
+.footballay-caret--right {
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.footballay-topbar-tab {
+  position: absolute;
+  top: 4px;
+  width: 58px;
+  height: 21px;
+  border-radius: 3px !important;
+  padding: 0;
+}
+
+.footballay-close-button + .footballay-topbar-tab {
+  left: 31px;
+}
+.footballay-topbar-tab + .footballay-topbar-tab {
+  left: 97px;
+}
+
+.footballay-topbar-tab--selected {
+  background: #2d333c !important;
+  color: #fff !important;
+}
+
+.footballay-topbar-tab:not(.footballay-topbar-tab--selected):hover {
+  background: #2d333c !important;
+  color: #fff !important;
+}
+
+.footballay-date-control {
+  position: absolute;
+  top: 5px;
+  left: 167px;
+  display: grid;
+  grid-template-columns: 10px 42px 10px;
+  column-gap: 6px;
+  grid-template-rows: 19px;
+  align-items: center;
+  width: 74px;
+  height: 19px;
+}
+
+.footballay-date-control button {
+  display: grid;
+  width: 100%;
+  height: 19px;
+  place-items: center;
+  padding: 0;
+}
+
+.footballay-date-control button:nth-child(2) {
+  text-align: center;
+}
+
+.footballay-date-control button:first-child:hover .footballay-caret,
+.footballay-date-control button:last-child:hover .footballay-caret {
+  background: #f4f7fb;
+}
+
+.footballay-date-control:not(.footballay-date-control--selected)
+  button:nth-child(2):hover {
+  width: 42px;
+  height: 19px;
+  justify-self: center;
+  border-radius: 3px;
+  background: #2d333c;
+  color: #f4f7fb;
+}
+
+.footballay-date-control--selected button:nth-child(2) {
+  width: 42px;
+  height: 17px;
+  justify-self: center;
+  border-bottom: 1px solid #f4f7fb;
+  color: #f4f7fb;
+}
+
+.footballay-calendar {
+  margin-top: 10px;
+}
+
+.footballay-calendar-month {
+  display: grid;
+  grid-template-columns: 10px 68px 10px;
+  align-items: center;
+  width: 88px;
+  height: 13px;
+  margin: 0 auto 9px;
+  color: #fff;
+  font-size: 12px;
+  text-align: center;
+}
+
+.footballay-calendar-month button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #848484;
+  padding: 0;
+}
+
+.footballay-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 33px);
+  grid-auto-rows: 20px;
+  gap: 1.333px 1px;
+  margin: 0 6px;
+}
+
+.footballay-date-block {
+  box-sizing: border-box;
+  width: 33px;
+  height: 20px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #848484;
+  font:
+    10px Inter,
+    sans-serif;
+  padding: 0;
+}
+
+.footballay-date-block--fixture {
+  border: 1px solid #353535;
+  color: #f4f7fb;
+}
+.footballay-date-block--today {
+  color: #3ddb97;
 }
 
 .footballay-match-summary,

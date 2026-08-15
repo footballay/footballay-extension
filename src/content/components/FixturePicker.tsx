@@ -1,7 +1,3 @@
-import { useState } from 'react';
-import { DayPicker } from '@daypicker/react';
-import { ko } from '@daypicker/react/locale/ko';
-import '@daypicker/react/style.css';
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
 
 function toDateInputValue(date: Date): string {
@@ -9,8 +5,11 @@ function toDateInputValue(date: Date): string {
   return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
 }
 
-export function FixturePicker() {
-  const [calendarOpen, setCalendarOpen] = useState(false);
+type FixturePickerProps = {
+  view: 'Match' | 'DatePicker';
+};
+
+export function FixturePicker({ view }: FixturePickerProps) {
   const fixtures = useMatchPickerStore((state) => state.fixtures);
   const fixtureStatus = useMatchPickerStore((state) => state.fixtureStatus);
   const fixtureError = useMatchPickerStore((state) => state.fixtureError);
@@ -31,58 +30,76 @@ export function FixturePicker() {
 
   if (!selectedLeagueUid) return null;
 
+  const selectedCalendarDate = selectedDate
+    ? new Date(`${selectedDate}T00:00:00`)
+    : new Date();
+  const calendarStart = new Date(
+    selectedCalendarDate.getFullYear(),
+    selectedCalendarDate.getMonth(),
+    1,
+  );
+  calendarStart.setDate(calendarStart.getDate() - calendarStart.getDay());
+
+  if (view === 'DatePicker') {
+    return (
+      <div
+        className="footballay-calendar"
+        role="dialog"
+        aria-label="Fixture date picker"
+      >
+        <div className="footballay-calendar-month">
+          <button
+            type="button"
+            aria-label="Previous month"
+            onClick={() => void navigateFixtureDate('previous')}
+          >
+            <span className="footballay-caret footballay-caret--left" />
+          </button>
+          <span>
+            {selectedCalendarDate.getFullYear()}.{' '}
+            {String(selectedCalendarDate.getMonth() + 1).padStart(2, '0')}
+          </span>
+          <button
+            type="button"
+            aria-label="Next month"
+            onClick={() => void navigateFixtureDate('next')}
+          >
+            <span className="footballay-caret footballay-caret--right" />
+          </button>
+        </div>
+        <div className="footballay-calendar-grid">
+          {Array.from({ length: 42 }, (_, index) => {
+            const date = new Date(calendarStart);
+            date.setDate(calendarStart.getDate() + index);
+            const value = toDateInputValue(date);
+            const isToday = value === toDateInputValue(new Date());
+            const hasFixture = fixtures.some((fixture) =>
+              fixture.kickoff?.startsWith(value),
+            );
+            const label =
+              date.getDate() === 1
+                ? `${date.getMonth() + 1}/${date.getDate()}`
+                : String(date.getDate());
+
+            return (
+              <button
+                key={value}
+                className={`footballay-date-block${hasFixture ? ' footballay-date-block--fixture' : ''}${isToday && !hasFixture ? ' footballay-date-block--today' : ''}`}
+                type="button"
+                aria-pressed={value === selectedDate}
+                onClick={() => void selectDateAndLoadFixtures(value)}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section className="footballay-fixture-section" aria-label="Fixtures">
-      <strong className="footballay-fixture-title">경기</strong>
-      <div className="footballay-fixture-date-navigation">
-        <button
-          type="button"
-          aria-label="Previous fixture date"
-          disabled={fixtureStatus === 'loading'}
-          onClick={() => void navigateFixtureDate('previous')}
-        >
-          &lt;
-        </button>
-        <button
-          type="button"
-          className="footballay-fixture-date-button"
-          aria-label="Fixture date"
-          aria-haspopup="dialog"
-          aria-expanded={calendarOpen}
-          disabled={fixtureStatus === 'loading'}
-          onClick={() => setCalendarOpen((open) => !open)}
-        >
-          {selectedDate}
-        </button>
-        <button
-          type="button"
-          aria-label="Next fixture date"
-          disabled={fixtureStatus === 'loading'}
-          onClick={() => void navigateFixtureDate('next')}
-        >
-          &gt;
-        </button>
-        {calendarOpen && (
-          <div
-            className="footballay-fixture-calendar"
-            role="dialog"
-            aria-label="Fixture date picker"
-          >
-            <DayPicker
-              mode="single"
-              locale={ko}
-              selected={
-                selectedDate ? new Date(`${selectedDate}T00:00:00`) : undefined
-              }
-              onSelect={(date) => {
-                if (!date) return;
-                setCalendarOpen(false);
-                void selectDateAndLoadFixtures(toDateInputValue(date));
-              }}
-            />
-          </div>
-        )}
-      </div>
       {fixtureStatus === 'loading' && (
         <p className="footballay-content-status" role="status">
           경기를 불러오는 중입니다.
@@ -123,13 +140,9 @@ export function FixturePicker() {
                 aria-pressed={fixture.uid === selectedFixtureUid}
                 onClick={() => selectFixture(fixture.uid)}
               >
-                <span>
-                  {kickoff} · {fixture.status.shortStatus}
-                </span>
-                <strong>
-                  {homeTeamName} {fixture.score.home ?? '-'} :{' '}
-                  {fixture.score.away ?? '-'} {awayTeamName}
-                </strong>
+                <span>{kickoff}</span>
+                <strong>{homeTeamName}</strong>
+                <strong>{awayTeamName}</strong>
               </button>
             );
           })}

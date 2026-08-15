@@ -59,8 +59,22 @@ describe('ContentApp', () => {
     ).toBe('true');
     await user.click(screen.getByRole('button', { name: 'La Liga' }));
     expect(selectLeagueAndLoadFixtures).toHaveBeenCalledWith('league-2');
-    expect(screen.getByRole('button', { name: /홈 1 : 0 원정/ })).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: /홈 1 : 0 원정/ }));
+    expect(screen.getByRole('button', { name: /21:00홈원정/ })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: /21:00홈원정/ }));
     expect(useMatchPickerStore.getState().selectedFixtureUid).toBe('fixture-1');
+  });
+
+  it('collapses and expands the match selector', async () => {
+    const user = userEvent.setup();
+    render(<ContentApp />);
+
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(
+      screen.getByRole('button', { name: 'Open match selector' }),
+    ).toBeTruthy();
+    await user.click(
+      screen.getByRole('button', { name: 'Open match selector' }),
+    );
+    expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
   });
 });
