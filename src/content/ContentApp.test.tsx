@@ -4,6 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentApp } from './ContentApp';
+import { useMatchDataStore } from './stores/matchDataStore';
 import { useMatchPickerStore } from './stores/matchPickerStore';
 
 const loadAvailableLeagues = vi.fn(async () => undefined);
@@ -50,6 +51,28 @@ beforeEach(() => {
     loadAvailableLeagues,
     selectLeagueAndLoadFixtures,
     selectDateAndLoadFixtures,
+  });
+  useMatchDataStore.setState({
+    lineup: {
+      lineup: {
+        home: {
+          teamName: 'Home',
+          formation: '4-2-3-1',
+          players: [{ name: 'Home Player', number: 1 }],
+          substitutes: [],
+        },
+        away: {
+          teamName: 'Away',
+          formation: '4-3-3',
+          players: [{ name: 'Away Player', number: 2 }],
+          substitutes: [],
+        },
+      },
+    },
+    statistics: {
+      home: { teamStatistics: { ballPossession: 55, xg: [{ xg: '1.4' }], totalShots: 10, shotsOnGoal: 4, cornerKicks: 3, fouls: 7 } },
+      away: { teamStatistics: { ballPossession: 45, xg: [{ xg: '0.9' }], totalShots: 8, shotsOnGoal: 2, cornerKicks: 1, fouls: 5 } },
+    },
   });
 });
 
@@ -135,17 +158,21 @@ describe('ContentApp', () => {
     ).toBe('');
   });
 
-  it('switches match-data tabs for a selected fixture', async () => {
+  it('switches match-panel tabs and its lineup team for a selected fixture', async () => {
     const user = userEvent.setup();
     useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
     render(<ContentApp />);
 
     expect(
-      screen.getByRole('tab', { name: 'lineup' }).getAttribute('aria-selected'),
+      screen.getByRole('tab', { name: 'Lineup' }).getAttribute('aria-selected'),
     ).toBe('true');
-    await user.click(screen.getByRole('tab', { name: 'events' }));
+    expect(screen.getByText('Home Player')).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Away' }));
+    expect(screen.getByText('Away Player')).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Statistics' }));
     expect(
-      screen.getByRole('tab', { name: 'events' }).getAttribute('aria-selected'),
+      screen.getByRole('tab', { name: 'Statistics' }).getAttribute('aria-selected'),
     ).toBe('true');
+    expect(screen.getByText('Possession')).toBeTruthy();
   });
 });
