@@ -6,6 +6,7 @@ vi.mock('axios', () => ({ default: { create: axiosCreate } }));
 
 import {
   getAvailableLeagues,
+  getFixtureDates,
   getFixtureStatus,
   getFixtures,
 } from './footballayApi';
@@ -37,6 +38,22 @@ describe('Footballay privileged API transport', () => {
     ).resolves.toEqual(response);
     expect(axiosGet).toHaveBeenCalledWith(
       '/v1/football/leagues/league%20%2F%201/fixtures?date=2026-08-11&mode=nearest&timezone=Asia%2FSeoul',
+    );
+  });
+
+  it('retrieves fixture dates for the complete calendar range', async () => {
+    axiosGet.mockResolvedValueOnce({ data: { dates: ['2026-08-22'] } });
+
+    await expect(
+      getFixtureDates({
+        leagueUid: 'league-1',
+        startDate: '2026-07-26',
+        endDate: '2026-09-05',
+        timezone: 'Asia/Seoul',
+      }),
+    ).resolves.toEqual(['2026-08-22']);
+    expect(axiosGet).toHaveBeenCalledWith(
+      '/v1/football/leagues/league-1/fixtures/dates?startDate=2026-07-26&endDate=2026-09-05&timezone=Asia%2FSeoul',
     );
   });
 

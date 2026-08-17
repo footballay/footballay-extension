@@ -257,13 +257,26 @@
   text-align: center;
 }
 
-.footballay-date-control button:first-child:hover .footballay-caret,
-.footballay-date-control button:last-child:hover .footballay-caret {
+.footballay-date-control button:not(:disabled) {
+  cursor: pointer;
+}
+
+.footballay-date-control button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.footballay-date-control
+  button:first-child:not(:disabled):hover
+  .footballay-caret,
+.footballay-date-control
+  button:last-child:not(:disabled):hover
+  .footballay-caret {
   background: #f4f7fb;
 }
 
 .footballay-date-control:not(.footballay-date-control--selected)
-  button:nth-child(2):hover {
+  button:nth-child(2):not(:disabled):hover {
   height: 19px;
   border-radius: 3px;
   background: #2d333c;
@@ -299,6 +312,11 @@
   background: transparent;
   color: #848484;
   padding: 0;
+  cursor: pointer;
+}
+
+.footballay-calendar-month button:hover .footballay-caret {
+  background: #f4f7fb;
 }
 
 .footballay-calendar-grid {
@@ -321,17 +339,28 @@
     10px Inter,
     sans-serif;
   padding: 0;
+  cursor: pointer;
 }
 
 .footballay-date-block--fixture {
   border: 1px solid #353535;
   color: #f4f7fb;
 }
+
+.footballay-date-block:not([aria-pressed='true']):hover {
+  background: #aab4c5;
+  color: #2d333c;
+}
+
+.footballay-date-block[aria-pressed='true'] {
+  border: 1px solid #5865f3;
+  background: #2d333c;
+  color: #f4f7fb;
+}
 .footballay-date-block--today {
   color: #3ddb97;
 }
 
-.footballay-match-summary,
 .footballay-match-details {
   position: fixed;
   z-index: 2147483647;
@@ -346,28 +375,12 @@
     sans-serif;
 }
 
-.footballay-match-summary {
+.footballay-match-details {
   bottom: 16px;
   left: 16px;
-  display: grid;
-  width: 150px;
-  min-height: 80px;
-}
-
-.footballay-match-summary strong {
-  text-align: center;
-}
-.footballay-match-summary em {
-  text-align: center;
-}
-
-.footballay-match-details {
-  top: 50%;
-  left: 16px;
-  width: 300px;
-  max-height: 60vh;
+  width: 500px;
+  height: 200px;
   overflow: auto;
-  transform: translateY(-50%);
 }
 
 .footballay-match-details__tabs {
@@ -382,27 +395,7 @@
   background: transparent;
   cursor: pointer;
 }
-.footballay-match-details p {
-  margin: 8px 0;
-}
-.footballay-match-details ol {
-  padding-left: 20px;
-}
-.footballay-match-details li {
-  margin: 6px 0;
-}
-.footballay-match-details section {
-  margin-top: 8px;
-}
-.footballay-match-details dl {
+.footballay-match-details pre {
   margin: 8px 0 0;
-}
-.footballay-match-details dl div {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin: 5px 0;
-}
-.footballay-match-details dd {
-  margin: 0;
+  white-space: pre-wrap;
 }

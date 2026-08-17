@@ -1,12 +1,14 @@
 import * as footballayApi from './footballayApi';
 import {
   GET_AVAILABLE_LEAGUES,
+  GET_FIXTURE_DATES,
   GET_FIXTURES,
   GET_FIXTURE_EVENTS,
   GET_FIXTURE_LINEUP,
   GET_FIXTURE_STATISTICS,
   GET_FIXTURE_STATUS,
   type GetFixturesPayload,
+  type GetFixtureDatesPayload,
   type FootballayApiResponse,
 } from '@/shared/footballayApiProtocol';
 
@@ -40,6 +42,23 @@ export async function handleRuntimeMessage(
 
       try {
         return { ok: true, data: await footballayApi.getFixtures(payload) };
+      } catch (error) {
+        return {
+          ok: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Footballay API request failed',
+        };
+      }
+    }
+
+    case GET_FIXTURE_DATES: {
+      const payload = parseGetFixtureDatesPayload(request.payload);
+      if (!payload) return invalidRequest();
+
+      try {
+        return { ok: true, data: await footballayApi.getFixtureDates(payload) };
       } catch (error) {
         return {
           ok: false,
@@ -148,6 +167,32 @@ function parseGetFixturesPayload(
     leagueUid: value.leagueUid,
     date: value.date,
     mode: value.mode as GetFixturesPayload['mode'],
+    timezone: value.timezone,
+  };
+}
+
+function parseGetFixtureDatesPayload(
+  payload: unknown,
+): GetFixtureDatesPayload | undefined {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload))
+    return undefined;
+
+  const value = payload as Record<string, unknown>;
+  if (
+    !hasOnlyFields(value, ['leagueUid', 'startDate', 'endDate', 'timezone']) ||
+    !isNonEmptyString(value.leagueUid) ||
+    !isDateInputValue(value.startDate) ||
+    !isDateInputValue(value.endDate) ||
+    value.startDate > value.endDate ||
+    !isNonEmptyString(value.timezone)
+  ) {
+    return undefined;
+  }
+
+  return {
+    leagueUid: value.leagueUid,
+    startDate: value.startDate,
+    endDate: value.endDate,
     timezone: value.timezone,
   };
 }

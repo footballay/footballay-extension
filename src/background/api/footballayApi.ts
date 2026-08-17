@@ -7,6 +7,7 @@ import type {
   FixtureLineupDto,
   FixtureStatisticsDto,
   FixtureStatusDto,
+  GetFixtureDatesPayload,
   GetFixturesPayload,
 } from '@/shared/footballayApiProtocol';
 
@@ -35,6 +36,19 @@ export async function getFixtures({
     `/v1/football/leagues/${encodeURIComponent(leagueUid)}/fixtures?${query}`,
   );
   return response.data;
+}
+
+export async function getFixtureDates({
+  leagueUid,
+  startDate,
+  endDate,
+  timezone,
+}: GetFixtureDatesPayload): Promise<string[]> {
+  const query = new URLSearchParams({ startDate, endDate, timezone });
+  const response = await footballayApi.get<{ dates: string[] }>(
+    `/v1/football/leagues/${encodeURIComponent(leagueUid)}/fixtures/dates?${query}`,
+  );
+  return response.data.dates;
 }
 
 export function getFixtureStatus(

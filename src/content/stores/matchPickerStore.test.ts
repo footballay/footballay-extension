@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const requestAvailableLeagues = vi.hoisted(() => vi.fn());
 const requestFixtures = vi.hoisted(() => vi.fn());
+const requestFixtureDates = vi.hoisted(() => vi.fn());
 vi.mock('@/shared/footballayApiProtocol', () => ({
   requestAvailableLeagues,
+  requestFixtureDates,
   requestFixtures,
 }));
 
@@ -13,11 +15,13 @@ describe('match picker store', () => {
   beforeEach(() => {
     requestAvailableLeagues.mockReset();
     requestFixtures.mockReset();
+    requestFixtureDates.mockReset();
     useMatchPickerStore.setState({
       leagues: [],
       leagueStatus: 'idle',
       leagueError: undefined,
       fixtures: [],
+      fixtureDates: [],
       fixtureStatus: 'idle',
       fixtureError: undefined,
       selectedLeagueUid: undefined,
@@ -139,6 +143,31 @@ describe('match picker store', () => {
         mode: 'exact',
       }),
     );
+  });
+
+  it('loads fixture dates for the full Sunday-to-Saturday calendar grid', async () => {
+    requestFixtureDates.mockResolvedValueOnce({
+      ok: true,
+      data: ['2026-08-22', '2026-08-23'],
+    });
+    useMatchPickerStore.setState({
+      selectedLeagueUid: 'league-1',
+      selectedDate: '2026-08-22',
+    });
+
+    await useMatchPickerStore.getState().loadFixtureDates('2026-08-22');
+
+    expect(requestFixtureDates).toHaveBeenCalledWith(
+      expect.objectContaining({
+        leagueUid: 'league-1',
+        startDate: '2026-07-26',
+        endDate: '2026-09-05',
+      }),
+    );
+    expect(useMatchPickerStore.getState().fixtureDates).toEqual([
+      '2026-08-22',
+      '2026-08-23',
+    ]);
   });
 
   it('ignores a fixture response from an earlier league selection', async () => {

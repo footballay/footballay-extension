@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import {
   requestAvailableLeagues,
+  requestFixtureDates,
   requestFixtures,
   type AvailableLeagueDto,
   type FixtureDto,
@@ -14,6 +15,7 @@ type MatchPickerState = {
   leagueStatus: LoadStatus;
   leagueError?: string;
   fixtures: FixtureDto[];
+  fixtureDates: string[];
   fixtureStatus: LoadStatus;
   fixtureError?: string;
   selectedLeagueUid?: string;
@@ -21,16 +23,26 @@ type MatchPickerState = {
   selectedFixtureUid?: string;
   loadAvailableLeagues: () => Promise<void>;
   selectLeagueAndLoadFixtures: (leagueUid: string) => Promise<void>;
+  loadFixtureDates: (date: string) => Promise<void>;
   navigateFixtureDate: (direction: 'previous' | 'next') => Promise<void>;
   selectDateAndLoadFixtures: (date: string) => Promise<void>;
   selectFixture: (fixtureUid: string) => void;
 };
 
 let latestFixtureRequestId = 0;
+let latestFixtureDatesRequestId = 0;
 
 function toDateInputValue(date: Date): string {
   const timezoneOffsetMs = date.getTimezoneOffset() * 60 * 1000;
   return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
+}
+
+function calendarRange(date: string): { startDate: string; endDate: string } {
+  const start = new Date(`${date}T00:00:00`);
+  start.setDate(1 - start.getDay());
+  const end = new Date(start);
+  end.setDate(start.getDate() + 41);
+  return { startDate: toDateInputValue(start), endDate: toDateInputValue(end) };
 }
 
 export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
@@ -88,6 +100,7 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
     leagues: [],
     leagueStatus: 'idle',
     fixtures: [],
+    fixtureDates: [],
     fixtureStatus: 'idle',
     loadAvailableLeagues: async () => {
       set({ leagueStatus: 'loading', leagueError: undefined });
@@ -118,8 +131,30 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
       set({
         selectedLeagueUid: leagueUid,
         selectedFixtureUid: undefined,
+        fixtureDates: [],
       });
       await loadFixtures(leagueUid, toDateInputValue(new Date()), 'nearest');
+    },
+    loadFixtureDates: async (date) => {
+      const { selectedLeagueUid } = get();
+      if (!selectedLeagueUid) return;
+
+      const requestId = ++latestFixtureDatesRequestId;
+      const { startDate, endDate } = calendarRange(date);
+      set({ fixtureDates: [] });
+      try {
+        const response = await requestFixtureDates({
+          leagueUid: selectedLeagueUid,
+          startDate,
+          endDate,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        });
+        if (requestId !== latestFixtureDatesRequestId) return;
+        set({ fixtureDates: response.ok ? response.data : [] });
+      } catch {
+        if (requestId === latestFixtureDatesRequestId)
+          set({ fixtureDates: [] });
+      }
     },
     navigateFixtureDate: async (direction) => {
       const { selectedDate, selectedLeagueUid } = get();

@@ -13,6 +13,9 @@ export function ContentApp() {
     (state) => state.loadAvailableLeagues,
   );
   const selectedDate = useMatchPickerStore((state) => state.selectedDate);
+  const selectedLeagueUid = useMatchPickerStore(
+    (state) => state.selectedLeagueUid,
+  );
   const navigateFixtureDate = useMatchPickerStore(
     (state) => state.navigateFixtureDate,
   );
@@ -70,6 +73,7 @@ export function ContentApp() {
                 <button
                   type="button"
                   aria-label="Previous fixture date"
+                  disabled={!selectedLeagueUid}
                   onClick={() => void navigateFixtureDate('previous')}
                 >
                   <span className="footballay-caret footballay-caret--left" />
@@ -79,6 +83,7 @@ export function ContentApp() {
                   aria-label="Fixture date picker"
                   aria-haspopup="dialog"
                   aria-expanded={view === 'DatePicker'}
+                  disabled={!selectedLeagueUid}
                   onClick={() =>
                     setView(view === 'DatePicker' ? 'Match' : 'DatePicker')
                   }
@@ -88,6 +93,7 @@ export function ContentApp() {
                 <button
                   type="button"
                   aria-label="Next fixture date"
+                  disabled={!selectedLeagueUid}
                   onClick={() => void navigateFixtureDate('next')}
                 >
                   <span className="footballay-caret footballay-caret--right" />
@@ -98,7 +104,10 @@ export function ContentApp() {
               {view === 'League' ? (
                 <LeaguePicker onSelect={() => setView('Match')} />
               ) : (
-                <FixturePicker view={view} />
+                <FixturePicker
+                  view={view}
+                  onDateSelect={() => setView('Match')}
+                />
               )}
             </div>
           </>

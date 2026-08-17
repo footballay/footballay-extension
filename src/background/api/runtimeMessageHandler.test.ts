@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('./footballayApi', () => ({
   getAvailableLeagues: vi.fn(),
   getFixtures: vi.fn(),
+  getFixtureDates: vi.fn(),
   getFixtureStatus: vi.fn(),
   getFixtureLineup: vi.fn(),
   getFixtureEvents: vi.fn(),
@@ -35,6 +36,24 @@ describe('runtime message handler', () => {
         },
       }),
     ).resolves.toEqual({ ok: true, data: [] });
+  });
+
+  it('accepts only a valid fixture-date range request', async () => {
+    vi.mocked(footballayApi.getFixtureDates).mockResolvedValueOnce([
+      '2026-08-22',
+    ]);
+
+    await expect(
+      handleRuntimeMessage({
+        type: 'GET_FIXTURE_DATES',
+        payload: {
+          leagueUid: 'league-1',
+          startDate: '2026-07-26',
+          endDate: '2026-09-05',
+          timezone: 'Asia/Seoul',
+        },
+      }),
+    ).resolves.toEqual({ ok: true, data: ['2026-08-22'] });
   });
 
   it('passes a fixture endpoint ETag through the validated boundary', async () => {

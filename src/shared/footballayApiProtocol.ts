@@ -1,5 +1,6 @@
 export const GET_AVAILABLE_LEAGUES = 'GET_AVAILABLE_LEAGUES';
 export const GET_FIXTURES = 'GET_FIXTURES';
+export const GET_FIXTURE_DATES = 'GET_FIXTURE_DATES';
 export const GET_FIXTURE_STATUS = 'GET_FIXTURE_STATUS';
 export const GET_FIXTURE_LINEUP = 'GET_FIXTURE_LINEUP';
 export const GET_FIXTURE_EVENTS = 'GET_FIXTURE_EVENTS';
@@ -72,6 +73,12 @@ export type GetFixturesPayload = {
   mode: 'previous' | 'exact' | 'nearest';
   timezone: string;
 };
+export type GetFixtureDatesPayload = {
+  leagueUid: string;
+  startDate: string;
+  endDate: string;
+  timezone: string;
+};
 export type FixtureEtagPayload = { fixtureUid: string; etag?: string };
 export type FootballayApiResponse<T> =
   { ok: true; data: T } | { ok: false; error: string };
@@ -83,6 +90,7 @@ export type AvailableLeaguesResponse = FootballayApiResponse<
   AvailableLeagueDto[]
 >;
 export type FixturesResponse = FootballayApiResponse<FixtureDto[]>;
+export type FixtureDatesResponse = FootballayApiResponse<string[]>;
 export type FixtureStatusResponse = FootballayApiResponse<
   EtaggedResponse<FixtureStatusDto>
 >;
@@ -109,6 +117,15 @@ export function requestFixtures(
     type: GET_FIXTURES,
     payload,
   }) as Promise<FixturesResponse>;
+}
+
+export function requestFixtureDates(
+  payload: GetFixtureDatesPayload,
+): Promise<FixtureDatesResponse> {
+  return chrome.runtime.sendMessage({
+    type: GET_FIXTURE_DATES,
+    payload,
+  }) as Promise<FixtureDatesResponse>;
 }
 
 function requestFixtureData<T>(
