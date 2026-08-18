@@ -1,6 +1,6 @@
 import type { MatchStatisticsTeamDto } from '@/shared/footballayApiProtocol';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
-import { teamColor } from '../shared/teamColor';
+import { resolveTeamColors } from '../shared/teamColor';
 import './statistics-tab.css';
 
 type StatisticDefinition = [
@@ -42,6 +42,8 @@ export function StatisticsTab() {
   const statistics = useMatchDataStore((state) => state.statistics);
   const home = statistics?.home;
   const away = statistics?.away;
+  const teamColors =
+    home && away ? resolveTeamColors(home.team, away.team) : undefined;
 
   return (
     <>
@@ -57,7 +59,9 @@ export function StatisticsTab() {
               className={`footballay-match-panel__statistics-column footballay-match-panel__statistics-column--${index}`}
               key={index}
             >
-              {index === 0 && <PassAccuracy home={home} away={away} />}
+              {index === 0 && (
+                <PassAccuracy home={home} away={away} colors={teamColors!} />
+              )}
               {index === 1 && <Cards home={home} away={away} />}
               {column.map(([name, value]) => (
                 <Statistic
@@ -65,14 +69,8 @@ export function StatisticsTab() {
                   name={name}
                   homeValue={value(home)}
                   awayValue={value(away)}
-                  homeColor={teamColor(
-                    home.team,
-                    'var(--footballay-color-red)',
-                  )}
-                  awayColor={teamColor(
-                    away.team,
-                    'var(--footballay-color-blue)',
-                  )}
+                  homeColor={teamColors!.home}
+                  awayColor={teamColors!.away}
                 />
               ))}
             </div>
@@ -90,9 +88,11 @@ export function StatisticsTab() {
 function PassAccuracy({
   home,
   away,
+  colors,
 }: {
   home: MatchStatisticsTeamDto;
   away: MatchStatisticsTeamDto;
+  colors: { home: string; away: string };
 }) {
   return (
     <div className="footballay-match-panel__pass-accuracy">
@@ -103,7 +103,7 @@ function PassAccuracy({
             <strong>{team.team.koreanName ?? team.team.name}</strong>
             <i
               style={{
-                background: `radial-gradient(circle, var(--footballay-color-surface-raised) 0 15px, transparent 16px), conic-gradient(${teamColor(team.team, index === 0 ? 'var(--footballay-color-red)' : 'var(--footballay-color-blue)')} ${value}%, var(--footballay-color-disabled) 0)`,
+                background: `radial-gradient(circle, var(--footballay-color-surface-raised) 0 15px, transparent 16px), conic-gradient(${index === 0 ? colors.home : colors.away} ${value}%, var(--footballay-color-disabled) 0)`,
               }}
             >
               {value}%

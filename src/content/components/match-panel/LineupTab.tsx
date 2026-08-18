@@ -7,7 +7,7 @@ import {
   type LineupTeam,
 } from '@/content/mappers/lineupViewModel';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
-import { teamColor } from '../shared/teamColor';
+import { resolveTeamColors } from '../shared/teamColor';
 import './lineup-tab.css';
 
 type TeamSide = 'home' | 'away';
@@ -99,6 +99,7 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
     home: buildLineupTeam(lineup?.lineup.home, events, statistics?.home),
     away: buildLineupTeam(lineup?.lineup.away, events, statistics?.away),
   };
+  const teamColors = resolveTeamColors(teams.home, teams.away);
   const selectedTeamSide: TeamSide = teams[teamSide] ? teamSide : 'away';
   const team = teams[selectedTeamSide];
   const columns = formationColumns(team);
@@ -128,12 +129,12 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
                 side === 'home'
                   ? {
                       borderLeftColor: teams[side]
-                        ? teamColor(teams[side], 'var(--footballay-color-red)')
+                        ? teamColors.home
                         : 'var(--footballay-color-red)',
                     }
                   : {
                       borderRightColor: teams[side]
-                        ? teamColor(teams[side], 'var(--footballay-color-blue)')
+                        ? teamColors.away
                         : 'var(--footballay-color-blue)',
                     }
               }

@@ -47,6 +47,7 @@ export type MatchStatisticsTeamInfoDto = {
 };
 export type MatchPlayerColorDto = {
   primary: string;
+  secondary?: string | null;
   number: string;
   border: string | null;
 };
