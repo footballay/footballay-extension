@@ -163,6 +163,7 @@ beforeEach(() => {
         playerStatistics: [],
       },
     },
+    events: { fixtureUid: 'fixture-1', events: [] },
   });
 });
 
@@ -266,5 +267,87 @@ describe('ContentApp', () => {
         .getAttribute('aria-selected'),
     ).toBe('true');
     expect(screen.getByText('Possession')).toBeTruthy();
+  });
+
+  it('shows an empty state when only one team has statistics', async () => {
+    const user = userEvent.setup();
+    useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
+    useMatchDataStore.setState((state) => ({
+      statistics: state.statistics
+        ? { ...state.statistics, away: null }
+        : undefined,
+    }));
+    render(<ContentApp />);
+
+    await user.click(screen.getByRole('tab', { name: 'Statistics' }));
+    expect(screen.getByText('통계 데이터가 없습니다.')).toBeTruthy();
+  });
+
+  it('hides possession when the statistic is unavailable', async () => {
+    const user = userEvent.setup();
+    useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
+    useMatchDataStore.setState((state) => ({
+      statistics:
+        state.statistics && state.statistics.home
+          ? {
+              ...state.statistics,
+              home: {
+                ...state.statistics.home,
+                teamStatistics: {
+                  ...state.statistics.home.teamStatistics,
+                  ballPossession: undefined as never,
+                },
+              },
+            }
+          : state.statistics,
+    }));
+    render(<ContentApp />);
+
+    await user.click(screen.getByRole('tab', { name: 'Statistics' }));
+    expect(screen.queryByText('Possession')).toBeNull();
+  });
+
+  it('normalizes team colors and keeps statistic bar ratios', async () => {
+    const user = userEvent.setup();
+    useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
+    useMatchDataStore.setState((state) => ({
+      statistics:
+        state.statistics && state.statistics.home && state.statistics.away
+          ? {
+              ...state.statistics,
+              home: {
+                ...state.statistics.home,
+                team: {
+                  ...state.statistics.home.team,
+                  playerColor: {
+                    primary: 'abd1f5',
+                    number: '000000',
+                    border: null,
+                  },
+                },
+              },
+              away: {
+                ...state.statistics.away,
+                team: {
+                  ...state.statistics.away.team,
+                  playerColor: {
+                    primary: '7000ff',
+                    number: 'ffffff',
+                    border: null,
+                  },
+                },
+              },
+            }
+          : state.statistics,
+    }));
+    render(<ContentApp />);
+
+    await user.click(screen.getByRole('tab', { name: 'Statistics' }));
+    const possession = screen.getByText('Possession').parentElement!;
+    expect(possession.querySelector('b')?.style.background).toBe(
+      'rgb(171, 209, 245)',
+    );
+    expect(possession.querySelector('b')?.style.flex).toBe('0 0 55%');
+    expect(possession.querySelector('em')?.style.flex).toBe('0 0 45%');
   });
 });
