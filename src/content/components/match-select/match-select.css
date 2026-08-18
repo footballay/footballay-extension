@@ -1,0 +1,350 @@
+.footballay-content-panel {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  width: 250px;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--footballay-color-overlay-select);
+  color: var(--footballay-color-text);
+  font-family: var(--footballay-font-family);
+  font-weight: 400;
+}
+
+.footballay-content-panel--collapsed {
+  width: 30px;
+  height: 30px;
+}
+
+.footballay-match-select-expand-button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 3px;
+  place-items: center;
+  background: var(--footballay-color-overlay-select);
+  color: var(--footballay-color-text);
+  cursor: pointer;
+  padding: 0;
+}
+
+.footballay-match-select-expand-button svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2;
+}
+
+.footballay-content-status {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.footballay-content-status p {
+  margin: 0 0 8px;
+}
+
+.footballay-match-select-content {
+  flex: 1;
+  min-height: 0;
+}
+
+.footballay-league-section,
+.footballay-fixture-section {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.footballay-league-section {
+  padding: 9px 10px 0;
+}
+
+.footballay-fixture-section {
+  padding: 8px 10px;
+}
+
+.footballay-league-list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.footballay-fixture-list {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-color: var(--footballay-color-scrollbar)
+    var(--footballay-color-scrollbar-track);
+  scrollbar-width: thin;
+}
+
+.footballay-league-button,
+.footballay-fixture-button,
+.footballay-content-status button {
+  box-sizing: border-box;
+  min-height: 40px;
+  border: 1px solid var(--footballay-color-text-muted);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--footballay-color-text);
+  cursor: pointer;
+  font: 14px var(--footballay-font-family);
+  padding: 0 9px;
+  text-align: left;
+}
+
+.footballay-league-button--selected {
+  border-color: var(--footballay-color-accent);
+  background: var(--footballay-color-surface-raised);
+}
+
+.footballay-league-button:not(.footballay-league-button--selected):hover,
+.footballay-fixture-button:not(.footballay-fixture-button--selected):hover {
+  background: var(--footballay-color-hover);
+  color: var(--footballay-color-surface-raised);
+}
+
+.footballay-fixture-button {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  padding: 0 5px;
+  text-align: center;
+}
+
+.footballay-fixture-button strong {
+  font-weight: 400;
+}
+
+.footballay-fixture-button--selected {
+  border-color: var(--footballay-color-accent);
+  background: var(--footballay-color-surface-raised);
+}
+
+.footballay-match-select-topbar {
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 29px;
+  align-items: center;
+  height: 29px;
+  border-bottom: 1px solid var(--footballay-color-border);
+  padding: 0 9px 0 6px;
+}
+
+.footballay-match-select-topbar button {
+  border: 0;
+  background: transparent;
+  color: var(--footballay-color-text-muted);
+  cursor: pointer;
+  font: 14px var(--footballay-font-family);
+}
+
+.footballay-close-button {
+  display: grid;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  padding: 0;
+}
+
+.footballay-close-button svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2;
+}
+
+.footballay-close-button:hover {
+  border-radius: 3px;
+  background: var(--footballay-color-danger) !important;
+  color: var(--footballay-color-white) !important;
+}
+
+.footballay-caret {
+  display: block;
+  width: 10px;
+  height: 12px;
+  background: var(--footballay-color-text-muted);
+}
+
+.footballay-caret--left {
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+
+.footballay-caret--right {
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.footballay-topbar-tab {
+  flex: 0 0 58px;
+  width: 58px;
+  height: 21px;
+  border-radius: 3px !important;
+  padding: 0;
+}
+
+.footballay-topbar-tabs {
+  display: flex;
+  gap: 8px;
+  margin-left: 6px;
+}
+
+.footballay-topbar-tab--selected {
+  background: var(--footballay-color-surface-raised) !important;
+  color: var(--footballay-color-white) !important;
+}
+
+.footballay-topbar-tab:not(.footballay-topbar-tab--selected):hover {
+  background: var(--footballay-color-surface-raised) !important;
+  color: var(--footballay-color-white) !important;
+}
+
+.footballay-date-control {
+  display: grid;
+  flex: 0 0 auto;
+  margin-left: auto;
+  grid-template-columns: 10px 42px 10px;
+  column-gap: 6px;
+  grid-template-rows: 19px;
+  align-items: center;
+  height: 19px;
+}
+
+.footballay-date-control button {
+  display: grid;
+  width: 100%;
+  height: 19px;
+  place-items: center;
+  padding: 0;
+}
+
+.footballay-date-control button:nth-child(2) {
+  text-align: center;
+}
+
+.footballay-date-control button:not(:disabled) {
+  cursor: pointer;
+}
+
+.footballay-date-control button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.footballay-date-control
+  button:first-child:not(:disabled):hover
+  .footballay-caret,
+.footballay-date-control
+  button:last-child:not(:disabled):hover
+  .footballay-caret {
+  background: var(--footballay-color-text);
+}
+
+.footballay-date-control:not(.footballay-date-control--selected)
+  button:nth-child(2):not(:disabled):hover {
+  height: 19px;
+  border-radius: 3px;
+  background: var(--footballay-color-surface-raised);
+  color: var(--footballay-color-text);
+}
+
+.footballay-date-control--selected button:nth-child(2) {
+  height: 17px;
+  border-bottom: 1px solid var(--footballay-color-text);
+  color: var(--footballay-color-text);
+}
+
+.footballay-calendar {
+  margin-top: 10px;
+}
+
+.footballay-calendar-month {
+  display: grid;
+  grid-template-columns: 10px 68px 10px;
+  align-items: center;
+  width: 88px;
+  height: 13px;
+  margin: 0 auto 9px;
+  color: var(--footballay-color-white);
+  font-size: 12px;
+  text-align: center;
+}
+
+.footballay-calendar-month button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--footballay-color-text-muted);
+  padding: 0;
+  cursor: pointer;
+}
+
+.footballay-calendar-month button:hover .footballay-caret {
+  background: var(--footballay-color-text);
+}
+
+.footballay-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 33px);
+  grid-auto-rows: 20px;
+  gap: 1.333px 1px;
+  margin: 0 6px;
+}
+
+.footballay-date-block {
+  box-sizing: border-box;
+  width: 33px;
+  height: 20px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--footballay-color-text-muted);
+  font: 10px var(--footballay-font-family);
+  padding: 0;
+  cursor: pointer;
+}
+
+.footballay-date-block--fixture {
+  border: 1px solid var(--footballay-color-border);
+  color: var(--footballay-color-text);
+}
+
+.footballay-date-block:not([aria-pressed='true']):hover {
+  background: var(--footballay-color-hover);
+  color: var(--footballay-color-surface-raised);
+}
+
+.footballay-date-block[aria-pressed='true'] {
+  border: 1px solid var(--footballay-color-accent);
+  background: var(--footballay-color-surface-raised);
+  color: var(--footballay-color-text);
+}
+.footballay-date-block--today {
+  color: var(--footballay-color-success);
+}

@@ -1,0 +1,115 @@
+.footballay-match-panel {
+  --lineup-player-width: 87px;
+  --lineup-player-height: 19px;
+  --lineup-player-number-width: 19px;
+  --lineup-player-marker-space: 12px;
+  --lineup-sub-in-size: 14px;
+  --lineup-sub-in-overlap: 4px;
+  --lineup-rating-overlap: 4px;
+  --lineup-card-offset-x: 2px;
+  --lineup-card-offset-y: 6px;
+  --lineup-goal-offset-x: 3px;
+  --lineup-goal-offset-y: 6px;
+  position: fixed;
+  z-index: 2147483647;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  box-sizing: border-box;
+  width: 500px;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--footballay-color-overlay-panel);
+  color: var(--footballay-color-text);
+  font-family: var(--footballay-font-family);
+}
+
+.footballay-match-panel__tabs {
+  display: flex;
+  flex: 0 0 30px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-right: 1px solid var(--footballay-color-border);
+  background: var(--footballay-color-surface);
+}
+
+.footballay-match-panel__tabs button {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  padding: 0;
+  place-items: center;
+  color: var(--footballay-color-text-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.footballay-match-panel__tabs button[aria-selected='true'] {
+  color: var(--footballay-color-text);
+}
+
+.footballay-match-panel__tabs button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.footballay-match-panel__tabs svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2;
+}
+
+.footballay-match-panel__content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.footballay-match-panel__topbar {
+  display: flex;
+  flex: 0 0 18px;
+  align-items: center;
+  justify-content: space-between;
+  height: 18px;
+  background: var(--footballay-color-surface);
+}
+
+.footballay-match-panel__title {
+  display: flex;
+  gap: 8px;
+  padding-left: 9px;
+  color: var(--footballay-color-text-muted);
+  font-size: 10px;
+}
+
+.footballay-match-panel__title strong {
+  color: var(--footballay-color-white);
+}
+
+.footballay-match-panel__card {
+  display: inline-block;
+  width: 8px;
+  height: 11px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.footballay-match-panel__card--yellow {
+  background: var(--footballay-color-yellow);
+}
+
+.footballay-match-panel__card--red {
+  background: var(--footballay-color-red);
+}
+
+.footballay-match-panel__empty {
+  align-self: center;
+  margin: auto;
+  color: var(--footballay-color-text-muted);
+  font-size: 12px;
+}

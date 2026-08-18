@@ -1,0 +1,157 @@
+.footballay-match-panel__teams {
+  display: flex;
+  align-self: stretch;
+}
+
+.footballay-match-panel__team {
+  position: relative;
+  width: 88px;
+  border: 1px solid var(--footballay-color-border);
+  border-top: 0;
+  border-bottom: 0;
+  padding: 0 5px;
+  overflow: hidden;
+  color: var(--footballay-color-text-muted);
+  background: transparent;
+  cursor: pointer;
+  font: 500 10px var(--footballay-font-family);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.footballay-match-panel__team--home {
+  border-left: 4px solid var(--footballay-color-red);
+}
+.footballay-match-panel__team--away {
+  border-right: 4px solid var(--footballay-color-blue);
+}
+.footballay-match-panel__team[aria-selected='true'] {
+  color: var(--footballay-color-text);
+  background: var(--footballay-color-surface-raised);
+}
+.footballay-match-panel__team:disabled {
+  cursor: not-allowed;
+}
+
+.footballay-match-panel__lineup {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-around;
+  min-height: 0;
+  padding: 7px 8px;
+  background: var(--footballay-color-surface-raised);
+}
+
+.footballay-match-panel__line {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.footballay-match-panel__player {
+  position: relative;
+  width: var(--lineup-player-width);
+  height: calc(var(--lineup-player-height) + var(--lineup-player-marker-space));
+}
+
+.footballay-match-panel__player-main {
+  display: flex;
+  width: var(--lineup-player-width);
+  max-width: 100%;
+  height: var(--lineup-player-height);
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--footballay-color-surface);
+  color: var(--footballay-color-white);
+  font-size: 12px;
+  line-height: var(--lineup-player-height);
+}
+
+.footballay-match-panel__player-main span {
+  flex: 0 0 var(--lineup-player-number-width);
+  color: var(--footballay-color-black);
+  background: var(--footballay-color-text);
+  text-align: center;
+}
+
+.footballay-match-panel__player-main strong {
+  min-width: 0;
+  padding: 0 4px;
+  overflow: hidden;
+  font-weight: 500;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.footballay-match-panel__markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.footballay-match-panel__markers svg {
+  width: 10px;
+  height: 10px;
+  fill: currentcolor;
+  stroke-width: 1.5;
+}
+.footballay-match-panel__sub-in {
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--lineup-sub-in-overlap) - var(--lineup-sub-in-size));
+  left: calc(0px - var(--lineup-sub-in-overlap));
+  display: grid;
+  width: var(--lineup-sub-in-size);
+  height: var(--lineup-sub-in-size);
+  border-radius: 50%;
+  background: var(--footballay-color-substitution);
+  color: var(--footballay-color-white);
+  place-items: center;
+}
+.footballay-match-panel__sub-in svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke-width: 3;
+}
+.footballay-match-panel__rating {
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--lineup-player-height) - var(--lineup-rating-overlap));
+  left: calc(var(--lineup-player-number-width) / 2);
+  transform: translateX(-50%);
+  padding: 0 2px;
+  border-radius: 2px;
+  color: var(--footballay-color-surface);
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 10px;
+}
+.footballay-match-panel__player-cards {
+  position: absolute;
+  top: calc(0px - var(--lineup-card-offset-y));
+  right: calc(0px - var(--lineup-card-offset-x));
+  display: flex;
+  gap: 2px;
+}
+.footballay-match-panel__goals {
+  position: absolute;
+  top: calc(var(--lineup-player-height) - var(--lineup-goal-offset-y));
+  right: calc(0px - var(--lineup-goal-offset-x));
+  display: flex;
+  gap: 2px;
+  color: var(--footballay-color-text);
+}
+.footballay-match-panel__own-goal {
+  color: var(--footballay-color-red);
+}
+.footballay-match-panel__rating--good {
+  background: var(--footballay-color-success);
+}
+.footballay-match-panel__rating--low {
+  background: var(--footballay-color-warning);
+}

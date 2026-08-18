@@ -1,0 +1,25 @@
+#footballay-content-root {
+  --footballay-color-overlay-select: rgb(10 16 31 / 70%);
+  --footballay-color-overlay-panel: rgb(10 16 31 / 80%);
+  --footballay-color-surface: #0a101f;
+  --footballay-color-surface-raised: #2d333c;
+  --footballay-color-surface-contrast: #454a55;
+  --footballay-color-border: #353535;
+  --footballay-color-text: #f4f7fb;
+  --footballay-color-text-muted: #848484;
+  --footballay-color-white: #fff;
+  --footballay-color-black: #000;
+  --footballay-color-disabled: #5c6470;
+  --footballay-color-scrollbar: #838b9e;
+  --footballay-color-scrollbar-track: #45484c;
+  --footballay-color-hover: #aab4c5;
+  --footballay-color-accent: #5865f3;
+  --footballay-color-danger: #d9585a;
+  --footballay-color-red: #ff5151;
+  --footballay-color-yellow: #f4f451;
+  --footballay-color-blue: #3cbeff;
+  --footballay-color-substitution: #1755e8;
+  --footballay-color-success: #3ddb97;
+  --footballay-color-warning: #ff9e57;
+  --footballay-color-purple: #7a5cff;
+}
