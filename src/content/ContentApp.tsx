@@ -4,6 +4,7 @@ import { FixturePicker } from '@/content/components/FixturePicker';
 import { LeaguePicker } from '@/content/components/LeaguePicker';
 import { MatchDataOverlays } from '@/content/components/MatchDataOverlays';
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
+import '@/styles/fonts.css';
 import './content-app.css';
 
 export function ContentApp() {

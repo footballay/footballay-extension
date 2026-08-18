@@ -1,0 +1,19 @@
+@font-face {
+  font-family: 'Inter';
+  src: url('../../assets/font/InterVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('../../assets/font/PretendardVariable.woff2') format('woff2');
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --footballay-font-family: 'Pretendard', 'Inter', sans-serif;
+}
