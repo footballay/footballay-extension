@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const actions = vi.hoisted(() => ({
   refreshMatchData: vi.fn(async () => undefined),
   setMatchDataFixture: vi.fn(),
+  statusData: undefined as unknown,
 }));
 vi.mock('./stores/matchDataStore', () => ({
   setMatchDataFixture: actions.setMatchDataFixture,
@@ -22,7 +23,9 @@ describe('matchDataSync', () => {
       configurable: true,
       value: false,
     });
-    Object.values(actions).forEach((action) => action.mockClear());
+    actions.refreshMatchData.mockClear();
+    actions.setMatchDataFixture.mockClear();
+    actions.statusData = undefined;
     useMatchPickerStore.setState({ selectedFixtureUid: undefined });
   });
 
@@ -38,7 +41,7 @@ describe('matchDataSync', () => {
     expect(actions.setMatchDataFixture).toHaveBeenLastCalledWith('fixture-1');
     expect(actions.refreshMatchData).toHaveBeenCalledTimes(1);
 
-    await act(async () => vi.advanceTimersByTimeAsync(5_000));
+    await act(async () => vi.advanceTimersByTimeAsync(20_000));
     expect(actions.refreshMatchData).toHaveBeenCalledTimes(2);
 
     Object.defineProperty(document, 'hidden', {
@@ -46,7 +49,7 @@ describe('matchDataSync', () => {
       value: true,
     });
     document.dispatchEvent(new Event('visibilitychange'));
-    await act(async () => vi.advanceTimersByTimeAsync(5_000));
+    await act(async () => vi.advanceTimersByTimeAsync(20_000));
     expect(actions.refreshMatchData).toHaveBeenCalledTimes(2);
 
     Object.defineProperty(document, 'hidden', {
@@ -56,6 +59,17 @@ describe('matchDataSync', () => {
     document.dispatchEvent(new Event('visibilitychange'));
     await act(async () => undefined);
     expect(actions.refreshMatchData).toHaveBeenCalledTimes(3);
+  });
+
+  it('stops polling after a terminal fixture status', async () => {
+    actions.statusData = { liveStatus: { shortStatus: 'FT' } };
+    useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
+
+    startMatchDataSync();
+    await act(async () => undefined);
+    await act(async () => vi.advanceTimersByTimeAsync(20_000));
+
+    expect(actions.refreshMatchData).toHaveBeenCalledTimes(1);
   });
 
   it('cleans up the old fixture and prevents overlapping refreshes', async () => {

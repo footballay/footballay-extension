@@ -24,48 +24,156 @@ export type FixtureDto = {
 
 export type FixtureTeamDto = { name: string; nameKo?: string | null };
 export type FixtureStatusDto = {
+  fixtureUid: string;
   liveStatus: {
-    elapsed?: number | null;
+    elapsed: number | null;
     shortStatus: string;
-    score: { home?: number | null; away?: number | null };
+    longStatus: string;
+    score: { home: number | null; away: number | null };
   };
 };
-export type MatchTeamDto = { name: string; koreanName?: string | null };
+export type MatchTeamDto = {
+  teamUid: string;
+  name: string;
+  koreanName: string | null;
+  playerColor: MatchPlayerColorDto | null;
+};
+export type MatchStatisticsTeamInfoDto = {
+  teamUid: string;
+  name: string;
+  koreanName: string | null;
+  logo: string | null;
+  playerColor: MatchPlayerColorDto | null;
+};
+export type MatchPlayerColorDto = {
+  primary: string;
+  number: string;
+  border: string | null;
+};
+export type MatchTeamStatisticsDto = {
+  shotsOnGoal: number;
+  shotsOffGoal: number;
+  totalShots: number;
+  blockedShots: number;
+  shotsInsideBox: number;
+  shotsOutsideBox: number;
+  fouls: number;
+  cornerKicks: number;
+  offsides: number;
+  ballPossession: number;
+  yellowCards: number;
+  redCards: number;
+  goalkeeperSaves: number;
+  totalPasses: number;
+  passesAccurate: number;
+  passesAccuracyPercentage: number;
+  goalsPrevented: number;
+  xg: Array<{ elapsed: number; xg: string }>;
+};
+export type MatchPlayerDto = {
+  matchPlayerUid: string;
+  playerUid: string | null;
+  name: string;
+  koreanName: string | null;
+  number: number | null;
+};
 export type MatchStatisticsTeamDto = {
-  teamStatistics: {
-    ballPossession: number;
-    xg: Array<{ xg: string }>;
-    totalShots: number;
-    shotsOnGoal: number;
-    cornerKicks: number;
-    fouls: number;
+  team: MatchStatisticsTeamInfoDto;
+  teamStatistics: MatchTeamStatisticsDto;
+  playerStatistics: MatchPlayerStatisticsDto[];
+};
+export type MatchPlayerStatisticsDto = {
+  player: MatchStatisticsPlayerDto;
+  statistics: {
+    minutesPlayed: number;
+    position: string | null;
+    rating: string | null;
+    captain: boolean;
+    substitute: boolean;
+    shotsTotal: number;
+    shotsOn: number;
+    goals: number;
+    goalsConceded: number;
+    assists: number;
+    saves: number;
+    passesTotal: number;
+    passesKey: number;
+    passesAccuracy: number;
+    tacklesTotal: number;
+    interceptions: number;
+    duelsTotal: number;
+    duelsWon: number;
+    dribblesAttempts: number;
+    dribblesSuccess: number;
+    foulsCommitted: number;
+    foulsDrawn: number;
+    yellowCards: number;
+    redCards: number;
+    penaltiesScored: number;
+    penaltiesMissed: number;
+    penaltiesSaved: number;
   };
+};
+export type MatchStatisticsPlayerDto = MatchPlayerDto & {
+  photo: string | null;
+  position: string | null;
 };
 export type FixtureStatisticsDto = {
-  home?: MatchStatisticsTeamDto | null;
-  away?: MatchStatisticsTeamDto | null;
+  fixture: { uid: string; elapsed: number | null; status: string };
+  home: MatchStatisticsTeamDto | null;
+  away: MatchStatisticsTeamDto | null;
 };
 export type MatchEventDto = {
   sequence: number;
   elapsed: number;
+  extraTime: number | null;
+  team: MatchTeamDto;
+  player: MatchPlayerDto | null;
+  assist: MatchPlayerDto | null;
   type: string;
   detail: string;
-  team: MatchTeamDto;
-  player?: MatchPlayerDto | null;
+  comments: string | null;
 };
-export type FixtureEventsDto = { events: MatchEventDto[] };
-export type MatchPlayerDto = { name: string; koreanName?: string | null };
+export type FixtureEventsDto = { fixtureUid: string; events: MatchEventDto[] };
+export type MatchEventKind = 'goal' | 'missed-penalty' | 'other';
+
+export function getMatchEventKind(event: MatchEventDto): MatchEventKind {
+  if (event.type === 'Goal') return 'goal';
+  if (event.type === 'ETC' && event.detail === 'Missed Penalty')
+    return 'missed-penalty';
+  return 'other';
+}
 export type MatchLineupDto = {
+  teamUid: string;
   teamName: string;
-  teamKoreanName?: string | null;
-  formation?: string | null;
+  teamKoreanName: string | null;
+  formation: string | null;
   players: MatchLineupPlayerDto[];
   substitutes: MatchLineupPlayerDto[];
+  playerColor: MatchPlayerColorDto | null;
 };
-export type MatchLineupPlayerDto = MatchPlayerDto & { number?: number | null };
+export type MatchLineupPlayerDto = MatchPlayerDto & {
+  photo: string | null;
+  position: string | null;
+  grid: string | null;
+  substitute: boolean;
+};
 export type FixtureLineupDto = {
-  lineup: { home?: MatchLineupDto | null; away?: MatchLineupDto | null };
+  fixtureUid: string;
+  lineup: { home: MatchLineupDto | null; away: MatchLineupDto | null };
 };
+
+export type FixtureStatusGroup =
+  'upcoming' | 'playing' | 'paused' | 'finished' | 'not-played' | 'unknown';
+
+export function getFixtureStatusGroup(status: string): FixtureStatusGroup {
+  if (['TBD', 'NS'].includes(status)) return 'upcoming';
+  if (['1H', '2H', 'ET', 'P', 'LIVE'].includes(status)) return 'playing';
+  if (['HT', 'BT', 'SUSP', 'INT'].includes(status)) return 'paused';
+  if (['FT', 'AET', 'PEN'].includes(status)) return 'finished';
+  if (['PST', 'CANC', 'ABD', 'AWD', 'WO'].includes(status)) return 'not-played';
+  return 'unknown';
+}
 
 export type GetFixturesPayload = {
   leagueUid: string;

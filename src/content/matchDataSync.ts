@@ -3,8 +3,9 @@ import {
   useMatchDataStore,
 } from './stores/matchDataStore';
 import { useMatchPickerStore } from './stores/matchPickerStore';
+import { getFixtureStatusGroup } from '@/shared/footballayApiProtocol';
 
-const POLLING_INTERVAL_MS = 5_000;
+const POLLING_INTERVAL_MS = 20_000;
 
 let unsubscribe: (() => void) | undefined;
 let stopFixturePolling: (() => void) | undefined;
@@ -49,9 +50,10 @@ function startFixturePolling(): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let refreshing = false;
   let disposed = false;
+  let completed = false;
 
   async function refreshAndSchedule() {
-    if (disposed || document.hidden || refreshing) return;
+    if (disposed || completed || document.hidden || refreshing) return;
 
     refreshing = true;
 
@@ -61,7 +63,13 @@ function startFixturePolling(): () => void {
       refreshing = false;
     }
 
-    if (!disposed && !document.hidden) {
+    const status =
+      useMatchDataStore.getState().statusData?.liveStatus.shortStatus;
+    completed =
+      getFixtureStatusGroup(status ?? '') === 'finished' ||
+      getFixtureStatusGroup(status ?? '') === 'not-played';
+
+    if (!disposed && !completed && !document.hidden) {
       timer = setTimeout(() => void refreshAndSchedule(), POLLING_INTERVAL_MS);
     }
   }
@@ -72,7 +80,7 @@ function startFixturePolling(): () => void {
       timer = undefined;
     }
 
-    if (!document.hidden) {
+    if (!completed && !document.hidden) {
       void refreshAndSchedule();
     }
   }

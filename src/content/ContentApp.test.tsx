@@ -54,24 +54,114 @@ beforeEach(() => {
   });
   useMatchDataStore.setState({
     lineup: {
+      fixtureUid: 'fixture-1',
       lineup: {
         home: {
+          teamUid: 'home-team',
           teamName: 'Home',
+          teamKoreanName: '홈',
           formation: '4-2-3-1',
-          players: [{ name: 'Home Player', number: 1 }],
+          players: [
+            {
+              matchPlayerUid: 'home-player-1',
+              playerUid: null,
+              name: 'Home Player',
+              koreanName: null,
+              number: 1,
+              photo: null,
+              position: null,
+              grid: null,
+              substitute: false,
+            },
+          ],
           substitutes: [],
+          playerColor: null,
         },
         away: {
+          teamUid: 'away-team',
           teamName: 'Away',
+          teamKoreanName: '원정',
           formation: '4-3-3',
-          players: [{ name: 'Away Player', number: 2 }],
+          players: [
+            {
+              matchPlayerUid: 'away-player-2',
+              playerUid: null,
+              name: 'Away Player',
+              koreanName: null,
+              number: 2,
+              photo: null,
+              position: null,
+              grid: null,
+              substitute: false,
+            },
+          ],
           substitutes: [],
+          playerColor: null,
         },
       },
     },
     statistics: {
-      home: { teamStatistics: { ballPossession: 55, xg: [{ xg: '1.4' }], totalShots: 10, shotsOnGoal: 4, cornerKicks: 3, fouls: 7 } },
-      away: { teamStatistics: { ballPossession: 45, xg: [{ xg: '0.9' }], totalShots: 8, shotsOnGoal: 2, cornerKicks: 1, fouls: 5 } },
+      fixture: { uid: 'fixture-1', elapsed: 45, status: 'HT' },
+      home: {
+        team: {
+          teamUid: 'home-team',
+          name: 'Home',
+          koreanName: '홈',
+          logo: null,
+          playerColor: null,
+        },
+        teamStatistics: {
+          shotsOnGoal: 4,
+          shotsOffGoal: 3,
+          totalShots: 10,
+          blockedShots: 3,
+          shotsInsideBox: 6,
+          shotsOutsideBox: 4,
+          fouls: 7,
+          cornerKicks: 3,
+          offsides: 0,
+          ballPossession: 55,
+          yellowCards: 0,
+          redCards: 0,
+          goalkeeperSaves: 1,
+          totalPasses: 100,
+          passesAccurate: 80,
+          passesAccuracyPercentage: 80,
+          goalsPrevented: 0,
+          xg: [{ elapsed: 45, xg: '1.4' }],
+        },
+        playerStatistics: [],
+      },
+      away: {
+        team: {
+          teamUid: 'away-team',
+          name: 'Away',
+          koreanName: '원정',
+          logo: null,
+          playerColor: null,
+        },
+        teamStatistics: {
+          shotsOnGoal: 2,
+          shotsOffGoal: 4,
+          totalShots: 8,
+          blockedShots: 2,
+          shotsInsideBox: 4,
+          shotsOutsideBox: 4,
+          fouls: 5,
+          cornerKicks: 1,
+          offsides: 0,
+          ballPossession: 45,
+          yellowCards: 0,
+          redCards: 0,
+          goalkeeperSaves: 2,
+          totalPasses: 90,
+          passesAccurate: 70,
+          passesAccuracyPercentage: 78,
+          goalsPrevented: 0,
+          xg: [{ elapsed: 45, xg: '0.9' }],
+        },
+        playerStatistics: [],
+      },
     },
   });
 });
@@ -167,11 +257,13 @@ describe('ContentApp', () => {
       screen.getByRole('tab', { name: 'Lineup' }).getAttribute('aria-selected'),
     ).toBe('true');
     expect(screen.getByText('Home Player')).toBeTruthy();
-    await user.click(screen.getByRole('tab', { name: 'Away' }));
+    await user.click(screen.getByRole('tab', { name: '원정' }));
     expect(screen.getByText('Away Player')).toBeTruthy();
     await user.click(screen.getByRole('tab', { name: 'Statistics' }));
     expect(
-      screen.getByRole('tab', { name: 'Statistics' }).getAttribute('aria-selected'),
+      screen
+        .getByRole('tab', { name: 'Statistics' })
+        .getAttribute('aria-selected'),
     ).toBe('true');
     expect(screen.getByText('Possession')).toBeTruthy();
   });
