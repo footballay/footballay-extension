@@ -1,8 +1,8 @@
-import { ArrowDownUp } from 'lucide-react';
 import { useRef } from 'react';
 import type { MatchEventDto } from '@/shared/footballayApiProtocol';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
 import { resolveTeamColors } from '../shared/teamColor';
+import substituteMarker from '../../../../assets/events_substitute_marker.png';
 import goalMarker from '../../../../assets/goal_marker.png';
 import './events-tab.css';
 
@@ -16,6 +16,10 @@ function eventKind(event: MatchEventDto): DisplayEvent['kind'] | undefined {
 
 function eventTime(event: MatchEventDto) {
   return `${event.elapsed}${event.extraTime ? `+${event.extraTime}` : ''}'`;
+}
+
+function timelineMinute(event: MatchEventDto) {
+  return Math.min(event.elapsed + (event.extraTime ?? 0), 90);
 }
 
 function displayName(name: { name: string; koreanName: string | null }) {
@@ -86,6 +90,23 @@ function Timeline({
   events: DisplayEvent[];
   homeTeamUid?: string;
 }) {
+  const laneEndsBySide = new Map<boolean, number[]>();
+  const positionedEvents = [...events]
+    .sort(
+      (a, b) =>
+        timelineMinute(a) - timelineMinute(b) || a.sequence - b.sequence,
+    )
+    .map((event) => {
+      const up = event.team.teamUid === homeTeamUid;
+      const minute = timelineMinute(event);
+      const laneEnds = laneEndsBySide.get(up) ?? [];
+      const availableLane = laneEnds.findIndex((end) => minute - end >= 5);
+      const lane = availableLane === -1 ? laneEnds.length : availableLane;
+      laneEnds[lane] = minute;
+      laneEndsBySide.set(up, laneEnds);
+      return { event, up, offset: lane * 18 };
+    });
+
   return (
     <div
       className="footballay-match-panel__timeline"
@@ -100,21 +121,35 @@ function Timeline({
           {minute}'
         </span>
       ))}
-      {events.map((event) => (
+      {positionedEvents.map(({ event, up, offset }) => (
         <EventMarker
           key={event.sequence}
           event={event}
-          up={event.team.teamUid === homeTeamUid}
+          up={up}
+          offset={offset}
         />
       ))}
     </div>
   );
 }
 
-function EventMarker({ event, up }: { event: DisplayEvent; up: boolean }) {
+function EventMarker({
+  event,
+  up,
+  offset,
+}: {
+  event: DisplayEvent;
+  up: boolean;
+  offset: number;
+}) {
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const left = `${(Math.min(event.elapsed, 90) / 90) * 100}%`;
+  const left = `${(timelineMinute(event) / 90) * 100}%`;
   const yellow = /yellow/i.test(event.detail);
+  const markerHeight =
+    event.kind === 'goal' ? 17 : event.kind === 'card' ? 11 : 9;
+  const markerGap = event.kind === 'goal' ? 0 : 2;
+  const stemHeight = 30 + offset;
+  const top = up ? 22 - (12 + markerHeight + markerGap + stemHeight) : 22;
 
   function showTooltip({ clientX, clientY }: React.PointerEvent) {
     const tooltip = tooltipRef.current;
@@ -132,14 +167,17 @@ function EventMarker({ event, up }: { event: DisplayEvent; up: boolean }) {
   return (
     <div
       className={`footballay-match-panel__event footballay-match-panel__event--${up ? 'up' : 'down'}`}
-      style={{ left }}
+      style={{ left, top: `${top}px` }}
       onPointerMove={showTooltip}
       onPointerLeave={hideTooltip}
     >
       <span className="footballay-match-panel__event-time">
         {eventTime(event)}
       </span>
-      <i className="footballay-match-panel__event-stem" />
+      <i
+        className="footballay-match-panel__event-stem"
+        style={{ height: `${stemHeight}px` }}
+      />
       {event.kind === 'goal' ? (
         <span className="footballay-match-panel__event-marker footballay-match-panel__event-marker--goal">
           <img src={goalMarker} alt="Goal" />
@@ -150,7 +188,7 @@ function EventMarker({ event, up }: { event: DisplayEvent; up: boolean }) {
         />
       ) : (
         <span className="footballay-match-panel__event-marker footballay-match-panel__event-marker--substitution">
-          <ArrowDownUp aria-hidden="true" />
+          <img src={substituteMarker} alt="Substitution" />
         </span>
       )}
       <div

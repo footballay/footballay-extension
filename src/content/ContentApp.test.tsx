@@ -227,6 +227,28 @@ describe('ContentApp', () => {
             detail: 'Normal Goal',
             comments: null,
           },
+          {
+            sequence: 2,
+            elapsed: 28,
+            extraTime: null,
+            team: {
+              teamUid: 'home-team',
+              name: 'Home',
+              koreanName: '홈',
+              playerColor: null,
+            },
+            player: {
+              matchPlayerUid: 'home-player-2',
+              playerUid: null,
+              name: 'Booked',
+              koreanName: null,
+              number: 2,
+            },
+            assist: null,
+            type: 'Card',
+            detail: 'Yellow Card',
+            comments: null,
+          },
         ],
       },
     });
@@ -237,6 +259,14 @@ describe('ContentApp', () => {
     expect(screen.getByText('홈')).toBeTruthy();
     expect(screen.getAllByText("27'")).toHaveLength(2);
     expect(screen.getByText('Scorer')).toBeTruthy();
+    expect(
+      Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '.footballay-match-panel__event-stem',
+        ),
+        (stem) => stem.style.height,
+      ),
+    ).toEqual(['30px', '48px']);
   });
 
   it('selects a calendar date and returns to the match tab', async () => {
