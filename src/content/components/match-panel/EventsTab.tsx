@@ -1,7 +1,9 @@
-import { ArrowDownUp, CircleDot } from 'lucide-react';
+import { ArrowDownUp } from 'lucide-react';
+import { useRef } from 'react';
 import type { MatchEventDto } from '@/shared/footballayApiProtocol';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
 import { resolveTeamColors } from '../shared/teamColor';
+import goalMarker from '../../../../assets/goal_marker.png';
 import './events-tab.css';
 
 type DisplayEvent = MatchEventDto & { kind: 'goal' | 'card' | 'substitution' };
@@ -110,31 +112,52 @@ function Timeline({
 }
 
 function EventMarker({ event, up }: { event: DisplayEvent; up: boolean }) {
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const left = `${(Math.min(event.elapsed, 90) / 90) * 100}%`;
   const yellow = /yellow/i.test(event.detail);
+
+  function showTooltip({ clientX, clientY }: React.PointerEvent) {
+    const tooltip = tooltipRef.current;
+    if (!tooltip) return;
+    tooltip.style.left = `${Math.min(clientX + 12, window.innerWidth - 158)}px`;
+    tooltip.style.top = `${Math.min(clientY + 12, window.innerHeight - 66)}px`;
+    if (!tooltip.matches(':popover-open')) tooltip.showPopover();
+  }
+
+  function hideTooltip() {
+    const tooltip = tooltipRef.current;
+    if (tooltip?.matches(':popover-open')) tooltip.hidePopover();
+  }
+
   return (
     <div
       className={`footballay-match-panel__event footballay-match-panel__event--${up ? 'up' : 'down'}`}
       style={{ left }}
+      onPointerMove={showTooltip}
+      onPointerLeave={hideTooltip}
     >
       <span className="footballay-match-panel__event-time">
         {eventTime(event)}
       </span>
       <i className="footballay-match-panel__event-stem" />
       {event.kind === 'goal' ? (
-        <CircleDot aria-hidden="true" />
+        <span className="footballay-match-panel__event-marker footballay-match-panel__event-marker--goal">
+          <img src={goalMarker} alt="Goal" />
+        </span>
       ) : event.kind === 'card' ? (
         <b
-          className={
-            yellow
-              ? 'footballay-match-panel__card--yellow'
-              : 'footballay-match-panel__card--red'
-          }
+          className={`footballay-match-panel__event-marker ${yellow ? 'footballay-match-panel__card--yellow' : 'footballay-match-panel__card--red'}`}
         />
       ) : (
-        <ArrowDownUp aria-hidden="true" />
+        <span className="footballay-match-panel__event-marker footballay-match-panel__event-marker--substitution">
+          <ArrowDownUp aria-hidden="true" />
+        </span>
       )}
-      <div className="footballay-match-panel__event-tooltip">
+      <div
+        className="footballay-match-panel__event-tooltip"
+        popover="manual"
+        ref={tooltipRef}
+      >
         <span>
           {eventTime(event)}{' '}
           <strong>

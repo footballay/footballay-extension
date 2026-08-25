@@ -111,10 +111,10 @@
   transform: translateX(-50%);
 }
 .footballay-match-panel__event--up {
-  top: -1px;
+  top: -36px;
 }
 .footballay-match-panel__event--down {
-  top: 23px;
+  top: 22px;
 }
 .footballay-match-panel__event-stem {
   width: 1px;
@@ -124,8 +124,14 @@
 .footballay-match-panel__event--up .footballay-match-panel__event-time {
   order: -1;
 }
+.footballay-match-panel__event--up .footballay-match-panel__event-stem {
+  order: 1;
+}
 .footballay-match-panel__event--down .footballay-match-panel__event-stem {
   order: -1;
+}
+.footballay-match-panel__event--down .footballay-match-panel__event-time {
+  order: 1;
 }
 .footballay-match-panel__event svg {
   width: 9px;
@@ -138,12 +144,56 @@
   height: 11px;
   border-radius: 2px;
 }
+.footballay-match-panel__event-marker,
+.footballay-match-panel__event-time {
+  transition: transform 120ms ease;
+}
+.footballay-match-panel__event:hover .footballay-match-panel__event-marker,
+.footballay-match-panel__event:hover .footballay-match-panel__event-time {
+  transform: scale(1.1);
+}
+.footballay-match-panel__event-marker--goal {
+  display: grid;
+  width: 17px;
+  height: 17px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: var(--footballay-color-surface-raised);
+  place-items: center;
+}
+.footballay-match-panel__event-marker--goal img {
+  width: 11px;
+  height: 11px;
+}
+.footballay-match-panel__event-marker--substitution {
+  display: grid;
+  width: 9px;
+  height: 9px;
+  place-items: center;
+}
+.footballay-match-panel__event-marker--substitution svg {
+  width: 9px;
+  height: 9px;
+}
+.footballay-match-panel__event:hover
+  .footballay-match-panel__event-marker--substitution
+  svg {
+  stroke: var(--footballay-color-accent);
+}
+.footballay-match-panel__event:hover
+  .footballay-match-panel__event-marker--goal {
+  border-color: var(--footballay-color-accent);
+}
+.footballay-match-panel__event:hover
+  .footballay-match-panel__event-marker--substitution,
+.footballay-match-panel__event:hover > b.footballay-match-panel__event-marker {
+  outline: 1px solid var(--footballay-color-accent);
+  outline-offset: 2px;
+}
 .footballay-match-panel__event-tooltip {
-  position: absolute;
-  z-index: 2;
-  top: 20px;
-  left: 4px;
-  display: none;
+  position: fixed;
+  margin: 0;
   width: 146px;
   padding: 5px;
   border: 1px solid var(--footballay-color-hover);
@@ -153,10 +203,7 @@
   font-size: 10px;
   line-height: 1.2;
 }
-.footballay-match-panel__event--down .footballay-match-panel__event-tooltip {
-  top: -67px;
-}
-.footballay-match-panel__event:hover .footballay-match-panel__event-tooltip {
+.footballay-match-panel__event-tooltip:popover-open {
   display: grid;
 }
 .footballay-match-panel__event-tooltip strong {

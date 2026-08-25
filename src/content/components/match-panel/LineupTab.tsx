@@ -1,5 +1,6 @@
-import { ArrowUp, CircleDot } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import { useState } from 'react';
+import goalMarker from '../../../../assets/goal_marker.png';
 import type { FixtureLineupDto } from '@/shared/footballayApiProtocol';
 import {
   buildLineupTeam,
@@ -77,14 +78,10 @@ function PlayerMarkers({ player }: { player: LineupPlayer }) {
       </span>
       <span className="footballay-match-panel__goals">
         {Array.from({ length: player.goals }, (_, index) => (
-          <CircleDot key={`goal-${index}`} aria-label="Goal" />
+          <img src={goalMarker} alt="Goal" key={`goal-${index}`} />
         ))}
         {Array.from({ length: player.ownGoals }, (_, index) => (
-          <CircleDot
-            className="footballay-match-panel__own-goal"
-            key={`own-goal-${index}`}
-            aria-label="Own goal"
-          />
+          <img src={goalMarker} alt="Own goal" key={`own-goal-${index}`} />
         ))}
       </span>
     </div>

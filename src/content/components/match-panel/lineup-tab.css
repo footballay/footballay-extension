@@ -147,8 +147,9 @@
   gap: 2px;
   color: var(--footballay-color-text);
 }
-.footballay-match-panel__own-goal {
-  color: var(--footballay-color-red);
+.footballay-match-panel__goals img {
+  width: 10px;
+  height: 10px;
 }
 .footballay-match-panel__rating--good {
   background: var(--footballay-color-success);
