@@ -1,6 +1,7 @@
 .footballay-match-panel__teams {
   display: flex;
   align-self: stretch;
+  margin-right: 20px;
 }
 
 .footballay-match-panel__team {
@@ -14,7 +15,7 @@
   color: var(--footballay-color-text-muted);
   background: transparent;
   cursor: pointer;
-  font: 500 10px var(--footballay-font-family);
+  font: 500 12px var(--footballay-font-family);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

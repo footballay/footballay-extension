@@ -3,6 +3,8 @@
   flex: 1;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
+  min-height: 0;
+  overflow: hidden;
   padding: 0;
   background: var(--footballay-color-surface-raised);
 }
@@ -10,9 +12,10 @@
 .footballay-match-panel__statistics-column {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 7px;
+  justify-content: space-between;
+  min-height: 0;
   min-width: 0;
+  overflow: hidden;
   padding: 8px;
 }
 .footballay-match-panel__statistics-column--1 {
@@ -22,14 +25,15 @@
 .footballay-match-panel__stat {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr) 20px;
-  align-items: end;
+  align-items: last baseline;
   gap: 5px;
   font-size: 10px;
   text-align: center;
 }
 
 .footballay-match-panel__stat > span {
-  padding-bottom: 1px;
+  font-size: 11px;
+  font-weight: 500;
 }
 .footballay-match-panel__stat strong {
   display: block;
@@ -56,27 +60,34 @@
 }
 .footballay-match-panel__pass-accuracy {
   display: flex;
-  justify-content: space-around;
-  gap: 4px;
+  margin-bottom: 2px;
   text-align: center;
-  font-size: 9px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.footballay-match-panel__pass-accuracy > div {
+  flex: 1 1 0;
+  min-width: 0;
 }
 .footballay-match-panel__pass-accuracy strong {
-  display: block;
-  height: 20px;
+  display: grid;
+  min-height: 2lh;
   overflow: hidden;
   font-weight: 500;
+  line-height: 1.2;
+  place-content: center;
 }
 .footballay-match-panel__pass-accuracy i {
   display: grid;
   position: relative;
   width: 43px;
   height: 43px;
-  margin: 2px auto 0;
+  margin: 4px auto 0;
   border-radius: 50%;
   color: var(--footballay-color-white);
+  font-size: 11px;
   font-style: normal;
-  font-weight: 700;
+  font-weight: 500;
   place-items: center;
 }
 .footballay-match-panel__pass-accuracy i {
@@ -88,6 +99,7 @@
   justify-content: center;
   gap: 7px;
   font-size: 11px;
+  font-weight: 500;
   text-align: center;
 }
 .footballay-match-panel__card-types {
