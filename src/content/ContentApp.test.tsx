@@ -198,6 +198,47 @@ describe('ContentApp', () => {
     expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
   });
 
+  it('shows fixture events in the Events tab', async () => {
+    const user = userEvent.setup();
+    useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
+    useMatchDataStore.setState({
+      events: {
+        fixtureUid: 'fixture-1',
+        events: [
+          {
+            sequence: 1,
+            elapsed: 27,
+            extraTime: null,
+            team: {
+              teamUid: 'home-team',
+              name: 'Home',
+              koreanName: '홈',
+              playerColor: null,
+            },
+            player: {
+              matchPlayerUid: 'home-player-1',
+              playerUid: null,
+              name: 'Scorer',
+              koreanName: null,
+              number: 1,
+            },
+            assist: null,
+            type: 'Goal',
+            detail: 'Normal Goal',
+            comments: null,
+          },
+        ],
+      },
+    });
+    render(<ContentApp />);
+
+    await user.click(screen.getByRole('tab', { name: 'Events' }));
+
+    expect(screen.getByText('홈')).toBeTruthy();
+    expect(screen.getAllByText("27'")).toHaveLength(2);
+    expect(screen.getByText('Scorer')).toBeTruthy();
+  });
+
   it('selects a calendar date and returns to the match tab', async () => {
     const user = userEvent.setup();
     render(<ContentApp />);
