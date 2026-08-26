@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentApp } from './ContentApp';
@@ -257,16 +264,46 @@ describe('ContentApp', () => {
     await user.click(screen.getByRole('tab', { name: 'Events' }));
 
     expect(screen.getByText('홈')).toBeTruthy();
-    expect(screen.getAllByText("27'")).toHaveLength(2);
-    expect(screen.getByText('Scorer')).toBeTruthy();
+    const cluster = document.querySelector<HTMLElement>(
+      '.footballay-match-panel__event',
+    );
+    const tooltip = document.querySelector<HTMLElement>(
+      '.footballay-match-panel__event-tooltip',
+    );
+    expect(cluster).toBeTruthy();
+    expect(tooltip).toBeTruthy();
     expect(
-      Array.from(
-        document.querySelectorAll<HTMLElement>(
-          '.footballay-match-panel__event-stem',
-        ),
-        (stem) => stem.style.height,
-      ),
-    ).toEqual(['30px', '48px']);
+      document.querySelectorAll('.footballay-match-panel__event'),
+    ).toHaveLength(1);
+    expect(
+      document.querySelector('.footballay-match-panel__event-markers')
+        ?.firstElementChild?.tagName,
+    ).toBe('B');
+
+    const showPopover = vi.fn();
+    Object.assign(tooltip!, {
+      matches: () => false,
+      showPopover,
+    });
+    fireEvent.pointerMove(cluster!, { clientX: 100, clientY: 100 });
+
+    expect(showPopover).toHaveBeenCalledOnce();
+    expect(within(tooltip!).getByText('Scorer')).toBeTruthy();
+    expect(within(tooltip!).getByText('Booked')).toBeTruthy();
+  });
+
+  it('keeps the Events tab mounted while switching fixtures', async () => {
+    const user = userEvent.setup();
+    useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
+    render(<ContentApp />);
+
+    await user.click(screen.getByRole('tab', { name: 'Events' }));
+    act(() => {
+      useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-2' });
+      useMatchDataStore.setState({ events: undefined });
+    });
+
+    expect(screen.getByRole('tab', { name: 'Events' })).toBeTruthy();
   });
 
   it('selects a calendar date and returns to the match tab', async () => {
