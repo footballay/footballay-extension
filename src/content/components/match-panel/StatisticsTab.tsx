@@ -39,6 +39,7 @@ const statisticColumns: StatisticDefinition[][] = [
 ];
 
 export function StatisticsTab() {
+  const status = useMatchDataStore((state) => state.status);
   const statistics = useMatchDataStore((state) => state.statistics);
   const home = statistics?.home;
   const away = statistics?.away;
@@ -77,7 +78,7 @@ export function StatisticsTab() {
           ))
         ) : (
           <p className="footballay-match-panel__empty">
-            통계 데이터가 없습니다.
+            {status === 'loading' ? '데이터 불러오는 중' : '통계 데이터가 없습니다.'}
           </p>
         )}
       </div>

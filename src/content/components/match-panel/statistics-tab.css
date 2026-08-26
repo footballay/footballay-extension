@@ -22,6 +22,11 @@
   background: var(--footballay-color-surface-contrast);
 }
 
+.footballay-match-panel__statistics > .footballay-match-panel__empty {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
 .footballay-match-panel__stat {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr) 20px;

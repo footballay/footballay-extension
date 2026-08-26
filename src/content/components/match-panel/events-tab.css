@@ -5,6 +5,14 @@
   overflow: hidden;
   background: var(--footballay-color-surface-raised);
 }
+
+.footballay-match-panel__events > .footballay-match-panel__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  margin: 0;
+  place-items: center;
+}
 .footballay-match-panel__title--events {
   font-size: 10px;
 }
@@ -144,6 +152,9 @@
 .footballay-match-panel__event-markers,
 .footballay-match-panel__event-time {
   transition: transform 120ms ease;
+}
+.footballay-match-panel__event-time {
+  white-space: nowrap;
 }
 .footballay-match-panel__event:hover .footballay-match-panel__event-markers,
 .footballay-match-panel__event:hover .footballay-match-panel__event-time {

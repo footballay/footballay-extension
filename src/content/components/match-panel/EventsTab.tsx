@@ -37,6 +37,7 @@ function displayName(name: { name: string; koreanName: string | null }) {
 }
 
 export function EventsTab() {
+  const status = useMatchDataStore((state) => state.status);
   const events = useMatchDataStore((state) => state.events?.events) ?? [];
   const statistics = useMatchDataStore((state) => state.statistics);
   const displayEvents = events.flatMap((event) => {
@@ -66,7 +67,7 @@ export function EventsTab() {
         )}
         {!home && !away && (
           <p className="footballay-match-panel__empty">
-            이벤트 데이터가 없습니다.
+            {status === 'loading' ? '데이터 불러오는 중' : '이벤트 데이터가 없습니다.'}
           </p>
         )}
       </div>

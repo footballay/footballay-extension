@@ -90,6 +90,7 @@ function PlayerMarkers({ player }: { player: LineupPlayer }) {
 
 export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
   const [teamSide, setTeamSide] = useState<TeamSide>('home');
+  const status = useMatchDataStore((state) => state.status);
   const events = useMatchDataStore((state) => state.events);
   const statistics = useMatchDataStore((state) => state.statistics);
   const teams = {
@@ -169,7 +170,7 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
           ))
         ) : (
           <p className="footballay-match-panel__empty">
-            라인업 정보가 없습니다.
+            {status === 'loading' ? '데이터 불러오는 중' : '라인업 정보가 없습니다.'}
           </p>
         )}
       </div>
