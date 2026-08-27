@@ -18,6 +18,12 @@ import './events-tab.css';
 type DisplayEvent = MatchEventDto & { kind: 'goal' | 'card' | 'substitution' };
 
 const EVENT_CLUSTER_WINDOW_PX = 22;
+const TOOLTIP_POINTER_OFFSET_PX = 12;
+const MARKER_STACK_ORDER: Record<DisplayEvent['kind'], number> = {
+  card: 0,
+  substitution: 1,
+  goal: 2,
+};
 
 function eventKind(event: MatchEventDto): DisplayEvent['kind'] | undefined {
   if (event.type === 'Goal') return 'goal';
@@ -164,14 +170,6 @@ function Timeline({
   );
 }
 
-function markerSize(event: DisplayEvent) {
-  return event.kind === 'goal'
-    ? { width: 17, height: 17 }
-    : event.kind === 'card'
-      ? { width: 8, height: 11 }
-      : { width: 14, height: 14 };
-}
-
 function EventClusterMarker({
   cluster,
 }: {
@@ -180,34 +178,21 @@ function EventClusterMarker({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const visibleEvents = cluster.events.slice(0, 3);
   const stackedEvents = [...visibleEvents].sort(
-    ({ event: a }, { event: b }) => {
-      const aSize = markerSize(a);
-      const bSize = markerSize(b);
-      return aSize.width * aSize.height - bSize.width * bSize.height;
-    },
+    ({ event: a }, { event: b }) =>
+      MARKER_STACK_ORDER[a.kind] - MARKER_STACK_ORDER[b.kind],
   );
-  const markerWidth = Math.max(
-    ...visibleEvents.map(({ event }) => markerSize(event).width),
+  const flushMarkers = visibleEvents.some(
+    ({ event }) => event.kind === 'goal',
   );
-  const markerHeight = Math.max(
-    ...visibleEvents.map(({ event }) => markerSize(event).height),
-  );
-  const stackOffset =
-    visibleEvents.length > 1 ? (visibleEvents.length - 1) * 3 : 0;
-  const markerBoxHeight = markerHeight + stackOffset;
-  const markerGap = visibleEvents.some(({ event }) => event.kind === 'goal')
-    ? 0
-    : 2;
   const up = cluster.side === 'home';
-  const top = up ? 22 - (12 + markerBoxHeight + markerGap + 30) : 22;
 
   function showTooltip({ clientX, clientY }: React.PointerEvent) {
     const tooltip = tooltipRef.current;
     if (!tooltip) return;
     if (!tooltip.matches(':popover-open')) tooltip.showPopover();
     const bounds = tooltip.getBoundingClientRect();
-    tooltip.style.left = `${Math.max(0, Math.min(clientX + 12, window.innerWidth - bounds.width))}px`;
-    tooltip.style.top = `${Math.max(0, Math.min(clientY + 12, window.innerHeight - bounds.height))}px`;
+    tooltip.style.left = `${Math.max(0, Math.min(clientX + TOOLTIP_POINTER_OFFSET_PX, window.innerWidth - bounds.width))}px`;
+    tooltip.style.top = `${Math.max(0, Math.min(clientY + TOOLTIP_POINTER_OFFSET_PX, window.innerHeight - bounds.height))}px`;
   }
 
   function hideTooltip() {
@@ -218,10 +203,7 @@ function EventClusterMarker({
   return (
     <div
       className={`footballay-match-panel__event footballay-match-panel__event--${up ? 'up' : 'down'}`}
-      style={{
-        left: `${cluster.anchorX}px`,
-        top: `${top}px`,
-      }}
+      style={{ left: `${cluster.anchorX}px` }}
       onPointerMove={showTooltip}
       onPointerLeave={hideTooltip}
     >
@@ -230,14 +212,11 @@ function EventClusterMarker({
       </span>
       <i className="footballay-match-panel__event-stem" />
       <span
-        className={`footballay-match-panel__event-markers${markerGap === 0 ? ' footballay-match-panel__event-markers--flush' : ''}`}
-        style={{
-          width: `${markerWidth + stackOffset}px`,
-          height: `${markerBoxHeight}px`,
-        }}
+        className={`footballay-match-panel__event-markers${flushMarkers ? ' footballay-match-panel__event-markers--flush' : ''}`}
+        data-stacked={visibleEvents.length}
       >
-        {stackedEvents.map(({ event }, index) => (
-          <EventGlyph event={event} index={index} key={event.sequence} />
+        {stackedEvents.map(({ event }) => (
+          <EventGlyph event={event} key={event.sequence} />
         ))}
         {cluster.events.length > 3 && (
           <small className="footballay-match-panel__event-count">
@@ -272,14 +251,11 @@ function EventClusterMarker({
   );
 }
 
-function EventGlyph({ event, index }: { event: DisplayEvent; index: number }) {
-  const style = { left: `${index * 3}px`, top: `${index * 3}px` };
-
+function EventGlyph({ event }: { event: DisplayEvent }) {
   if (event.kind === 'goal') {
     return (
       <span
         className="footballay-match-panel__event-marker footballay-match-panel__event-marker--goal"
-        style={style}
       >
         <img src={goalMarker} alt="" />
       </span>
@@ -290,7 +266,6 @@ function EventGlyph({ event, index }: { event: DisplayEvent; index: number }) {
     return (
       <b
         className={`footballay-match-panel__event-marker ${/yellow/i.test(event.detail) ? 'footballay-match-panel__card--yellow' : 'footballay-match-panel__card--red'}`}
-        style={style}
       />
     );
   }
@@ -298,7 +273,6 @@ function EventGlyph({ event, index }: { event: DisplayEvent; index: number }) {
   return (
     <span
       className="footballay-match-panel__event-marker footballay-match-panel__event-marker--substitution"
-      style={style}
     >
       <img src={substituteMarker} alt="" />
     </span>
