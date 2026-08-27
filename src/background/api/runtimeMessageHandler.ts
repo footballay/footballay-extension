@@ -10,7 +10,7 @@ import {
   type GetFixturesPayload,
   type GetFixtureDatesPayload,
   type FootballayApiResponse,
-} from '@/shared/footballayApiProtocol';
+} from '@/shared/api/protocol';
 
 export async function handleRuntimeMessage(
   message: unknown,

@@ -3,7 +3,7 @@ import {
   useMatchDataStore,
 } from './stores/matchDataStore';
 import { useMatchPickerStore } from './stores/matchPickerStore';
-import { getFixtureStatusGroup } from '@/shared/footballayApiProtocol';
+import { getFixtureStatusGroup } from '@/shared/football/fixtureStatus';
 
 const POLLING_INTERVAL_MS = 20_000;
 

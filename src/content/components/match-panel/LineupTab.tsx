@@ -1,7 +1,7 @@
 import { ArrowUp } from 'lucide-react';
 import { useState } from 'react';
 import goalMarker from '../../../../assets/goal_marker.png';
-import type { FixtureLineupDto } from '@/shared/footballayApiProtocol';
+import type { FixtureLineupDto } from '@/shared/api/dto';
 import {
   buildLineupTeam,
   type LineupPlayer,

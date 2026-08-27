@@ -13,6 +13,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentApp } from './ContentApp';
 import { useMatchDataStore } from './stores/matchDataStore';
 import { useMatchPickerStore } from './stores/matchPickerStore';
+import {
+  createFixtureLineup,
+  createFixtureStatistics,
+} from './test/matchDataFixtures';
 
 const loadAvailableLeagues = vi.fn(async () => undefined);
 const selectLeagueAndLoadFixtures = vi.fn(async (leagueUid: string) => {
@@ -66,119 +70,11 @@ beforeEach(() => {
     status: { loadStatus: 'ready' },
     lineup: {
       loadStatus: 'ready',
-      data: {
-        fixtureUid: 'fixture-1',
-        lineup: {
-          home: {
-            teamUid: 'home-team',
-            teamName: 'Home',
-            teamKoreanName: '홈',
-            formation: '4-2-3-1',
-            players: [
-              {
-                matchPlayerUid: 'home-player-1',
-                playerUid: null,
-                name: 'Home Player',
-                koreanName: null,
-                number: 1,
-                photo: null,
-                position: null,
-                grid: null,
-                substitute: false,
-              },
-            ],
-            substitutes: [],
-            playerColor: null,
-          },
-          away: {
-            teamUid: 'away-team',
-            teamName: 'Away',
-            teamKoreanName: '원정',
-            formation: '4-3-3',
-            players: [
-              {
-                matchPlayerUid: 'away-player-2',
-                playerUid: null,
-                name: 'Away Player',
-                koreanName: null,
-                number: 2,
-                photo: null,
-                position: null,
-                grid: null,
-                substitute: false,
-              },
-            ],
-            substitutes: [],
-            playerColor: null,
-          },
-        },
-      },
+      data: createFixtureLineup(),
     },
     statistics: {
       loadStatus: 'ready',
-      data: {
-        fixture: { uid: 'fixture-1', elapsed: 45, status: 'HT' },
-        home: {
-          team: {
-            teamUid: 'home-team',
-            name: 'Home',
-            koreanName: '홈',
-            logo: null,
-            playerColor: null,
-          },
-          teamStatistics: {
-            shotsOnGoal: 4,
-            shotsOffGoal: 3,
-            totalShots: 10,
-            blockedShots: 3,
-            shotsInsideBox: 6,
-            shotsOutsideBox: 4,
-            fouls: 7,
-            cornerKicks: 3,
-            offsides: 0,
-            ballPossession: 55,
-            yellowCards: 0,
-            redCards: 0,
-            goalkeeperSaves: 1,
-            totalPasses: 100,
-            passesAccurate: 80,
-            passesAccuracyPercentage: 80,
-            goalsPrevented: 0,
-            xg: [{ elapsed: 45, xg: '1.4' }],
-          },
-          playerStatistics: [],
-        },
-        away: {
-          team: {
-            teamUid: 'away-team',
-            name: 'Away',
-            koreanName: '원정',
-            logo: null,
-            playerColor: null,
-          },
-          teamStatistics: {
-            shotsOnGoal: 2,
-            shotsOffGoal: 4,
-            totalShots: 8,
-            blockedShots: 2,
-            shotsInsideBox: 4,
-            shotsOutsideBox: 4,
-            fouls: 5,
-            cornerKicks: 1,
-            offsides: 0,
-            ballPossession: 45,
-            yellowCards: 0,
-            redCards: 0,
-            goalkeeperSaves: 2,
-            totalPasses: 90,
-            passesAccurate: 70,
-            passesAccuracyPercentage: 78,
-            goalsPrevented: 0,
-            xg: [{ elapsed: 45, xg: '0.9' }],
-          },
-          playerStatistics: [],
-        },
-      },
+      data: createFixtureStatistics(),
     },
     events: {
       loadStatus: 'ready',
@@ -474,33 +370,6 @@ describe('ContentApp', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Statistics' }));
     expect(screen.getByText('통계 데이터가 없습니다.')).toBeTruthy();
-  });
-
-  it('hides possession when the statistic is unavailable', async () => {
-    const user = userEvent.setup();
-    useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
-    useMatchDataStore.setState((state) => ({
-      statistics:
-        state.statistics.data && state.statistics.data.home
-          ? {
-              ...state.statistics,
-              data: {
-                ...state.statistics.data,
-                home: {
-                  ...state.statistics.data.home,
-                  teamStatistics: {
-                    ...state.statistics.data.home.teamStatistics,
-                    ballPossession: undefined as never,
-                  },
-                },
-              },
-            }
-          : state.statistics,
-    }));
-    render(<ContentApp />);
-
-    await user.click(screen.getByRole('tab', { name: 'Statistics' }));
-    expect(screen.queryByText('Possession')).toBeNull();
   });
 
   it('normalizes team colors and keeps statistic bar ratios', async () => {

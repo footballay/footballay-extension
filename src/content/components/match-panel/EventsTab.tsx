@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { MatchEventDto } from '@/shared/footballayApiProtocol';
+import type { MatchEventDto } from '@/shared/api/dto';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
 import { resolveTeamColors } from '../shared/teamColor';
 import substituteMarker from '../../../../assets/events_substitute_marker.png';

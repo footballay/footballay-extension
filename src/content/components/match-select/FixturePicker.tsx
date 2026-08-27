@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
-
-function toDateInputValue(date: Date): string {
-  const timezoneOffsetMs = date.getTimezoneOffset() * 60 * 1000;
-  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
-}
+import { toDateInputValue } from '@/content/utils/date';
 
 type FixturePickerProps = {
   view: 'Match' | 'DatePicker';

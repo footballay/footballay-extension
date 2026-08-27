@@ -1,4 +1,4 @@
-import type { MatchStatisticsTeamDto } from '@/shared/footballayApiProtocol';
+import type { MatchStatisticsTeamDto } from '@/shared/api/dto';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
 import { resolveTeamColors } from '../shared/teamColor';
 import './statistics-tab.css';

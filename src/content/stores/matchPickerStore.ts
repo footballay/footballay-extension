@@ -3,10 +3,10 @@ import {
   requestAvailableLeagues,
   requestFixtureDates,
   requestFixtures,
-  type AvailableLeagueDto,
-  type FixtureDto,
-  type GetFixturesPayload,
-} from '@/shared/footballayApiProtocol';
+} from '@/shared/api/client';
+import type { AvailableLeagueDto, FixtureDto } from '@/shared/api/dto';
+import type { GetFixturesPayload } from '@/shared/api/protocol';
+import { toDateInputValue } from '@/content/utils/date';
 
 export type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -31,11 +31,6 @@ type MatchPickerState = {
 
 let latestFixtureRequestId = 0;
 let latestFixtureDatesRequestId = 0;
-
-function toDateInputValue(date: Date): string {
-  const timezoneOffsetMs = date.getTimezoneOffset() * 60 * 1000;
-  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
-}
 
 function calendarRange(date: string): { startDate: string; endDate: string } {
   const start = new Date(`${date}T00:00:00`);

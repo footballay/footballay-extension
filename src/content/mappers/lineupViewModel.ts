@@ -1,11 +1,11 @@
-import {
-  getMatchEventKind,
-  type FixtureEventsDto,
-  type MatchEventDto,
-  type MatchLineupDto,
-  type MatchLineupPlayerDto,
-  type MatchStatisticsTeamDto,
-} from '@/shared/footballayApiProtocol';
+import { getMatchEventKind } from '@/shared/football/matchEvent';
+import type {
+  FixtureEventsDto,
+  MatchEventDto,
+  MatchLineupDto,
+  MatchLineupPlayerDto,
+  MatchStatisticsTeamDto,
+} from '@/shared/api/dto';
 
 export type LineupPlayer = {
   player: MatchLineupPlayerDto;

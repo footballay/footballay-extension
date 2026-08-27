@@ -4,7 +4,7 @@ import type {
   FixtureEventsDto,
   MatchLineupDto,
   MatchStatisticsTeamDto,
-} from '@/shared/footballayApiProtocol';
+} from '@/shared/api/dto';
 
 const player = (matchPlayerUid: string, name = matchPlayerUid) => ({
   matchPlayerUid,

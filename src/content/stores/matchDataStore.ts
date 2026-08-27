@@ -4,13 +4,17 @@ import {
   requestFixtureLineup,
   requestFixtureStatistics,
   requestFixtureStatus,
-  type EtaggedResponse,
-  type FixtureEventsDto,
-  type FixtureLineupDto,
-  type FixtureStatisticsDto,
-  type FixtureStatusDto,
-  type FootballayApiResponse,
-} from '@/shared/footballayApiProtocol';
+} from '@/shared/api/client';
+import type {
+  EtaggedResponse,
+  FootballayApiResponse,
+} from '@/shared/api/protocol';
+import type {
+  FixtureEventsDto,
+  FixtureLineupDto,
+  FixtureStatisticsDto,
+  FixtureStatusDto,
+} from '@/shared/api/dto';
 import type { LoadStatus } from './matchPickerStore';
 
 export type MatchDataResource<T> = {

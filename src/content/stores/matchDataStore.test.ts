@@ -4,7 +4,7 @@ const requestFixtureStatus = vi.hoisted(() => vi.fn());
 const requestFixtureLineup = vi.hoisted(() => vi.fn());
 const requestFixtureEvents = vi.hoisted(() => vi.fn());
 const requestFixtureStatistics = vi.hoisted(() => vi.fn());
-vi.mock('@/shared/footballayApiProtocol', () => ({
+vi.mock('@/shared/api/client', () => ({
   requestFixtureStatus,
   requestFixtureLineup,
   requestFixtureEvents,

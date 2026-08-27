@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const requestAvailableLeagues = vi.hoisted(() => vi.fn());
 const requestFixtures = vi.hoisted(() => vi.fn());
 const requestFixtureDates = vi.hoisted(() => vi.fn());
-vi.mock('@/shared/footballayApiProtocol', () => ({
+vi.mock('@/shared/api/client', () => ({
   requestAvailableLeagues,
   requestFixtureDates,
   requestFixtures,

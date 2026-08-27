@@ -1,15 +1,17 @@
 import axios from 'axios';
 import type {
   AvailableLeagueDto,
-  EtaggedResponse,
   FixtureDto,
   FixtureEventsDto,
   FixtureLineupDto,
   FixtureStatisticsDto,
   FixtureStatusDto,
+} from '@/shared/api/dto';
+import type {
+  EtaggedResponse,
   GetFixtureDatesPayload,
   GetFixturesPayload,
-} from '@/shared/footballayApiProtocol';
+} from '@/shared/api/protocol';
 
 const footballayApi = axios.create({
   baseURL:

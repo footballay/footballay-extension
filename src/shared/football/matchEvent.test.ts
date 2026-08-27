@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getMatchEventKind, type MatchEventDto } from './footballayApiProtocol';
+import type { MatchEventDto } from '@/shared/api/dto';
+import { getMatchEventKind } from './matchEvent';
 
 function event(type: string, detail: string): MatchEventDto {
   return {
