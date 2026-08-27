@@ -53,7 +53,7 @@ export function MatchSelect() {
                 League
               </button>
               <button
-                className={`footballay-topbar-tab${view === 'Match' ? ' footballay-topbar-tab--selected' : ''}`}
+                className={`footballay-topbar-tab${view === 'Match' ? ' footballay-topbar-tab--selected' : view === 'DatePicker' ? ' footballay-topbar-tab--active-text' : ''}`}
                 type="button"
                 onClick={() => setView('Match')}
               >
@@ -67,7 +67,10 @@ export function MatchSelect() {
                 type="button"
                 aria-label="Previous fixture date"
                 disabled={!selectedLeagueUid}
-                onClick={() => void navigateFixtureDate('previous')}
+                onClick={() => {
+                  setView('Match');
+                  void navigateFixtureDate('previous');
+                }}
               >
                 <span className="footballay-caret footballay-caret--left" />
               </button>
@@ -87,7 +90,10 @@ export function MatchSelect() {
                 type="button"
                 aria-label="Next fixture date"
                 disabled={!selectedLeagueUid}
-                onClick={() => void navigateFixtureDate('next')}
+                onClick={() => {
+                  setView('Match');
+                  void navigateFixtureDate('next');
+                }}
               >
                 <span className="footballay-caret footballay-caret--right" />
               </button>

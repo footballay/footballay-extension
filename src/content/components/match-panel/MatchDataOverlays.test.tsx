@@ -30,4 +30,18 @@ describe('MatchDataOverlays', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
     expect(screen.getByText('데이터 불러오는 중')).toBeTruthy();
   });
+
+  it('collapses and expands the match panel', () => {
+    render(<MatchDataOverlays />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Minimize match panel' }),
+    );
+    expect(
+      screen.getByRole('button', { name: 'Open match panel' }),
+    ).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open match panel' }));
+    expect(screen.getByRole('tab', { name: 'Lineup' })).toBeTruthy();
+  });
 });

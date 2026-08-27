@@ -25,15 +25,21 @@
   font-family: var(--footballay-font-family);
 }
 
-.footballay-match-panel__tabs {
+.footballay-match-panel__sidebar {
   display: flex;
   flex: 0 0 30px;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding-top: 8px;
   border-right: 1px solid var(--footballay-color-border);
   background: var(--footballay-color-surface);
+}
+
+.footballay-match-panel__tabs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
 }
 
 .footballay-match-panel__tabs button {
@@ -58,6 +64,43 @@
 }
 
 .footballay-match-panel__tabs svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2;
+}
+
+.footballay-match-panel__sidebar .footballay-close-button {
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  margin-top: auto;
+  margin-bottom: 6px;
+}
+
+.footballay-match-panel__sidebar .footballay-close-button svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2;
+}
+
+.footballay-match-panel--collapsed {
+  width: 30px;
+  height: 30px;
+}
+
+.footballay-match-panel__expand-button {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  place-items: center;
+  color: var(--footballay-color-text-muted);
+  background: var(--footballay-color-surface);
+  cursor: pointer;
+}
+
+.footballay-match-panel__expand-button svg {
   width: 22px;
   height: 22px;
   stroke-width: 2;

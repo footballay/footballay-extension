@@ -54,7 +54,6 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
     const requestId = ++latestFixtureRequestId;
     set({
       selectedDate: date,
-      selectedFixtureUid: undefined,
       fixtures: [],
       fixtureStatus: 'loading',
       fixtureError: undefined,

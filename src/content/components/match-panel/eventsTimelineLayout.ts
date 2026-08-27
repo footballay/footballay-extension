@@ -20,10 +20,15 @@ export type EventCluster<T> = {
 
 export type TimelineScale = { min: number; max: number; width: number };
 
+export function timelineMax(events: readonly { elapsed: number }[]) {
+  return events.some((event) => event.elapsed > 90) ? 120 : 90;
+}
+
 export function matchMinuteToTimelineValue(
   elapsed: number,
   extraTime: number | null,
 ) {
+  if (elapsed > 90) return elapsed;
   if (extraTime === null) return elapsed;
   return elapsed <= 45 ? 45 : 90;
 }
@@ -76,4 +81,14 @@ export function clusterPositionedEvents<T>(
   }
 
   return clusters;
+}
+
+export function clusterTime<T>(cluster: EventCluster<T>) {
+  const first = cluster.events[0];
+  const last = cluster.events.at(-1);
+  if (!first || !last) return '';
+  if (first.timelineValue === last.timelineValue) {
+    return `${first.timelineValue}'`;
+  }
+  return `${first.displayTime.slice(0, -1)}–${last.displayTime}`;
 }

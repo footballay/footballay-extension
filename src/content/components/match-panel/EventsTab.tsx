@@ -6,8 +6,10 @@ import substituteMarker from '../../../../assets/events_substitute_marker.png';
 import goalMarker from '../../../../assets/goal_marker.png';
 import {
   clusterPositionedEvents,
+  clusterTime,
   matchMinuteToTimelineValue,
   positionTimelineEvents,
+  timelineMax,
   type EventCluster,
   type TimelineSide,
 } from './eventsTimelineLayout';
@@ -16,7 +18,6 @@ import './events-tab.css';
 type DisplayEvent = MatchEventDto & { kind: 'goal' | 'card' | 'substitution' };
 
 const EVENT_CLUSTER_WINDOW_PX = 22;
-const TIMELINE_MAX = 90;
 
 function eventKind(event: MatchEventDto): DisplayEvent['kind'] | undefined {
   if (event.type === 'Goal') return 'goal';
@@ -41,6 +42,7 @@ export function EventsTab() {
   const events = useMatchDataStore((state) => state.events?.events) ?? [];
   const statistics = useMatchDataStore((state) => state.statistics);
   const displayEvents = events.flatMap((event) => {
+    if (event.elapsed < 0) return [];
     const kind = eventKind(event);
     return kind ? [{ ...event, kind }] : [];
   });
@@ -103,6 +105,7 @@ function Timeline({
 }) {
   const timelineRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const max = timelineMax(events);
 
   useEffect(() => {
     const timeline = timelineRef.current;
@@ -126,7 +129,7 @@ function Timeline({
       sequence: event.sequence,
       displayTime: eventTime(event),
     })),
-    { min: 0, max: TIMELINE_MAX, width },
+    { min: 0, max, width },
   );
   const clusters = clusterPositionedEvents(
     positionedEvents,
@@ -140,14 +143,17 @@ function Timeline({
       ref={timelineRef}
     >
       <div className="footballay-match-panel__timeline-line" />
-      {[15, 30, 45, 60, 75, 90].map((minute) => (
-        <span
-          className={`footballay-match-panel__timeline-tick footballay-match-panel__timeline-tick--${minute}`}
-          key={minute}
-        >
-          {minute}'
-        </span>
-      ))}
+      {Array.from({ length: max / 15 }, (_, index) => (index + 1) * 15).map(
+        (minute) => (
+          <span
+            className={`footballay-match-panel__timeline-tick footballay-match-panel__timeline-tick--${minute}`}
+            key={minute}
+            style={{ left: `${(minute / max) * 100}%` }}
+          >
+            {minute}'
+          </span>
+        ),
+      )}
       {clusters.map((cluster) => (
         <EventClusterMarker
           cluster={cluster}
@@ -156,12 +162,6 @@ function Timeline({
       ))}
     </div>
   );
-}
-
-function clusterTime(cluster: EventCluster<DisplayEvent>) {
-  const first = cluster.events[0]?.displayTime ?? '';
-  const last = cluster.events.at(-1)?.displayTime ?? '';
-  return first === last ? first : `${first.slice(0, -1)}–${last}`;
 }
 
 function markerSize(event: DisplayEvent) {

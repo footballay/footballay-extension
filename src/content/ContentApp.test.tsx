@@ -34,6 +34,7 @@ const selectLeagueAndLoadFixtures = vi.fn(async (leagueUid: string) => {
 const selectDateAndLoadFixtures = vi.fn(async (date: string) => {
   useMatchPickerStore.setState({ selectedDate: date, fixtureStatus: 'ready' });
 });
+const navigateFixtureDate = vi.fn(async () => undefined);
 
 afterEach(cleanup);
 
@@ -41,6 +42,7 @@ beforeEach(() => {
   loadAvailableLeagues.mockClear();
   selectLeagueAndLoadFixtures.mockClear();
   selectDateAndLoadFixtures.mockClear();
+  navigateFixtureDate.mockClear();
   useMatchPickerStore.setState({
     leagues: [
       { uid: 'league-1', name: 'Premier League', nameKo: '프리미어리그' },
@@ -58,6 +60,7 @@ beforeEach(() => {
     loadAvailableLeagues,
     selectLeagueAndLoadFixtures,
     selectDateAndLoadFixtures,
+    navigateFixtureDate,
   });
   useMatchDataStore.setState({
     lineup: {
@@ -330,6 +333,25 @@ describe('ContentApp', () => {
 
     expect(screen.getByText('2026. 07')).toBeTruthy();
     expect(useMatchPickerStore.getState().selectedDate).toBe('2026-08-11');
+  });
+
+  it('returns to matches when navigating dates from the date picker', async () => {
+    const user = userEvent.setup();
+    render(<ContentApp />);
+
+    await user.click(
+      screen.getByRole('button', { name: 'Fixture date picker' }),
+    );
+    expect(screen.getByRole('button', { name: 'Match' }).className).toContain(
+      'footballay-topbar-tab--active-text',
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: 'Previous fixture date' }),
+    );
+
+    expect(navigateFixtureDate).toHaveBeenCalledWith('previous');
+    expect(screen.getByRole('region', { name: 'Fixtures' })).toBeTruthy();
   });
 
   it('guides users to choose a league and disables date controls without one', async () => {

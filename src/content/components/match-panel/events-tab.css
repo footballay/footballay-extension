@@ -41,7 +41,7 @@
 
 .footballay-match-panel__timeline {
   position: absolute;
-  top: 61px;
+  top: calc(50% - 22px);
   right: 22px;
   left: 11px;
   height: 55px;
@@ -88,25 +88,6 @@
   height: 11px;
   width: 2px;
 }
-.footballay-match-panel__timeline-tick--15 {
-  left: 16.667%;
-}
-.footballay-match-panel__timeline-tick--30 {
-  left: 33.333%;
-}
-.footballay-match-panel__timeline-tick--45 {
-  left: 50%;
-}
-.footballay-match-panel__timeline-tick--60 {
-  left: 66.667%;
-}
-.footballay-match-panel__timeline-tick--75 {
-  left: 83.333%;
-}
-.footballay-match-panel__timeline-tick--90 {
-  left: 100%;
-}
-
 .footballay-match-panel__event {
   position: absolute;
   z-index: 1;

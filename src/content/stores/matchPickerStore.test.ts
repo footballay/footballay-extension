@@ -111,6 +111,7 @@ describe('match picker store', () => {
     useMatchPickerStore.setState({
       selectedLeagueUid: 'league-1',
       selectedDate: '2026-08-11',
+      selectedFixtureUid: 'fixture-1',
     });
 
     await useMatchPickerStore.getState().navigateFixtureDate('previous');
@@ -143,6 +144,7 @@ describe('match picker store', () => {
         mode: 'exact',
       }),
     );
+    expect(useMatchPickerStore.getState().selectedFixtureUid).toBe('fixture-1');
   });
 
   it('loads fixture dates for the full Sunday-to-Saturday calendar grid', async () => {

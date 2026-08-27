@@ -169,8 +169,13 @@
   flex: 0 0 19px;
   width: 19px;
   height: 19px;
+  border: 0;
   place-items: center;
   padding: 0;
+  color: var(--footballay-color-text-muted);
+  background: transparent;
+  cursor: pointer;
+  font: 14px var(--footballay-font-family);
 }
 
 .footballay-close-button svg {
@@ -219,7 +224,14 @@
   color: var(--footballay-color-white) !important;
 }
 
-.footballay-topbar-tab:not(.footballay-topbar-tab--selected):hover {
+.footballay-topbar-tab--active-text {
+  color: var(--footballay-color-white) !important;
+}
+
+.footballay-topbar-tab:not(
+    .footballay-topbar-tab--selected,
+    .footballay-topbar-tab--active-text
+  ):hover {
   background: var(--footballay-color-surface-raised) !important;
   color: var(--footballay-color-white) !important;
 }

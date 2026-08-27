@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  clusterTime,
   clusterPositionedEvents,
   matchMinuteToTimelineValue,
   positionTimelineEvents,
+  timelineMax,
   type PositionedEvent,
 } from './eventsTimelineLayout';
 
@@ -22,9 +24,15 @@ function event(
 }
 
 describe('events timeline layout', () => {
+  it('extends the timeline to 120 when an event passes 90 minutes', () => {
+    expect(timelineMax([{ elapsed: 90 }])).toBe(90);
+    expect(timelineMax([{ elapsed: 91 }])).toBe(120);
+  });
+
   it('places stoppage-time events at the end of each half', () => {
     expect(matchMinuteToTimelineValue(45, 3)).toBe(45);
     expect(matchMinuteToTimelineValue(90, 5)).toBe(90);
+    expect(matchMinuteToTimelineValue(91, 1)).toBe(91);
     expect(matchMinuteToTimelineValue(67, null)).toBe(67);
   });
 
@@ -50,6 +58,19 @@ describe('events timeline layout', () => {
     expect(clusters[1]?.side).toBe('away');
   });
 
+  it('shows events compressed by extra time as one timeline minute', () => {
+    const clusters = clusterPositionedEvents(
+      [
+        { ...event(90, 1), displayTime: "90+1'" },
+        { ...event(90, 2), displayTime: "90+3'" },
+        { ...event(90, 3, 'away'), displayTime: "90+2'" },
+      ],
+      12,
+    );
+
+    expect(clusters.map(clusterTime)).toEqual(["90'", "90'"]);
+  });
+
   it('uses the rendered timeline width when positioning events', () => {
     const input = [
       {
@@ -67,5 +88,12 @@ describe('events timeline layout', () => {
     expect(
       positionTimelineEvents(input, { min: 0, max: 90, width: 500 })[0]?.x,
     ).toBe(250);
+    expect(
+      positionTimelineEvents([{ ...input[0]!, timelineValue: 105 }], {
+        min: 0,
+        max: 120,
+        width: 480,
+      })[0]?.x,
+    ).toBe(420);
   });
 });
