@@ -44,9 +44,9 @@ function displayName(name: { name: string; koreanName: string | null }) {
 }
 
 export function EventsTab() {
-  const status = useMatchDataStore((state) => state.status);
-  const events = useMatchDataStore((state) => state.events?.events) ?? [];
-  const statistics = useMatchDataStore((state) => state.statistics);
+  const eventsResource = useMatchDataStore((state) => state.events);
+  const events = eventsResource.data?.events ?? [];
+  const statistics = useMatchDataStore((state) => state.statistics.data);
   const displayEvents = events.flatMap((event) => {
     if (event.elapsed < 0) return [];
     const kind = eventKind(event);
@@ -73,10 +73,19 @@ export function EventsTab() {
         {away && (
           <TeamTitle side="away" name={displayName(away)} color={colors.away} />
         )}
-        {!home && !away && (
-          <p className="footballay-match-panel__empty">
-            {status === 'loading' ? '데이터 불러오는 중' : '이벤트 데이터가 없습니다.'}
+        {eventsResource.loadStatus === 'error' ? (
+          <p className="footballay-match-panel__empty" role="alert">
+            이벤트 데이터를 불러오지 못했습니다: {eventsResource.error}
           </p>
+        ) : (
+          !home &&
+          !away && (
+            <p className="footballay-match-panel__empty">
+              {eventsResource.loadStatus === 'loading'
+                ? '데이터 불러오는 중'
+                : '이벤트 데이터가 없습니다.'}
+            </p>
+          )
         )}
       </div>
     </>
@@ -181,9 +190,7 @@ function EventClusterMarker({
     ({ event: a }, { event: b }) =>
       MARKER_STACK_ORDER[a.kind] - MARKER_STACK_ORDER[b.kind],
   );
-  const flushMarkers = visibleEvents.some(
-    ({ event }) => event.kind === 'goal',
-  );
+  const flushMarkers = visibleEvents.some(({ event }) => event.kind === 'goal');
   const up = cluster.side === 'home';
 
   function showTooltip({ clientX, clientY }: React.PointerEvent) {
@@ -254,9 +261,7 @@ function EventClusterMarker({
 function EventGlyph({ event }: { event: DisplayEvent }) {
   if (event.kind === 'goal') {
     return (
-      <span
-        className="footballay-match-panel__event-marker footballay-match-panel__event-marker--goal"
-      >
+      <span className="footballay-match-panel__event-marker footballay-match-panel__event-marker--goal">
         <img src={goalMarker} alt="" />
       </span>
     );
@@ -271,9 +276,7 @@ function EventGlyph({ event }: { event: DisplayEvent }) {
   }
 
   return (
-    <span
-      className="footballay-match-panel__event-marker footballay-match-panel__event-marker--substitution"
-    >
+    <span className="footballay-match-panel__event-marker footballay-match-panel__event-marker--substitution">
       <img src={substituteMarker} alt="" />
     </span>
   );

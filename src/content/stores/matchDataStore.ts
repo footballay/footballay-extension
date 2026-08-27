@@ -4,133 +4,107 @@ import {
   requestFixtureLineup,
   requestFixtureStatistics,
   requestFixtureStatus,
+  type EtaggedResponse,
   type FixtureEventsDto,
   type FixtureLineupDto,
   type FixtureStatisticsDto,
   type FixtureStatusDto,
+  type FootballayApiResponse,
 } from '@/shared/footballayApiProtocol';
 import type { LoadStatus } from './matchPickerStore';
 
+export type MatchDataResource<T> = {
+  data?: T;
+  etag?: string;
+  loadStatus: LoadStatus;
+  error?: string;
+};
+
 type MatchDataStore = {
   fixtureUid?: string;
-  statusData?: FixtureStatusDto;
-  lineup?: FixtureLineupDto;
-  events?: FixtureEventsDto;
-  statistics?: FixtureStatisticsDto;
-  etags: {
-    status?: string;
-    lineup?: string;
-    events?: string;
-    statistics?: string;
-  };
-  status: LoadStatus;
-  error?: string;
+  status: MatchDataResource<FixtureStatusDto>;
+  lineup: MatchDataResource<FixtureLineupDto>;
+  events: MatchDataResource<FixtureEventsDto>;
+  statistics: MatchDataResource<FixtureStatisticsDto>;
   refreshMatchData: () => Promise<void>;
 };
 
+type FixtureDataResponse<T> = FootballayApiResponse<EtaggedResponse<T>>;
+
 let latestRequestId = 0;
+
+function emptyResource(loadStatus: LoadStatus): MatchDataResource<never> {
+  return { loadStatus };
+}
+
+function nextResource<T>(
+  resource: MatchDataResource<T>,
+  result: PromiseSettledResult<FixtureDataResponse<T>>,
+): MatchDataResource<T> {
+  if (result.status === 'rejected') {
+    return {
+      ...resource,
+      loadStatus: 'error',
+      error:
+        result.reason instanceof Error
+          ? result.reason.message
+          : 'Unable to refresh match data',
+    };
+  }
+  if (!result.value.ok) {
+    return { ...resource, loadStatus: 'error', error: result.value.error };
+  }
+
+  const response = result.value.data;
+  return {
+    data: response.type === 'updated' ? response.data : resource.data,
+    etag: response.etag === undefined ? resource.etag : response.etag,
+    loadStatus: 'ready',
+  };
+}
 
 export const useMatchDataStore = create<MatchDataStore>((set, get) => {
   async function refreshMatchData() {
-    const { fixtureUid, etags } = get();
+    const { fixtureUid, status, lineup, events, statistics } = get();
     if (!fixtureUid) return;
 
     const requestId = ++latestRequestId;
     const results = await Promise.allSettled([
-      requestFixtureStatus({ fixtureUid, etag: etags.status }),
-      requestFixtureLineup({ fixtureUid, etag: etags.lineup }),
-      requestFixtureEvents({ fixtureUid, etag: etags.events }),
-      requestFixtureStatistics({ fixtureUid, etag: etags.statistics }),
+      requestFixtureStatus({ fixtureUid, etag: status.etag }),
+      requestFixtureLineup({ fixtureUid, etag: lineup.etag }),
+      requestFixtureEvents({ fixtureUid, etag: events.etag }),
+      requestFixtureStatistics({ fixtureUid, etag: statistics.etag }),
     ]);
     if (requestId !== latestRequestId || get().fixtureUid !== fixtureUid)
       return;
 
-    const errors = results.flatMap((result) => {
-      if (result.status === 'rejected') {
-        return result.reason instanceof Error
-          ? result.reason.message
-          : 'Unable to refresh match data';
-      }
-      return result.value.ok ? [] : result.value.error;
-    });
-    const [status, lineup, events, statistics] = results;
+    const [statusResult, lineupResult, eventsResult, statisticsResult] =
+      results;
     set((state) => ({
-      statusData:
-        status.status === 'fulfilled' &&
-        status.value.ok &&
-        status.value.data.type === 'updated'
-          ? status.value.data.data
-          : state.statusData,
-      lineup:
-        lineup.status === 'fulfilled' &&
-        lineup.value.ok &&
-        lineup.value.data.type === 'updated'
-          ? lineup.value.data.data
-          : state.lineup,
-      events:
-        events.status === 'fulfilled' &&
-        events.value.ok &&
-        events.value.data.type === 'updated'
-          ? events.value.data.data
-          : state.events,
-      statistics:
-        statistics.status === 'fulfilled' &&
-        statistics.value.ok &&
-        statistics.value.data.type === 'updated'
-          ? statistics.value.data.data
-          : state.statistics,
-      etags: {
-        status:
-          status.status === 'fulfilled' &&
-          status.value.ok &&
-          (status.value.data.type === 'updated' ||
-            status.value.data.etag !== undefined)
-            ? status.value.data.etag
-            : state.etags.status,
-        lineup:
-          lineup.status === 'fulfilled' &&
-          lineup.value.ok &&
-          (lineup.value.data.type === 'updated' ||
-            lineup.value.data.etag !== undefined)
-            ? lineup.value.data.etag
-            : state.etags.lineup,
-        events:
-          events.status === 'fulfilled' &&
-          events.value.ok &&
-          (events.value.data.type === 'updated' ||
-            events.value.data.etag !== undefined)
-            ? events.value.data.etag
-            : state.etags.events,
-        statistics:
-          statistics.status === 'fulfilled' &&
-          statistics.value.ok &&
-          (statistics.value.data.type === 'updated' ||
-            statistics.value.data.etag !== undefined)
-            ? statistics.value.data.etag
-            : state.etags.statistics,
-      },
-      status: errors.length === 4 ? 'error' : 'ready',
-      error: errors[0],
+      status: nextResource(state.status, statusResult),
+      lineup: nextResource(state.lineup, lineupResult),
+      events: nextResource(state.events, eventsResult),
+      statistics: nextResource(state.statistics, statisticsResult),
     }));
   }
 
   return {
-    etags: {},
-    status: 'idle',
+    status: emptyResource('idle'),
+    lineup: emptyResource('idle'),
+    events: emptyResource('idle'),
+    statistics: emptyResource('idle'),
     refreshMatchData,
   };
 });
 
 export function setMatchDataFixture(fixtureUid?: string) {
   ++latestRequestId;
+  const loadStatus = fixtureUid ? 'loading' : 'idle';
   useMatchDataStore.setState({
     fixtureUid,
-    statusData: undefined,
-    lineup: undefined,
-    events: undefined,
-    statistics: undefined,
-    etags: {},
-    status: fixtureUid ? 'loading' : 'idle',
-    error: undefined,
+    status: emptyResource(loadStatus),
+    lineup: emptyResource(loadStatus),
+    events: emptyResource(loadStatus),
+    statistics: emptyResource(loadStatus),
   });
 }

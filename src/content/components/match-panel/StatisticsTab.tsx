@@ -21,8 +21,8 @@ const statisticColumns: StatisticDefinition[][] = [
     ],
   ],
   [
-    ['Shots', (team) => team.teamStatistics.totalShots],
-    ['Shots on goal', (team) => team.teamStatistics.shotsOnGoal],
+    ['Total Shots', (team) => team.teamStatistics.totalShots],
+    ['Shots On Goal', (team) => team.teamStatistics.shotsOnGoal],
     ['xG', (team) => team.teamStatistics.xg.at(-1)?.xg ?? '0'],
     ['Fouls', (team) => team.teamStatistics.fouls],
     ['Corner Kicks', (team) => team.teamStatistics.cornerKicks],
@@ -33,14 +33,14 @@ const statisticColumns: StatisticDefinition[][] = [
     ['Blocked Shots', (team) => team.teamStatistics.blockedShots],
     ['Shots Inside Box', (team) => team.teamStatistics.shotsInsideBox],
     ['Shots Outside Box', (team) => team.teamStatistics.shotsOutsideBox],
-    ['Corner Kicks', (team) => team.teamStatistics.cornerKicks],
-    ['Offsides', (team) => team.teamStatistics.offsides],
+    ['Goalkeeper Saves', (team) => team.teamStatistics.goalkeeperSaves],
+    ['Goals Prevented', (team) => team.teamStatistics.goalsPrevented],
   ],
 ];
 
 export function StatisticsTab() {
-  const status = useMatchDataStore((state) => state.status);
-  const statistics = useMatchDataStore((state) => state.statistics);
+  const statisticsResource = useMatchDataStore((state) => state.statistics);
+  const statistics = statisticsResource.data;
   const home = statistics?.home;
   const away = statistics?.away;
   const teamColors =
@@ -54,7 +54,11 @@ export function StatisticsTab() {
         </div>
       </div>
       <div className="footballay-match-panel__statistics">
-        {home && away ? (
+        {statisticsResource.loadStatus === 'error' ? (
+          <p className="footballay-match-panel__empty" role="alert">
+            통계 데이터를 불러오지 못했습니다: {statisticsResource.error}
+          </p>
+        ) : home && away ? (
           statisticColumns.map((column, index) => (
             <div
               className={`footballay-match-panel__statistics-column footballay-match-panel__statistics-column--${index}`}
@@ -78,7 +82,9 @@ export function StatisticsTab() {
           ))
         ) : (
           <p className="footballay-match-panel__empty">
-            {status === 'loading' ? '데이터 불러오는 중' : '통계 데이터가 없습니다.'}
+            {statisticsResource.loadStatus === 'loading'
+              ? '데이터 불러오는 중'
+              : '통계 데이터가 없습니다.'}
           </p>
         )}
       </div>

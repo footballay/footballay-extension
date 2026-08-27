@@ -90,15 +90,19 @@ function PlayerMarkers({ player }: { player: LineupPlayer }) {
 
 export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
   const [teamSide, setTeamSide] = useState<TeamSide>('home');
-  const status = useMatchDataStore((state) => state.status);
-  const events = useMatchDataStore((state) => state.events);
-  const statistics = useMatchDataStore((state) => state.statistics);
+  const lineupResource = useMatchDataStore((state) => state.lineup);
+  const events = useMatchDataStore((state) => state.events.data);
+  const statistics = useMatchDataStore((state) => state.statistics.data);
   const teams = {
     home: buildLineupTeam(lineup?.lineup.home, events, statistics?.home),
     away: buildLineupTeam(lineup?.lineup.away, events, statistics?.away),
   };
   const teamColors = resolveTeamColors(teams.home, teams.away);
-  const selectedTeamSide: TeamSide = teams[teamSide] ? teamSide : 'away';
+  const selectedTeamSide: TeamSide = teams[teamSide]
+    ? teamSide
+    : teams.home
+      ? 'home'
+      : 'away';
   const team = teams[selectedTeamSide];
   const columns = formationColumns(team);
 
@@ -146,7 +150,11 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
         className="footballay-match-panel__lineup"
         aria-label="Lineup players"
       >
-        {columns.length ? (
+        {lineupResource.loadStatus === 'error' ? (
+          <p className="footballay-match-panel__empty" role="alert">
+            라인업 데이터를 불러오지 못했습니다: {lineupResource.error}
+          </p>
+        ) : columns.length ? (
           columns.map((column, index) => (
             <div className="footballay-match-panel__line" key={index}>
               {column.map((player, playerIndex) => (
@@ -170,7 +178,9 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
           ))
         ) : (
           <p className="footballay-match-panel__empty">
-            {status === 'loading' ? '데이터 불러오는 중' : '라인업 정보가 없습니다.'}
+            {lineupResource.loadStatus === 'loading'
+              ? '데이터 불러오는 중'
+              : '라인업 정보가 없습니다.'}
           </p>
         )}
       </div>

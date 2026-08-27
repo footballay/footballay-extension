@@ -66,11 +66,43 @@ describe('match data store', () => {
     });
     expect(useMatchDataStore.getState()).toMatchObject({
       fixtureUid: 'fixture-1',
-      status: 'ready',
-      etags: { status: 's2', lineup: 'l2', events: 'e2', statistics: 't1' },
-      statusData: { liveStatus: { shortStatus: '1H', score: { home: 1 } } },
-      events: { events: [{ sequence: 1 }] },
-      statistics: {},
+      status: {
+        loadStatus: 'ready',
+        etag: 's2',
+        data: { liveStatus: { shortStatus: '1H', score: { home: 1 } } },
+      },
+      events: {
+        loadStatus: 'ready',
+        etag: 'e2',
+        data: { events: [{ sequence: 1 }] },
+      },
+      statistics: {
+        loadStatus: 'error',
+        etag: 't1',
+        error: 'temporary failure',
+      },
+    });
+  });
+
+  it('keeps endpoint failures isolated from successful resources', async () => {
+    requestFixtureStatus.mockResolvedValue(
+      updated({ liveStatus: { shortStatus: '1H', score: {} } }, 's1'),
+    );
+    requestFixtureLineup.mockResolvedValue({
+      ok: false,
+      error: 'lineup failed',
+    });
+    requestFixtureEvents.mockResolvedValue(updated({ events: [] }, 'e1'));
+    requestFixtureStatistics.mockResolvedValue(updated({}, 't1'));
+
+    setMatchDataFixture('fixture-1');
+    await useMatchDataStore.getState().refreshMatchData();
+
+    expect(useMatchDataStore.getState()).toMatchObject({
+      lineup: { loadStatus: 'error', error: 'lineup failed' },
+      status: { loadStatus: 'ready', etag: 's1' },
+      events: { loadStatus: 'ready', etag: 'e1' },
+      statistics: { loadStatus: 'ready', etag: 't1' },
     });
   });
 
@@ -106,6 +138,6 @@ describe('match data store', () => {
     await oldRefresh;
 
     expect(useMatchDataStore.getState().fixtureUid).toBe('fixture-1');
-    expect(useMatchDataStore.getState().statusData).toBeUndefined();
+    expect(useMatchDataStore.getState().status.data).toBeUndefined();
   });
 });

@@ -63,117 +63,127 @@ beforeEach(() => {
     navigateFixtureDate,
   });
   useMatchDataStore.setState({
+    status: { loadStatus: 'ready' },
     lineup: {
-      fixtureUid: 'fixture-1',
-      lineup: {
-        home: {
-          teamUid: 'home-team',
-          teamName: 'Home',
-          teamKoreanName: '홈',
-          formation: '4-2-3-1',
-          players: [
-            {
-              matchPlayerUid: 'home-player-1',
-              playerUid: null,
-              name: 'Home Player',
-              koreanName: null,
-              number: 1,
-              photo: null,
-              position: null,
-              grid: null,
-              substitute: false,
-            },
-          ],
-          substitutes: [],
-          playerColor: null,
-        },
-        away: {
-          teamUid: 'away-team',
-          teamName: 'Away',
-          teamKoreanName: '원정',
-          formation: '4-3-3',
-          players: [
-            {
-              matchPlayerUid: 'away-player-2',
-              playerUid: null,
-              name: 'Away Player',
-              koreanName: null,
-              number: 2,
-              photo: null,
-              position: null,
-              grid: null,
-              substitute: false,
-            },
-          ],
-          substitutes: [],
-          playerColor: null,
+      loadStatus: 'ready',
+      data: {
+        fixtureUid: 'fixture-1',
+        lineup: {
+          home: {
+            teamUid: 'home-team',
+            teamName: 'Home',
+            teamKoreanName: '홈',
+            formation: '4-2-3-1',
+            players: [
+              {
+                matchPlayerUid: 'home-player-1',
+                playerUid: null,
+                name: 'Home Player',
+                koreanName: null,
+                number: 1,
+                photo: null,
+                position: null,
+                grid: null,
+                substitute: false,
+              },
+            ],
+            substitutes: [],
+            playerColor: null,
+          },
+          away: {
+            teamUid: 'away-team',
+            teamName: 'Away',
+            teamKoreanName: '원정',
+            formation: '4-3-3',
+            players: [
+              {
+                matchPlayerUid: 'away-player-2',
+                playerUid: null,
+                name: 'Away Player',
+                koreanName: null,
+                number: 2,
+                photo: null,
+                position: null,
+                grid: null,
+                substitute: false,
+              },
+            ],
+            substitutes: [],
+            playerColor: null,
+          },
         },
       },
     },
     statistics: {
-      fixture: { uid: 'fixture-1', elapsed: 45, status: 'HT' },
-      home: {
-        team: {
-          teamUid: 'home-team',
-          name: 'Home',
-          koreanName: '홈',
-          logo: null,
-          playerColor: null,
+      loadStatus: 'ready',
+      data: {
+        fixture: { uid: 'fixture-1', elapsed: 45, status: 'HT' },
+        home: {
+          team: {
+            teamUid: 'home-team',
+            name: 'Home',
+            koreanName: '홈',
+            logo: null,
+            playerColor: null,
+          },
+          teamStatistics: {
+            shotsOnGoal: 4,
+            shotsOffGoal: 3,
+            totalShots: 10,
+            blockedShots: 3,
+            shotsInsideBox: 6,
+            shotsOutsideBox: 4,
+            fouls: 7,
+            cornerKicks: 3,
+            offsides: 0,
+            ballPossession: 55,
+            yellowCards: 0,
+            redCards: 0,
+            goalkeeperSaves: 1,
+            totalPasses: 100,
+            passesAccurate: 80,
+            passesAccuracyPercentage: 80,
+            goalsPrevented: 0,
+            xg: [{ elapsed: 45, xg: '1.4' }],
+          },
+          playerStatistics: [],
         },
-        teamStatistics: {
-          shotsOnGoal: 4,
-          shotsOffGoal: 3,
-          totalShots: 10,
-          blockedShots: 3,
-          shotsInsideBox: 6,
-          shotsOutsideBox: 4,
-          fouls: 7,
-          cornerKicks: 3,
-          offsides: 0,
-          ballPossession: 55,
-          yellowCards: 0,
-          redCards: 0,
-          goalkeeperSaves: 1,
-          totalPasses: 100,
-          passesAccurate: 80,
-          passesAccuracyPercentage: 80,
-          goalsPrevented: 0,
-          xg: [{ elapsed: 45, xg: '1.4' }],
+        away: {
+          team: {
+            teamUid: 'away-team',
+            name: 'Away',
+            koreanName: '원정',
+            logo: null,
+            playerColor: null,
+          },
+          teamStatistics: {
+            shotsOnGoal: 2,
+            shotsOffGoal: 4,
+            totalShots: 8,
+            blockedShots: 2,
+            shotsInsideBox: 4,
+            shotsOutsideBox: 4,
+            fouls: 5,
+            cornerKicks: 1,
+            offsides: 0,
+            ballPossession: 45,
+            yellowCards: 0,
+            redCards: 0,
+            goalkeeperSaves: 2,
+            totalPasses: 90,
+            passesAccurate: 70,
+            passesAccuracyPercentage: 78,
+            goalsPrevented: 0,
+            xg: [{ elapsed: 45, xg: '0.9' }],
+          },
+          playerStatistics: [],
         },
-        playerStatistics: [],
-      },
-      away: {
-        team: {
-          teamUid: 'away-team',
-          name: 'Away',
-          koreanName: '원정',
-          logo: null,
-          playerColor: null,
-        },
-        teamStatistics: {
-          shotsOnGoal: 2,
-          shotsOffGoal: 4,
-          totalShots: 8,
-          blockedShots: 2,
-          shotsInsideBox: 4,
-          shotsOutsideBox: 4,
-          fouls: 5,
-          cornerKicks: 1,
-          offsides: 0,
-          ballPossession: 45,
-          yellowCards: 0,
-          redCards: 0,
-          goalkeeperSaves: 2,
-          totalPasses: 90,
-          passesAccurate: 70,
-          passesAccuracyPercentage: 78,
-          goalsPrevented: 0,
-          xg: [{ elapsed: 45, xg: '0.9' }],
-        },
-        playerStatistics: [],
       },
     },
-    events: { fixtureUid: 'fixture-1', events: [] },
+    events: {
+      loadStatus: 'ready',
+      data: { fixtureUid: 'fixture-1', events: [] },
+    },
   });
 });
 
@@ -213,53 +223,56 @@ describe('ContentApp', () => {
     useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
     useMatchDataStore.setState({
       events: {
-        fixtureUid: 'fixture-1',
-        events: [
-          {
-            sequence: 1,
-            elapsed: 27,
-            extraTime: null,
-            team: {
-              teamUid: 'home-team',
-              name: 'Home',
-              koreanName: '홈',
-              playerColor: null,
+        loadStatus: 'ready',
+        data: {
+          fixtureUid: 'fixture-1',
+          events: [
+            {
+              sequence: 1,
+              elapsed: 27,
+              extraTime: null,
+              team: {
+                teamUid: 'home-team',
+                name: 'Home',
+                koreanName: '홈',
+                playerColor: null,
+              },
+              player: {
+                matchPlayerUid: 'home-player-1',
+                playerUid: null,
+                name: 'Scorer',
+                koreanName: null,
+                number: 1,
+              },
+              assist: null,
+              type: 'Goal',
+              detail: 'Normal Goal',
+              comments: null,
             },
-            player: {
-              matchPlayerUid: 'home-player-1',
-              playerUid: null,
-              name: 'Scorer',
-              koreanName: null,
-              number: 1,
+            {
+              sequence: 2,
+              elapsed: 28,
+              extraTime: null,
+              team: {
+                teamUid: 'home-team',
+                name: 'Home',
+                koreanName: '홈',
+                playerColor: null,
+              },
+              player: {
+                matchPlayerUid: 'home-player-2',
+                playerUid: null,
+                name: 'Booked',
+                koreanName: null,
+                number: 2,
+              },
+              assist: null,
+              type: 'Card',
+              detail: 'Yellow Card',
+              comments: null,
             },
-            assist: null,
-            type: 'Goal',
-            detail: 'Normal Goal',
-            comments: null,
-          },
-          {
-            sequence: 2,
-            elapsed: 28,
-            extraTime: null,
-            team: {
-              teamUid: 'home-team',
-              name: 'Home',
-              koreanName: '홈',
-              playerColor: null,
-            },
-            player: {
-              matchPlayerUid: 'home-player-2',
-              playerUid: null,
-              name: 'Booked',
-              koreanName: null,
-              number: 2,
-            },
-            assist: null,
-            type: 'Card',
-            detail: 'Yellow Card',
-            comments: null,
-          },
-        ],
+          ],
+        },
       },
     });
     render(<ContentApp />);
@@ -303,7 +316,7 @@ describe('ContentApp', () => {
     await user.click(screen.getByRole('tab', { name: 'Events' }));
     act(() => {
       useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-2' });
-      useMatchDataStore.setState({ events: undefined });
+      useMatchDataStore.setState({ events: { loadStatus: 'loading' } });
     });
 
     expect(screen.getByRole('tab', { name: 'Events' })).toBeTruthy();
@@ -397,15 +410,65 @@ describe('ContentApp', () => {
         .getAttribute('aria-selected'),
     ).toBe('true');
     expect(screen.getByText('Possession')).toBeTruthy();
+    expect(screen.getAllByText('Corner Kicks')).toHaveLength(1);
+    expect(screen.getAllByText('Offsides')).toHaveLength(1);
+    expect(screen.getByText('Goalkeeper Saves')).toBeTruthy();
+    expect(screen.getByText('Goals Prevented')).toBeTruthy();
+  });
+
+  it('shows a lineup error without hiding successful statistics', async () => {
+    const user = userEvent.setup();
+    useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
+    useMatchDataStore.setState((state) => ({
+      lineup: { ...state.lineup, loadStatus: 'error', error: 'lineup failed' },
+    }));
+    render(<ContentApp />);
+
+    expect(screen.getByRole('alert').textContent).toBe(
+      '라인업 데이터를 불러오지 못했습니다: lineup failed',
+    );
+    await user.click(screen.getByRole('tab', { name: 'Statistics' }));
+    expect(screen.getByText('Possession')).toBeTruthy();
+  });
+
+  it('falls back to the home lineup when the selected away lineup disappears', async () => {
+    const user = userEvent.setup();
+    useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
+    render(<ContentApp />);
+
+    await user.click(screen.getByRole('tab', { name: '원정' }));
+    act(() => {
+      useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-2' });
+      useMatchDataStore.setState((state) => ({
+        lineup: state.lineup.data
+          ? {
+              ...state.lineup,
+              data: {
+                ...state.lineup.data,
+                fixtureUid: 'fixture-2',
+                lineup: { ...state.lineup.data.lineup, away: null },
+              },
+            }
+          : state.lineup,
+      }));
+    });
+
+    expect(screen.getByText('Home Player')).toBeTruthy();
+    expect(
+      screen.getByRole('tab', { name: '홈' }).getAttribute('aria-selected'),
+    ).toBe('true');
   });
 
   it('shows an empty state when only one team has statistics', async () => {
     const user = userEvent.setup();
     useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
     useMatchDataStore.setState((state) => ({
-      statistics: state.statistics
-        ? { ...state.statistics, away: null }
-        : undefined,
+      statistics: state.statistics.data
+        ? {
+            ...state.statistics,
+            data: { ...state.statistics.data, away: null },
+          }
+        : state.statistics,
     }));
     render(<ContentApp />);
 
@@ -418,14 +481,17 @@ describe('ContentApp', () => {
     useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
     useMatchDataStore.setState((state) => ({
       statistics:
-        state.statistics && state.statistics.home
+        state.statistics.data && state.statistics.data.home
           ? {
               ...state.statistics,
-              home: {
-                ...state.statistics.home,
-                teamStatistics: {
-                  ...state.statistics.home.teamStatistics,
-                  ballPossession: undefined as never,
+              data: {
+                ...state.statistics.data,
+                home: {
+                  ...state.statistics.data.home,
+                  teamStatistics: {
+                    ...state.statistics.data.home.teamStatistics,
+                    ballPossession: undefined as never,
+                  },
                 },
               },
             }
@@ -442,28 +508,33 @@ describe('ContentApp', () => {
     useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
     useMatchDataStore.setState((state) => ({
       statistics:
-        state.statistics && state.statistics.home && state.statistics.away
+        state.statistics.data &&
+        state.statistics.data.home &&
+        state.statistics.data.away
           ? {
               ...state.statistics,
-              home: {
-                ...state.statistics.home,
-                team: {
-                  ...state.statistics.home.team,
-                  playerColor: {
-                    primary: 'abd1f5',
-                    number: '000000',
-                    border: null,
+              data: {
+                ...state.statistics.data,
+                home: {
+                  ...state.statistics.data.home,
+                  team: {
+                    ...state.statistics.data.home.team,
+                    playerColor: {
+                      primary: 'abd1f5',
+                      number: '000000',
+                      border: null,
+                    },
                   },
                 },
-              },
-              away: {
-                ...state.statistics.away,
-                team: {
-                  ...state.statistics.away.team,
-                  playerColor: {
-                    primary: '7000ff',
-                    number: 'ffffff',
-                    border: null,
+                away: {
+                  ...state.statistics.data.away,
+                  team: {
+                    ...state.statistics.data.away.team,
+                    playerColor: {
+                      primary: '7000ff',
+                      number: 'ffffff',
+                      border: null,
+                    },
                   },
                 },
               },

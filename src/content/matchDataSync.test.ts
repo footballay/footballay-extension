@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const actions = vi.hoisted(() => ({
   refreshMatchData: vi.fn(async () => undefined),
   setMatchDataFixture: vi.fn(),
-  statusData: undefined as unknown,
+  status: { data: undefined as unknown },
 }));
 vi.mock('./stores/matchDataStore', () => ({
   setMatchDataFixture: actions.setMatchDataFixture,
@@ -25,7 +25,7 @@ describe('matchDataSync', () => {
     });
     actions.refreshMatchData.mockClear();
     actions.setMatchDataFixture.mockClear();
-    actions.statusData = undefined;
+    actions.status.data = undefined;
     useMatchPickerStore.setState({ selectedFixtureUid: undefined });
   });
 
@@ -62,7 +62,7 @@ describe('matchDataSync', () => {
   });
 
   it('stops polling after a terminal fixture status', async () => {
-    actions.statusData = { liveStatus: { shortStatus: 'FT' } };
+    actions.status.data = { liveStatus: { shortStatus: 'FT' } };
     useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
 
     startMatchDataSync();

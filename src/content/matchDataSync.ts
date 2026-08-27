@@ -64,7 +64,7 @@ function startFixturePolling(): () => void {
     }
 
     const status =
-      useMatchDataStore.getState().statusData?.liveStatus.shortStatus;
+      useMatchDataStore.getState().status.data?.liveStatus.shortStatus;
     completed =
       getFixtureStatusGroup(status ?? '') === 'finished' ||
       getFixtureStatusGroup(status ?? '') === 'not-played';

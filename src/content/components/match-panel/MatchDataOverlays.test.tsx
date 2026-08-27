@@ -11,10 +11,10 @@ afterEach(cleanup);
 beforeEach(() => {
   useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
   useMatchDataStore.setState({
-    status: 'loading',
-    lineup: undefined,
-    events: undefined,
-    statistics: undefined,
+    status: { loadStatus: 'loading' },
+    lineup: { loadStatus: 'loading' },
+    events: { loadStatus: 'loading' },
+    statistics: { loadStatus: 'loading' },
   });
 });
 
@@ -29,6 +29,38 @@ describe('MatchDataOverlays', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
     expect(screen.getByText('데이터 불러오는 중')).toBeTruthy();
+  });
+
+  it('shows only the Statistics resource error in the Statistics tab', () => {
+    useMatchDataStore.setState({
+      status: { loadStatus: 'ready' },
+      lineup: { loadStatus: 'ready' },
+      events: { loadStatus: 'ready' },
+      statistics: { loadStatus: 'error', error: 'statistics failed' },
+    });
+    render(<MatchDataOverlays />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Statistics' }));
+
+    expect(screen.getByRole('alert').textContent).toBe(
+      '통계 데이터를 불러오지 못했습니다: statistics failed',
+    );
+  });
+
+  it('shows only the Events resource error in the Events tab', () => {
+    useMatchDataStore.setState({
+      status: { loadStatus: 'ready' },
+      lineup: { loadStatus: 'ready' },
+      events: { loadStatus: 'error', error: 'events failed' },
+      statistics: { loadStatus: 'ready' },
+    });
+    render(<MatchDataOverlays />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
+
+    expect(screen.getByRole('alert').textContent).toBe(
+      '이벤트 데이터를 불러오지 못했습니다: events failed',
+    );
   });
 
   it('collapses and expands the match panel', () => {

@@ -11,7 +11,7 @@ type DetailTab = 'lineup' | 'statistics' | 'events';
 
 export function MatchDataOverlays() {
   const fixtureUid = useMatchPickerStore((state) => state.selectedFixtureUid);
-  const lineup = useMatchDataStore((state) => state.lineup);
+  const lineup = useMatchDataStore((state) => state.lineup.data);
   const [tab, setTab] = useState<DetailTab>('lineup');
   const [collapsed, setCollapsed] = useState(false);
 
