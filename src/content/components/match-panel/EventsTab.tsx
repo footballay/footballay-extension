@@ -73,19 +73,13 @@ export function EventsTab() {
         {away && (
           <TeamTitle side="away" name={displayName(away)} color={colors.away} />
         )}
-        {eventsResource.loadStatus === 'error' ? (
+        {eventsResource.loadStatus === 'error' && (
           <p className="footballay-match-panel__empty" role="alert">
             이벤트 데이터를 불러오지 못했습니다: {eventsResource.error}
           </p>
-        ) : (
-          !home &&
-          !away && (
-            <p className="footballay-match-panel__empty">
-              {eventsResource.loadStatus === 'loading'
-                ? '데이터 불러오는 중'
-                : '이벤트 데이터가 없습니다.'}
-            </p>
-          )
+        )}
+        {eventsResource.loadStatus === 'loading' && !home && !away && (
+          <p className="footballay-match-panel__empty">데이터 불러오는 중</p>
         )}
       </div>
     </>

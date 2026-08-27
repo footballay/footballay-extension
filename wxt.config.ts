@@ -24,7 +24,6 @@ export default defineConfig({
         128: 'footballay_icon.png',
       },
     },
-    permissions: ['storage', 'activeTab', 'scripting'],
     host_permissions: ['https://api.footballay.com/*'],
   },
 });

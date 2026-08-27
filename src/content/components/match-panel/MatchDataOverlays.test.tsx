@@ -63,6 +63,24 @@ describe('MatchDataOverlays', () => {
     );
   });
 
+  it('keeps an empty events timeline without an empty-state message', () => {
+    useMatchDataStore.setState({
+      status: { loadStatus: 'ready' },
+      lineup: { loadStatus: 'ready' },
+      events: {
+        loadStatus: 'ready',
+        data: { fixtureUid: 'fixture-1', events: [] },
+      },
+      statistics: { loadStatus: 'ready' },
+    });
+    render(<MatchDataOverlays />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
+
+    expect(screen.getByLabelText('Match events timeline')).toBeTruthy();
+    expect(screen.queryByText('이벤트 데이터가 없습니다.')).toBeNull();
+  });
+
   it('collapses and expands the match panel', () => {
     render(<MatchDataOverlays />);
 
