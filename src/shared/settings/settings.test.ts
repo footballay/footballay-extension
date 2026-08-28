@@ -50,14 +50,16 @@ beforeEach(() => {
 describe('settings storage', () => {
   it('uses defaults and normalizes invalid persisted values', async () => {
     expect(await loadExtensionSettings()).toEqual(DEFAULT_SETTINGS);
-    expect(
-      normalizeSettings({ locale: 'fr', timezone: 'UTC+9' }),
-    ).toEqual(DEFAULT_SETTINGS);
+    expect(normalizeSettings({ locale: 'fr', timezone: 'UTC+9' })).toEqual(
+      DEFAULT_SETTINGS,
+    );
   });
 
   it('persists normalized settings and reflects storage changes', async () => {
     const changes: unknown[] = [];
-    const unwatch = watchExtensionSettings((settings) => changes.push(settings));
+    const unwatch = watchExtensionSettings((settings) =>
+      changes.push(settings),
+    );
 
     await saveExtensionSettings({ locale: 'ko', timezone: 'Asia/Seoul' });
     expect(await loadExtensionSettings()).toEqual({

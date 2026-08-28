@@ -107,7 +107,9 @@ describe('MatchDataOverlays', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     expect(screen.getByLabelText('Language')).toBeTruthy();
-    expect(screen.getByLabelText('Timezone')).toBeTruthy();
+    expect(screen.getByLabelText('Timezone').textContent).toContain(
+      Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    );
 
     fireEvent.change(screen.getByLabelText('Language'), {
       target: { value: 'ko' },
@@ -130,5 +132,22 @@ describe('MatchDataOverlays', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
     expect(screen.getByLabelText('Match events timeline')).toBeTruthy();
+  });
+
+  it('does not save an invalid custom timezone over the current setting', () => {
+    const updateSettings = vi.fn();
+    useSettingsStore.setState({
+      settings: { locale: 'default', timezone: 'Asia/Seoul' },
+      updateSettings,
+    });
+    render(<MatchDataOverlays />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    fireEvent.change(screen.getByLabelText('Custom timezone'), {
+      target: { value: 'UTC+9' },
+    });
+
+    expect(updateSettings).not.toHaveBeenCalled();
+    expect(useSettingsStore.getState().settings.timezone).toBe('Asia/Seoul');
   });
 });
