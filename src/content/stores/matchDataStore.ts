@@ -33,11 +33,13 @@ type MatchDataStore = {
   events: MatchDataResource<FixtureEventsDto>;
   statistics: MatchDataResource<FixtureStatisticsDto>;
   refreshMatchData: () => Promise<void>;
+  reloadLocalizedMatchData: () => Promise<void>;
 };
 
 type FixtureDataResponse<T> = FootballayApiResponse<EtaggedResponse<T>>;
 
 let latestRequestId = 0;
+let localizedGeneration = 0;
 
 function emptyResource(loadStatus: LoadStatus): MatchDataResource<never> {
   return { loadStatus };
@@ -75,6 +77,7 @@ export const useMatchDataStore = create<MatchDataStore>((set, get) => {
     if (!fixtureUid) return;
 
     const requestId = ++latestRequestId;
+    const generation = localizedGeneration;
     const localeOverride = toLocaleOverride(
       useSettingsStore.getState().settings.locale,
     );
@@ -103,6 +106,46 @@ export const useMatchDataStore = create<MatchDataStore>((set, get) => {
       results;
     set((state) => ({
       status: nextResource(state.status, statusResult),
+      ...(generation === localizedGeneration && {
+        lineup: nextResource(state.lineup, lineupResult),
+        events: nextResource(state.events, eventsResult),
+        statistics: nextResource(state.statistics, statisticsResult),
+      }),
+    }));
+  }
+
+  async function reloadLocalizedMatchData() {
+    const { fixtureUid } = get();
+    if (!fixtureUid) return;
+
+    const generation = ++localizedGeneration;
+    set({
+      lineup: emptyResource('loading'),
+      events: emptyResource('loading'),
+      statistics: emptyResource('loading'),
+    });
+    const localeOverride = toLocaleOverride(
+      useSettingsStore.getState().settings.locale,
+    );
+    const results = await Promise.allSettled([
+      requestFixtureLineup({
+        fixtureUid,
+        ...(localeOverride && { localeOverride }),
+      }),
+      requestFixtureEvents({
+        fixtureUid,
+        ...(localeOverride && { localeOverride }),
+      }),
+      requestFixtureStatistics({
+        fixtureUid,
+        ...(localeOverride && { localeOverride }),
+      }),
+    ]);
+    if (generation !== localizedGeneration || get().fixtureUid !== fixtureUid)
+      return;
+
+    const [lineupResult, eventsResult, statisticsResult] = results;
+    set((state) => ({
       lineup: nextResource(state.lineup, lineupResult),
       events: nextResource(state.events, eventsResult),
       statistics: nextResource(state.statistics, statisticsResult),
@@ -115,11 +158,13 @@ export const useMatchDataStore = create<MatchDataStore>((set, get) => {
     events: emptyResource('idle'),
     statistics: emptyResource('idle'),
     refreshMatchData,
+    reloadLocalizedMatchData,
   };
 });
 
 export function setMatchDataFixture(fixtureUid?: string) {
   ++latestRequestId;
+  ++localizedGeneration;
   const loadStatus = fixtureUid ? 'loading' : 'idle';
   useMatchDataStore.setState({
     fixtureUid,

@@ -22,9 +22,15 @@ vi.mock('@/shared/api/client', () => ({
   requestFixtureEvents,
   requestFixtureStatistics,
 }));
-vi.mock('@/content/stores/settingsStore', () => ({ useSettingsStore: settings }));
+vi.mock('@/content/stores/settingsStore', () => ({
+  useSettingsStore: settings,
+}));
 
 import { setMatchDataFixture, useMatchDataStore } from './matchDataStore';
+import {
+  createFixtureLineup,
+  createFixtureStatistics,
+} from '@/content/test/matchDataFixtures';
 
 const updated = <T>(data: T, etag: string) => ({
   ok: true as const,
@@ -159,6 +165,104 @@ describe('match data store', () => {
     expect(requestFixtureStatistics).toHaveBeenCalledWith(
       expect.objectContaining({ localeOverride: 'en' }),
     );
+  });
+
+  it('reloads only localized resources without their previous ETags', async () => {
+    requestFixtureLineup.mockResolvedValue(
+      updated(createFixtureLineup({ fixtureUid: 'en' }), 'l2'),
+    );
+    requestFixtureEvents.mockResolvedValue(
+      updated({ fixtureUid: 'en', events: [] }, 'e2'),
+    );
+    requestFixtureStatistics.mockResolvedValue(
+      updated(createFixtureStatistics(), 't2'),
+    );
+    settings.setState({
+      settings: { locale: 'en', timezone: 'default' },
+    });
+    setMatchDataFixture('fixture-1');
+    useMatchDataStore.setState({
+      status: {
+        loadStatus: 'ready',
+        data: {
+          fixtureUid: 'fixture-1',
+          liveStatus: {
+            elapsed: null,
+            shortStatus: 'NS',
+            longStatus: 'Not Started',
+            score: { home: null, away: null },
+          },
+        },
+        etag: 's1',
+      },
+      lineup: {
+        loadStatus: 'ready',
+        data: createFixtureLineup({ fixtureUid: 'ko' }),
+        etag: 'l1',
+      },
+      events: {
+        loadStatus: 'ready',
+        data: { fixtureUid: 'ko', events: [] },
+        etag: 'e1',
+      },
+      statistics: {
+        loadStatus: 'ready',
+        data: createFixtureStatistics(),
+        etag: 't1',
+      },
+    });
+
+    await useMatchDataStore.getState().reloadLocalizedMatchData();
+
+    expect(requestFixtureStatus).not.toHaveBeenCalled();
+    expect(requestFixtureLineup).toHaveBeenCalledWith({
+      fixtureUid: 'fixture-1',
+      localeOverride: 'en',
+    });
+    expect(requestFixtureEvents).toHaveBeenCalledWith({
+      fixtureUid: 'fixture-1',
+      localeOverride: 'en',
+    });
+    expect(requestFixtureStatistics).toHaveBeenCalledWith({
+      fixtureUid: 'fixture-1',
+      localeOverride: 'en',
+    });
+    expect(useMatchDataStore.getState()).toMatchObject({
+      status: { loadStatus: 'ready', etag: 's1' },
+      lineup: { loadStatus: 'ready', data: { fixtureUid: 'en' }, etag: 'l2' },
+    });
+  });
+
+  it('ignores a late localized response after the locale changes again', async () => {
+    let resolveOldLineup!: (value: unknown) => void;
+    requestFixtureLineup
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveOldLineup = resolve;
+        }),
+      )
+      .mockResolvedValueOnce(
+        updated(createFixtureLineup({ fixtureUid: 'en' }), 'l2'),
+      );
+    requestFixtureEvents.mockResolvedValue(
+      updated({ fixtureUid: 'en', events: [] }, 'e2'),
+    );
+    requestFixtureStatistics.mockResolvedValue(
+      updated(createFixtureStatistics(), 't2'),
+    );
+    setMatchDataFixture('fixture-1');
+    settings.setState({ settings: { locale: 'ko', timezone: 'default' } });
+    const oldReload = useMatchDataStore.getState().reloadLocalizedMatchData();
+
+    settings.setState({ settings: { locale: 'en', timezone: 'default' } });
+    await useMatchDataStore.getState().reloadLocalizedMatchData();
+    resolveOldLineup(updated(createFixtureLineup({ fixtureUid: 'ko' }), 'l1'));
+    await oldReload;
+
+    expect(useMatchDataStore.getState().lineup).toMatchObject({
+      data: { fixtureUid: 'en' },
+      etag: 'l2',
+    });
   });
 
   it('ignores a response after another fixture is selected', async () => {

@@ -76,6 +76,70 @@ describe('match picker store', () => {
     });
   });
 
+  it('keeps the latest locale league response when an earlier request finishes late', async () => {
+    let resolveOldRequest!: (value: unknown) => void;
+    requestAvailableLeagues
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveOldRequest = resolve;
+        }),
+      )
+      .mockResolvedValueOnce({
+        ok: true,
+        data: [
+          {
+            uid: 'league-ko',
+            name: '프리미어리그',
+            shortName: 'PL',
+            logo: null,
+          },
+        ],
+      });
+
+    const oldRequest = useMatchPickerStore.getState().loadAvailableLeagues();
+    settings.setState({ settings: { locale: 'ko', timezone: 'default' } });
+    await useMatchPickerStore.getState().loadAvailableLeagues();
+    resolveOldRequest({
+      ok: true,
+      data: [
+        {
+          uid: 'league-default',
+          name: 'Premier League',
+          shortName: 'PL',
+          logo: null,
+        },
+      ],
+    });
+    await oldRequest;
+
+    expect(useMatchPickerStore.getState()).toMatchObject({
+      leagues: [expect.objectContaining({ uid: 'league-ko' })],
+      leagueStatus: 'ready',
+    });
+  });
+
+  it('ignores a late league request error after a newer response succeeds', async () => {
+    let rejectOldRequest!: (error: Error) => void;
+    requestAvailableLeagues
+      .mockReturnValueOnce(
+        new Promise((_, reject) => {
+          rejectOldRequest = reject;
+        }),
+      )
+      .mockResolvedValueOnce({ ok: true, data: [] });
+
+    const oldRequest = useMatchPickerStore.getState().loadAvailableLeagues();
+    await useMatchPickerStore.getState().loadAvailableLeagues();
+    rejectOldRequest(new Error('old request failed'));
+    await oldRequest;
+
+    expect(useMatchPickerStore.getState()).toMatchObject({
+      leagues: [],
+      leagueStatus: 'ready',
+      leagueError: undefined,
+    });
+  });
+
   it('selects a league and loads its fixtures in the same action flow', async () => {
     requestFixtures.mockResolvedValueOnce({
       ok: true,
@@ -239,6 +303,52 @@ describe('match picker store', () => {
       .selectDateAndLoadFixtures('2026-08-28');
 
     expect(useMatchPickerStore.getState().selectedDate).toBe('2026-08-28');
+  });
+
+  it('reloads the same date exactly for a timezone change and preserves its fixture selection', async () => {
+    requestFixtures.mockResolvedValueOnce({
+      ok: true,
+      data: [{ uid: 'fixture-1' }],
+    });
+    settings.setState({
+      settings: { locale: 'default', timezone: 'America/New_York' },
+    });
+    useMatchPickerStore.setState({
+      selectedLeagueUid: 'league-1',
+      selectedDate: '2026-08-28',
+      selectedFixtureUid: 'fixture-1',
+    });
+
+    await useMatchPickerStore.getState().reloadFixturesForTimezone();
+
+    expect(requestFixtures).toHaveBeenCalledWith({
+      leagueUid: 'league-1',
+      date: '2026-08-28',
+      mode: 'exact',
+      timezone: 'America/New_York',
+    });
+    expect(useMatchPickerStore.getState()).toMatchObject({
+      selectedLeagueUid: 'league-1',
+      selectedDate: '2026-08-28',
+      selectedFixtureUid: 'fixture-1',
+    });
+  });
+
+  it('clears only a missing fixture selection after a timezone reload', async () => {
+    requestFixtures.mockResolvedValueOnce({ ok: true, data: [] });
+    useMatchPickerStore.setState({
+      selectedLeagueUid: 'league-1',
+      selectedDate: '2026-08-28',
+      selectedFixtureUid: 'fixture-1',
+    });
+
+    await useMatchPickerStore.getState().reloadFixturesForTimezone();
+
+    expect(useMatchPickerStore.getState()).toMatchObject({
+      selectedLeagueUid: 'league-1',
+      selectedDate: '2026-08-28',
+      selectedFixtureUid: undefined,
+    });
   });
 
   it('makes a fixture API failure available to the view', async () => {

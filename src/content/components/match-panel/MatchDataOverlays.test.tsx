@@ -1,14 +1,19 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
+import { useSettingsStore } from '@/content/stores/settingsStore';
 import { MatchDataOverlays } from './MatchDataOverlays';
 
 afterEach(cleanup);
 
 beforeEach(() => {
+  useSettingsStore.setState({
+    settings: { locale: 'default', timezone: 'default' },
+    updateSettings: vi.fn(),
+  });
   useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
   useMatchDataStore.setState({
     status: { loadStatus: 'loading' },
@@ -93,5 +98,37 @@ describe('MatchDataOverlays', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Open match panel' }));
     expect(screen.getByRole('tab', { name: 'Lineup' })).toBeTruthy();
+  });
+
+  it('opens Settings from the sidebar and saves language and timezone choices', () => {
+    const updateSettings = useSettingsStore.getState()
+      .updateSettings as ReturnType<typeof vi.fn>;
+    render(<MatchDataOverlays />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(screen.getByLabelText('Language')).toBeTruthy();
+    expect(screen.getByLabelText('Timezone')).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Language'), {
+      target: { value: 'ko' },
+    });
+    expect(updateSettings).toHaveBeenCalledWith({
+      locale: 'ko',
+      timezone: 'default',
+    });
+
+    fireEvent.change(screen.getByLabelText('Timezone'), {
+      target: { value: 'custom' },
+    });
+    fireEvent.change(screen.getByLabelText('Custom timezone'), {
+      target: { value: 'Asia/Seoul' },
+    });
+    expect(updateSettings).toHaveBeenLastCalledWith({
+      locale: 'default',
+      timezone: 'Asia/Seoul',
+    });
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
+    expect(screen.getByLabelText('Match events timeline')).toBeTruthy();
   });
 });

@@ -52,6 +52,8 @@ const selectDateAndLoadFixtures = vi.fn(async (date: string) => {
   useMatchPickerStore.setState({ selectedDate: date, fixtureStatus: 'ready' });
 });
 const navigateFixtureDate = vi.fn(async () => undefined);
+const loadFixtureDates = vi.fn(async () => undefined);
+const reloadFixturesForTimezone = vi.fn(async () => undefined);
 
 vi.mock('@/shared/settings/settings', () => ({
   DEFAULT_SETTINGS: { locale: 'default', timezone: 'default' },
@@ -70,6 +72,8 @@ beforeEach(() => {
   selectLeagueAndLoadFixtures.mockClear();
   selectDateAndLoadFixtures.mockClear();
   navigateFixtureDate.mockClear();
+  loadFixtureDates.mockClear();
+  reloadFixturesForTimezone.mockClear();
   useSettingsStore.setState({ hydrated: true });
   useMatchPickerStore.setState({
     leagues: [
@@ -94,6 +98,8 @@ beforeEach(() => {
     selectLeagueAndLoadFixtures,
     selectDateAndLoadFixtures,
     navigateFixtureDate,
+    loadFixtureDates,
+    reloadFixturesForTimezone,
   });
   useMatchDataStore.setState({
     status: { loadStatus: 'ready' },
@@ -271,6 +277,23 @@ describe('ContentApp', () => {
 
     expect(screen.getByText('2026. 07')).toBeTruthy();
     expect(useMatchPickerStore.getState().selectedDate).toBe('2026-08-11');
+  });
+
+  it('reloads the open calendar range when the timezone changes', async () => {
+    const user = userEvent.setup();
+    render(<ContentApp />);
+
+    await user.click(
+      screen.getByRole('button', { name: 'Fixture date picker' }),
+    );
+    loadFixtureDates.mockClear();
+    act(() => {
+      useSettingsStore.setState({
+        settings: { locale: 'default', timezone: 'America/New_York' },
+      });
+    });
+
+    expect(loadFixtureDates).toHaveBeenCalledWith('2026-08-01');
   });
 
   it('returns to matches when navigating dates from the date picker', async () => {

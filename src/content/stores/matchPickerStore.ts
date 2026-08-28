@@ -36,17 +36,21 @@ type MatchPickerState = {
   loadFixtureDates: (date: string) => Promise<void>;
   navigateFixtureDate: (direction: 'previous' | 'next') => Promise<void>;
   selectDateAndLoadFixtures: (date: string) => Promise<void>;
+  reloadFixturesForLocale: () => Promise<void>;
+  reloadFixturesForTimezone: () => Promise<void>;
   selectFixture: (fixtureUid: string) => void;
 };
 
 let latestFixtureRequestId = 0;
 let latestFixtureDatesRequestId = 0;
+let latestLeagueRequestId = 0;
 
 export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
   async function loadFixtures(
     leagueUid: string,
     date: string,
     mode: GetFixturesPayload['mode'],
+    preserveSelectedFixture = false,
   ): Promise<void> {
     const requestId = ++latestFixtureRequestId;
     set({
@@ -80,6 +84,11 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
       set({
         fixtures: response.data,
         selectedDate: resolvedDate,
+        ...(preserveSelectedFixture &&
+          get().selectedFixtureUid &&
+          !response.data.some(
+            (fixture) => fixture.uid === get().selectedFixtureUid,
+          ) && { selectedFixtureUid: undefined }),
         fixtureStatus: 'ready',
         fixtureError: undefined,
       });
@@ -101,6 +110,7 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
     fixtureDates: [],
     fixtureStatus: 'idle',
     loadAvailableLeagues: async () => {
+      const requestId = ++latestLeagueRequestId;
       set({ leagueStatus: 'loading', leagueError: undefined });
 
       try {
@@ -110,6 +120,7 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
         const response = await requestAvailableLeagues(
           localeOverride ? { localeOverride } : undefined,
         );
+        if (requestId !== latestLeagueRequestId) return;
         if (!response.ok) {
           set({ leagueStatus: 'error', leagueError: response.error });
           return;
@@ -121,6 +132,7 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
           leagueError: undefined,
         });
       } catch (error) {
+        if (requestId !== latestLeagueRequestId) return;
         set({
           leagueStatus: 'error',
           leagueError:
@@ -178,6 +190,18 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
       if (!selectedLeagueUid) return;
 
       await loadFixtures(selectedLeagueUid, date, 'exact');
+    },
+    reloadFixturesForLocale: async () => {
+      const { selectedLeagueUid, selectedDate } = get();
+      if (!selectedLeagueUid || !selectedDate) return;
+
+      await loadFixtures(selectedLeagueUid, selectedDate, 'exact');
+    },
+    reloadFixturesForTimezone: async () => {
+      const { selectedLeagueUid, selectedDate } = get();
+      if (!selectedLeagueUid || !selectedDate) return;
+
+      await loadFixtures(selectedLeagueUid, selectedDate, 'exact', true);
     },
     selectFixture: (selectedFixtureUid) => set({ selectedFixtureUid }),
   };

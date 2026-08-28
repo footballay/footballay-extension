@@ -1,4 +1,4 @@
-import { BarChart3, Flag, UsersRound, X } from 'lucide-react';
+import { BarChart3, Flag, Settings, UsersRound, X } from 'lucide-react';
 import { useState } from 'react';
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
@@ -6,9 +6,10 @@ import { t, useContentLocale } from '@/shared/i18n/content';
 import { LineupTab } from './LineupTab';
 import { StatisticsTab } from './StatisticsTab';
 import { EventsTab } from './EventsTab';
+import { SettingsTab } from './SettingsTab';
 import './match-data-overlays.css';
 
-type DetailTab = 'lineup' | 'statistics' | 'events';
+type DetailTab = 'lineup' | 'statistics' | 'events' | 'settings';
 
 export function MatchDataOverlays() {
   const locale = useContentLocale();
@@ -75,22 +76,34 @@ export function MatchDataOverlays() {
             <Flag />
           </button>
         </div>
-        <button
-          className="footballay-close-button"
-          type="button"
-          aria-label={t(locale, 'minimizeMatchPanel')}
-          onClick={() => setCollapsed(true)}
-        >
-          <X />
-        </button>
+        <div className="footballay-match-panel__actions">
+          <button
+            type="button"
+            aria-label={t(locale, 'settings')}
+            aria-pressed={tab === 'settings'}
+            onClick={() => setTab('settings')}
+          >
+            <Settings />
+          </button>
+          <button
+            className="footballay-close-button"
+            type="button"
+            aria-label={t(locale, 'minimizeMatchPanel')}
+            onClick={() => setCollapsed(true)}
+          >
+            <X />
+          </button>
+        </div>
       </div>
       <section className="footballay-match-panel__content">
         {tab === 'lineup' ? (
           <LineupTab lineup={lineup} />
         ) : tab === 'statistics' ? (
           <StatisticsTab />
-        ) : (
+        ) : tab === 'events' ? (
           <EventsTab />
+        ) : (
+          <SettingsTab />
         )}
       </section>
     </aside>

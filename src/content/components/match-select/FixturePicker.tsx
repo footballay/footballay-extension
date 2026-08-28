@@ -54,7 +54,7 @@ export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
 
   useEffect(() => {
     if (view === 'DatePicker') void loadFixtureDates(calendarMonth);
-  }, [calendarMonth, loadFixtureDates, view]);
+  }, [calendarMonth, loadFixtureDates, timezone, view]);
 
   if (!selectedLeagueUid) {
     return view === 'Match' ? (
