@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
-import { toDateInputValue } from '@/content/utils/date';
+import {
+  addDateMonths,
+  calendarGridDates,
+  dateDay,
+  dateMonth,
+  startOfDateMonth,
+  todayInTimezone,
+} from '@/content/utils/date';
+import { useSettingsStore } from '@/content/stores/settingsStore';
 import { t, useContentLocale } from '@/shared/i18n/content';
+import { resolveTimezone } from '@/shared/settings/resolution';
 
 type FixturePickerProps = {
   view: 'Match' | 'DatePicker';
@@ -10,6 +19,9 @@ type FixturePickerProps = {
 
 export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
   const locale = useContentLocale();
+  const timezone = useSettingsStore((state) =>
+    resolveTimezone(state.settings.timezone),
+  );
   const fixtures = useMatchPickerStore((state) => state.fixtures);
   const fixtureDates = useMatchPickerStore((state) => state.fixtureDates);
   const fixtureStatus = useMatchPickerStore((state) => state.fixtureStatus);
@@ -29,20 +41,19 @@ export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
     (state) => state.loadFixtureDates,
   );
   const [calendarMonth, setCalendarMonth] = useState(() =>
-    selectedDate ? new Date(`${selectedDate}T00:00:00`) : new Date(),
+    startOfDateMonth(selectedDate ?? todayInTimezone(timezone)),
   );
 
   useEffect(() => {
     if (view !== 'DatePicker') {
       setCalendarMonth(
-        selectedDate ? new Date(`${selectedDate}T00:00:00`) : new Date(),
+        startOfDateMonth(selectedDate ?? todayInTimezone(timezone)),
       );
     }
-  }, [selectedDate, view]);
+  }, [selectedDate, timezone, view]);
 
   useEffect(() => {
-    if (view === 'DatePicker')
-      void loadFixtureDates(toDateInputValue(calendarMonth));
+    if (view === 'DatePicker') void loadFixtureDates(calendarMonth);
   }, [calendarMonth, loadFixtureDates, view]);
 
   if (!selectedLeagueUid) {
@@ -56,13 +67,6 @@ export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
     ) : null;
   }
 
-  const calendarStart = new Date(
-    calendarMonth.getFullYear(),
-    calendarMonth.getMonth(),
-    1,
-  );
-  calendarStart.setDate(calendarStart.getDate() - calendarStart.getDay());
-
   if (view === 'DatePicker') {
     return (
       <div
@@ -74,41 +78,29 @@ export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
           <button
             type="button"
             aria-label={t(locale, 'previousMonth')}
-            onClick={() =>
-              setCalendarMonth(
-                (date) => new Date(date.getFullYear(), date.getMonth() - 1, 1),
-              )
-            }
+            onClick={() => setCalendarMonth((date) => addDateMonths(date, -1))}
           >
             <span className="footballay-caret footballay-caret--left" />
           </button>
           <span>
-            {calendarMonth.getFullYear()}.{' '}
-            {String(calendarMonth.getMonth() + 1).padStart(2, '0')}
+            {calendarMonth.slice(0, 4)}.{' '}
+            {String(dateMonth(calendarMonth)).padStart(2, '0')}
           </span>
           <button
             type="button"
             aria-label={t(locale, 'nextMonth')}
-            onClick={() =>
-              setCalendarMonth(
-                (date) => new Date(date.getFullYear(), date.getMonth() + 1, 1),
-              )
-            }
+            onClick={() => setCalendarMonth((date) => addDateMonths(date, 1))}
           >
             <span className="footballay-caret footballay-caret--right" />
           </button>
         </div>
         <div className="footballay-calendar-grid">
-          {Array.from({ length: 42 }, (_, index) => {
-            const date = new Date(calendarStart);
-            date.setDate(calendarStart.getDate() + index);
-            const value = toDateInputValue(date);
-            const isToday = value === toDateInputValue(new Date());
+          {calendarGridDates(calendarMonth).map((value) => {
+            const day = dateDay(value);
+            const month = dateMonth(value);
+            const isToday = value === todayInTimezone(timezone);
             const hasFixture = fixtureDates.includes(value);
-            const label =
-              date.getDate() === 1
-                ? `${date.getMonth() + 1}/${date.getDate()}`
-                : String(date.getDate());
+            const label = day === 1 ? `${month}/${day}` : String(day);
 
             return (
               <button
@@ -159,6 +151,7 @@ export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
             const awayTeamName = fixture.awayTeam?.name ?? t(locale, 'tbd');
             const kickoff = fixture.kickoff
               ? new Intl.DateTimeFormat(locale, {
+                  timeZone: timezone,
                   hour: '2-digit',
                   minute: '2-digit',
                   hour12: false,

@@ -20,7 +20,9 @@ vi.mock('@/shared/api/client', () => ({
   requestFixtureDates,
   requestFixtures,
 }));
-vi.mock('@/content/stores/settingsStore', () => ({ useSettingsStore: settings }));
+vi.mock('@/content/stores/settingsStore', () => ({
+  useSettingsStore: settings,
+}));
 
 import { useMatchPickerStore } from './matchPickerStore';
 
@@ -149,6 +151,94 @@ describe('match picker store', () => {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       }),
     );
+  });
+
+  it('uses selected-timezone today for the initial nearest request', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-28T23:30:00Z'));
+    requestFixtures.mockResolvedValueOnce({ ok: true, data: [] });
+    settings.setState({
+      settings: { locale: 'default', timezone: 'Asia/Seoul' },
+    });
+
+    await useMatchPickerStore
+      .getState()
+      .selectLeagueAndLoadFixtures('league-1');
+
+    expect(requestFixtures).toHaveBeenCalledWith(
+      expect.objectContaining({ date: '2026-08-29', mode: 'nearest' }),
+    );
+    vi.useRealTimers();
+  });
+
+  it('uses selected-timezone today when changing leagues', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-28T23:30:00Z'));
+    requestFixtures.mockResolvedValueOnce({
+      ok: true,
+      data: [{ uid: 'fixture-1', kickoff: '2026-08-28T23:30:00Z' }],
+    });
+    settings.setState({
+      settings: { locale: 'default', timezone: 'Asia/Seoul' },
+    });
+    useMatchPickerStore.setState({ selectedDate: '2026-01-01' });
+
+    await useMatchPickerStore
+      .getState()
+      .selectLeagueAndLoadFixtures('league-2');
+
+    expect(requestFixtures).toHaveBeenCalledWith(
+      expect.objectContaining({ date: '2026-08-29', mode: 'nearest' }),
+    );
+    expect(useMatchPickerStore.getState().selectedDate).toBe('2026-08-29');
+    vi.useRealTimers();
+  });
+
+  it('uses the selected timezone for nearest and previous kickoff dates', async () => {
+    requestFixtures
+      .mockResolvedValueOnce({
+        ok: true,
+        data: [{ uid: 'fixture-1', kickoff: '2026-08-28T23:30:00Z' }],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: [{ uid: 'fixture-2', kickoff: '2026-08-28T23:30:00Z' }],
+      });
+    settings.setState({
+      settings: { locale: 'default', timezone: 'Asia/Seoul' },
+    });
+
+    await useMatchPickerStore
+      .getState()
+      .selectLeagueAndLoadFixtures('league-1');
+    expect(useMatchPickerStore.getState().selectedDate).toBe('2026-08-29');
+
+    settings.setState({
+      settings: { locale: 'default', timezone: 'America/Los_Angeles' },
+    });
+    await useMatchPickerStore.getState().navigateFixtureDate('previous');
+
+    expect(requestFixtures).toHaveBeenLastCalledWith(
+      expect.objectContaining({ mode: 'previous', date: '2026-08-28' }),
+    );
+    expect(useMatchPickerStore.getState().selectedDate).toBe('2026-08-28');
+  });
+
+  it('keeps an exact request date even when kickoff crosses the selected timezone date', async () => {
+    requestFixtures.mockResolvedValueOnce({
+      ok: true,
+      data: [{ uid: 'fixture-1', kickoff: '2026-08-28T23:30:00Z' }],
+    });
+    settings.setState({
+      settings: { locale: 'default', timezone: 'Asia/Seoul' },
+    });
+    useMatchPickerStore.setState({ selectedLeagueUid: 'league-1' });
+
+    await useMatchPickerStore
+      .getState()
+      .selectDateAndLoadFixtures('2026-08-28');
+
+    expect(useMatchPickerStore.getState().selectedDate).toBe('2026-08-28');
   });
 
   it('makes a fixture API failure available to the view', async () => {

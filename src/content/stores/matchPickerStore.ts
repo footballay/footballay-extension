@@ -6,7 +6,12 @@ import {
 } from '@/shared/api/client';
 import type { AvailableLeagueDto, FixtureDto } from '@/shared/api/dto';
 import type { GetFixturesPayload } from '@/shared/api/protocol';
-import { toDateInputValue } from '@/content/utils/date';
+import {
+  addDateDays,
+  calendarRange,
+  instantToDate,
+  todayInTimezone,
+} from '@/content/utils/date';
 import { useSettingsStore } from '@/content/stores/settingsStore';
 import {
   resolveTimezone,
@@ -37,14 +42,6 @@ type MatchPickerState = {
 let latestFixtureRequestId = 0;
 let latestFixtureDatesRequestId = 0;
 
-function calendarRange(date: string): { startDate: string; endDate: string } {
-  const start = new Date(`${date}T00:00:00`);
-  start.setDate(1 - start.getDay());
-  const end = new Date(start);
-  end.setDate(start.getDate() + 41);
-  return { startDate: toDateInputValue(start), endDate: toDateInputValue(end) };
-}
-
 export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
   async function loadFixtures(
     leagueUid: string,
@@ -62,11 +59,12 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
     try {
       const settings = useSettingsStore.getState().settings;
       const localeOverride = toLocaleOverride(settings.locale);
+      const timezone = resolveTimezone(settings.timezone);
       const response = await requestFixtures({
         leagueUid,
         date,
         mode,
-        timezone: resolveTimezone(settings.timezone),
+        timezone,
         ...(localeOverride && { localeOverride }),
       });
       if (requestId !== latestFixtureRequestId) return;
@@ -78,9 +76,7 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
 
       const kickoff = response.data.find((fixture) => fixture.kickoff)?.kickoff;
       const resolvedDate =
-        mode === 'exact' || !kickoff
-          ? date
-          : toDateInputValue(new Date(kickoff));
+        mode === 'exact' || !kickoff ? date : instantToDate(kickoff, timezone);
       set({
         fixtures: response.data,
         selectedDate: resolvedDate,
@@ -140,7 +136,10 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
         selectedFixtureUid: undefined,
         fixtureDates: [],
       });
-      await loadFixtures(leagueUid, toDateInputValue(new Date()), 'nearest');
+      const timezone = resolveTimezone(
+        useSettingsStore.getState().settings.timezone,
+      );
+      await loadFixtures(leagueUid, todayInTimezone(timezone), 'nearest');
     },
     loadFixtureDates: async (date) => {
       const { selectedLeagueUid } = get();
@@ -168,13 +167,9 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
       const { selectedDate, selectedLeagueUid } = get();
       if (!selectedLeagueUid || !selectedDate) return;
 
-      const nextDate = new Date(`${selectedDate}T00:00:00`);
-      nextDate.setDate(
-        nextDate.getDate() + (direction === 'previous' ? -1 : 1),
-      );
       await loadFixtures(
         selectedLeagueUid,
-        toDateInputValue(nextDate),
+        addDateDays(selectedDate, direction === 'previous' ? -1 : 1),
         direction === 'previous' ? 'previous' : 'nearest',
       );
     },
