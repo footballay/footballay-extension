@@ -7,6 +7,7 @@ export default defineConfig({
     startUrls: ['https://www.coupangplay.com/'],
   },
   manifest: {
+    permissions: ['storage'],
     default_locale: 'ko',
     name: '__MSG_extension_name__',
     description: '__MSG_extension_description__',

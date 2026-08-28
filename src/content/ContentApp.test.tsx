@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentApp } from './ContentApp';
 import { useMatchDataStore } from './stores/matchDataStore';
 import { useMatchPickerStore } from './stores/matchPickerStore';
+import { useSettingsStore } from './stores/settingsStore';
 import {
   createFixtureLineup,
   createFixtureStatistics,
@@ -40,6 +41,16 @@ const selectDateAndLoadFixtures = vi.fn(async (date: string) => {
 });
 const navigateFixtureDate = vi.fn(async () => undefined);
 
+vi.mock('@/shared/settings/settings', () => ({
+  DEFAULT_SETTINGS: { locale: 'default', timezone: 'default' },
+  loadExtensionSettings: vi.fn(),
+  saveExtensionSettings: vi.fn(),
+  watchExtensionSettings: vi.fn(() => () => undefined),
+}));
+vi.mock('@/content/matchDataSync', () => ({
+  startMatchDataSync: vi.fn(),
+}));
+
 afterEach(cleanup);
 
 beforeEach(() => {
@@ -47,6 +58,7 @@ beforeEach(() => {
   selectLeagueAndLoadFixtures.mockClear();
   selectDateAndLoadFixtures.mockClear();
   navigateFixtureDate.mockClear();
+  useSettingsStore.setState({ hydrated: true });
   useMatchPickerStore.setState({
     leagues: [
       { uid: 'league-1', name: 'Premier League', nameKo: '프리미어리그' },
