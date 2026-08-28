@@ -7,6 +7,11 @@ import {
 import type { AvailableLeagueDto, FixtureDto } from '@/shared/api/dto';
 import type { GetFixturesPayload } from '@/shared/api/protocol';
 import { toDateInputValue } from '@/content/utils/date';
+import { useSettingsStore } from '@/content/stores/settingsStore';
+import {
+  resolveTimezone,
+  toLocaleOverride,
+} from '@/shared/settings/resolution';
 
 export type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -55,11 +60,14 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
     });
 
     try {
+      const settings = useSettingsStore.getState().settings;
+      const localeOverride = toLocaleOverride(settings.locale);
       const response = await requestFixtures({
         leagueUid,
         date,
         mode,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        timezone: resolveTimezone(settings.timezone),
+        ...(localeOverride && { localeOverride }),
       });
       if (requestId !== latestFixtureRequestId) return;
 
@@ -100,7 +108,12 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
       set({ leagueStatus: 'loading', leagueError: undefined });
 
       try {
-        const response = await requestAvailableLeagues();
+        const localeOverride = toLocaleOverride(
+          useSettingsStore.getState().settings.locale,
+        );
+        const response = await requestAvailableLeagues(
+          localeOverride ? { localeOverride } : undefined,
+        );
         if (!response.ok) {
           set({ leagueStatus: 'error', leagueError: response.error });
           return;
@@ -137,11 +150,12 @@ export const useMatchPickerStore = create<MatchPickerState>((set, get) => {
       const { startDate, endDate } = calendarRange(date);
       set({ fixtureDates: [] });
       try {
+        const settings = useSettingsStore.getState().settings;
         const response = await requestFixtureDates({
           leagueUid: selectedLeagueUid,
           startDate,
           endDate,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          timezone: resolveTimezone(settings.timezone),
         });
         if (requestId !== latestFixtureDatesRequestId) return;
         set({ fixtureDates: response.ok ? response.data : [] });

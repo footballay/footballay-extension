@@ -15,11 +15,16 @@ export const GET_FIXTURE_LINEUP = 'GET_FIXTURE_LINEUP';
 export const GET_FIXTURE_EVENTS = 'GET_FIXTURE_EVENTS';
 export const GET_FIXTURE_STATISTICS = 'GET_FIXTURE_STATISTICS';
 
+export type LocaleOverride = 'ko' | 'en';
+export type GetAvailableLeaguesPayload = {
+  localeOverride?: LocaleOverride;
+};
 export type GetFixturesPayload = {
   leagueUid: string;
   date: string;
   mode: 'previous' | 'exact' | 'nearest';
   timezone: string;
+  localeOverride?: LocaleOverride;
 };
 export type GetFixtureDatesPayload = {
   leagueUid: string;
@@ -28,6 +33,9 @@ export type GetFixtureDatesPayload = {
   timezone: string;
 };
 export type FixtureEtagPayload = { fixtureUid: string; etag?: string };
+export type LocalizedFixtureEtagPayload = FixtureEtagPayload & {
+  localeOverride?: LocaleOverride;
+};
 export type FootballayApiResponse<T> =
   { ok: true; data: T } | { ok: false; error: string };
 export type EtaggedResponse<T> =

@@ -22,6 +22,43 @@ describe('runtime message handler', () => {
     ).resolves.toEqual({ ok: true, data: [] });
   });
 
+  it('passes localeOverride only through localized operations', async () => {
+    vi.mocked(footballayApi.getAvailableLeagues).mockResolvedValueOnce([]);
+    vi.mocked(footballayApi.getFixtures).mockResolvedValueOnce([]);
+    vi.mocked(footballayApi.getFixtureLineup).mockResolvedValueOnce({
+      type: 'not-modified',
+    });
+
+    await handleRuntimeMessage({
+      type: 'GET_AVAILABLE_LEAGUES',
+      payload: { localeOverride: 'ko' },
+    });
+    await handleRuntimeMessage({
+      type: 'GET_FIXTURES',
+      payload: {
+        leagueUid: 'league-1',
+        date: '2026-08-11',
+        mode: 'nearest',
+        timezone: 'Asia/Seoul',
+        localeOverride: 'en',
+      },
+    });
+    await handleRuntimeMessage({
+      type: 'GET_FIXTURE_LINEUP',
+      payload: { fixtureUid: 'fixture-1', localeOverride: 'ko' },
+    });
+
+    expect(footballayApi.getAvailableLeagues).toHaveBeenCalledWith('ko');
+    expect(footballayApi.getFixtures).toHaveBeenCalledWith(
+      expect.objectContaining({ localeOverride: 'en' }),
+    );
+    expect(footballayApi.getFixtureLineup).toHaveBeenCalledWith(
+      'fixture-1',
+      undefined,
+      'ko',
+    );
+  });
+
   it('accepts a declared fixture operation with its validated payload', async () => {
     vi.mocked(footballayApi.getFixtures).mockResolvedValueOnce([]);
 
@@ -56,6 +93,37 @@ describe('runtime message handler', () => {
     ).resolves.toEqual({ ok: true, data: ['2026-08-22'] });
   });
 
+  it('rejects non-IANA timezones at the fixture and fixture-date boundary', async () => {
+    await expect(
+      handleRuntimeMessage({
+        type: 'GET_FIXTURES',
+        payload: {
+          leagueUid: 'league-1',
+          date: '2026-08-11',
+          mode: 'nearest',
+          timezone: 'UTC+9',
+        },
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      error: 'Invalid Footballay API request',
+    });
+    await expect(
+      handleRuntimeMessage({
+        type: 'GET_FIXTURE_DATES',
+        payload: {
+          leagueUid: 'league-1',
+          startDate: '2026-08-01',
+          endDate: '2026-08-31',
+          timezone: 'Asia/NotExists',
+        },
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      error: 'Invalid Footballay API request',
+    });
+  });
+
   it('passes a fixture endpoint ETag through the validated boundary', async () => {
     vi.mocked(footballayApi.getFixtureStatus).mockResolvedValueOnce({
       type: 'not-modified',
@@ -86,7 +154,22 @@ describe('runtime message handler', () => {
     await expect(
       handleRuntimeMessage({
         type: 'GET_FIXTURE_STATUS',
-        payload: { fixtureUid: 'fixture-1', etag: 1 },
+        payload: { fixtureUid: 'fixture-1', localeOverride: 'ko' },
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      error: 'Invalid Footballay API request',
+    });
+    await expect(
+      handleRuntimeMessage({
+        type: 'GET_FIXTURE_DATES',
+        payload: {
+          leagueUid: 'league-1',
+          startDate: '2026-08-01',
+          endDate: '2026-08-31',
+          timezone: 'Asia/Seoul',
+          localeOverride: 'ko',
+        },
       }),
     ).resolves.toEqual({
       ok: false,

@@ -16,6 +16,8 @@ import type {
   FixtureStatusDto,
 } from '@/shared/api/dto';
 import type { LoadStatus } from './matchPickerStore';
+import { useSettingsStore } from './settingsStore';
+import { toLocaleOverride } from '@/shared/settings/resolution';
 
 export type MatchDataResource<T> = {
   data?: T;
@@ -73,11 +75,26 @@ export const useMatchDataStore = create<MatchDataStore>((set, get) => {
     if (!fixtureUid) return;
 
     const requestId = ++latestRequestId;
+    const localeOverride = toLocaleOverride(
+      useSettingsStore.getState().settings.locale,
+    );
     const results = await Promise.allSettled([
       requestFixtureStatus({ fixtureUid, etag: status.etag }),
-      requestFixtureLineup({ fixtureUid, etag: lineup.etag }),
-      requestFixtureEvents({ fixtureUid, etag: events.etag }),
-      requestFixtureStatistics({ fixtureUid, etag: statistics.etag }),
+      requestFixtureLineup({
+        fixtureUid,
+        etag: lineup.etag,
+        ...(localeOverride && { localeOverride }),
+      }),
+      requestFixtureEvents({
+        fixtureUid,
+        etag: events.etag,
+        ...(localeOverride && { localeOverride }),
+      }),
+      requestFixtureStatistics({
+        fixtureUid,
+        etag: statistics.etag,
+        ...(localeOverride && { localeOverride }),
+      }),
     ]);
     if (requestId !== latestRequestId || get().fixtureUid !== fixtureUid)
       return;

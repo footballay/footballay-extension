@@ -7,6 +7,7 @@ vi.mock('axios', () => ({ default: { create: axiosCreate } }));
 import {
   getAvailableLeagues,
   getFixtureDates,
+  getFixtureLineup,
   getFixtureStatus,
   getFixtures,
 } from './footballayApi';
@@ -38,6 +39,40 @@ describe('Footballay privileged API transport', () => {
     ).resolves.toEqual(response);
     expect(axiosGet).toHaveBeenCalledWith(
       '/v1/football/leagues/league%20%2F%201/fixtures?date=2026-08-11&mode=nearest&timezone=Asia%2FSeoul',
+    );
+  });
+
+  it('sets Accept-Language per localized request only when overridden', async () => {
+    axiosGet.mockResolvedValueOnce({ data: [] });
+    axiosGet.mockResolvedValueOnce({ data: [] });
+    axiosGet.mockResolvedValueOnce({ status: 304, headers: {} });
+
+    await getAvailableLeagues('ko');
+    await getFixtures({
+      leagueUid: 'league-1',
+      date: '2026-08-11',
+      mode: 'nearest',
+      timezone: 'Asia/Seoul',
+      localeOverride: 'en',
+    });
+    await getFixtureLineup('fixture-1', 'etag-1', 'ko');
+
+    expect(axiosGet).toHaveBeenNthCalledWith(
+      1,
+      '/v1/football/leagues/available',
+      { headers: { 'Accept-Language': 'ko' } },
+    );
+    expect(axiosGet).toHaveBeenNthCalledWith(
+      2,
+      '/v1/football/leagues/league-1/fixtures?date=2026-08-11&mode=nearest&timezone=Asia%2FSeoul',
+      { headers: { 'Accept-Language': 'en' } },
+    );
+    expect(axiosGet).toHaveBeenNthCalledWith(
+      3,
+      '/v1/football/fixtures/fixture-1/lineup',
+      expect.objectContaining({
+        headers: { 'If-None-Match': 'etag-1', 'Accept-Language': 'ko' },
+      }),
     );
   });
 

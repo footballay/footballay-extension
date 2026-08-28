@@ -9,6 +9,8 @@ import {
   GET_FIXTURE_STATUS,
   type GetFixturesPayload,
   type GetFixtureDatesPayload,
+  type GetAvailableLeaguesPayload,
+  type LocaleOverride,
   type FootballayApiResponse,
 } from '@/shared/api/protocol';
 
@@ -22,10 +24,19 @@ export async function handleRuntimeMessage(
 
   switch (request.type) {
     case GET_AVAILABLE_LEAGUES:
-      if (request.payload !== undefined) return invalidRequest();
+      if (
+        request.payload !== undefined &&
+        !parseGetAvailableLeaguesPayload(request.payload)
+      )
+        return invalidRequest();
 
       try {
-        return { ok: true, data: await footballayApi.getAvailableLeagues() };
+        return {
+          ok: true,
+          data: await footballayApi.getAvailableLeagues(
+            parseGetAvailableLeaguesPayload(request.payload)?.localeOverride,
+          ),
+        };
       } catch (error) {
         return {
           ok: false,
@@ -71,24 +82,29 @@ export async function handleRuntimeMessage(
     }
 
     case GET_FIXTURE_STATUS:
-      return requestFixtureData(
-        request.payload,
-        footballayApi.getFixtureStatus,
+      return requestFixtureData(request.payload, (fixtureUid, etag) =>
+        footballayApi.getFixtureStatus(fixtureUid, etag),
       );
     case GET_FIXTURE_LINEUP:
       return requestFixtureData(
         request.payload,
-        footballayApi.getFixtureLineup,
+        (fixtureUid, etag, localeOverride) =>
+          footballayApi.getFixtureLineup(fixtureUid, etag, localeOverride),
+        true,
       );
     case GET_FIXTURE_EVENTS:
       return requestFixtureData(
         request.payload,
-        footballayApi.getFixtureEvents,
+        (fixtureUid, etag, localeOverride) =>
+          footballayApi.getFixtureEvents(fixtureUid, etag, localeOverride),
+        true,
       );
     case GET_FIXTURE_STATISTICS:
       return requestFixtureData(
         request.payload,
-        footballayApi.getFixtureStatistics,
+        (fixtureUid, etag, localeOverride) =>
+          footballayApi.getFixtureStatistics(fixtureUid, etag, localeOverride),
+        true,
       );
 
     default:
@@ -98,13 +114,25 @@ export async function handleRuntimeMessage(
 
 async function requestFixtureData<T>(
   payload: unknown,
-  request: (fixtureUid: string, etag?: string) => Promise<T>,
+  request: (
+    fixtureUid: string,
+    etag?: string,
+    localeOverride?: LocaleOverride,
+  ) => Promise<T>,
+  localized = false,
 ): Promise<FootballayApiResponse<T>> {
-  const fixture = parseFixturePayload(payload);
+  const fixture = parseFixturePayload(payload, localized);
   if (!fixture) return invalidRequest();
 
   try {
-    return { ok: true, data: await request(fixture.fixtureUid, fixture.etag) };
+    return {
+      ok: true,
+      data: await request(
+        fixture.fixtureUid,
+        fixture.etag,
+        fixture.localeOverride,
+      ),
+    };
   } catch (error) {
     return {
       ok: false,
@@ -118,14 +146,26 @@ async function requestFixtureData<T>(
 
 function parseFixturePayload(
   payload: unknown,
-): { fixtureUid: string; etag?: string } | undefined {
+  localized: boolean,
+):
+  | { fixtureUid: string; etag?: string; localeOverride?: LocaleOverride }
+  | undefined {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload))
     return undefined;
   const value = payload as Record<string, unknown>;
-  return hasOnlyFields(value, ['fixtureUid', 'etag']) &&
+  return hasOnlyFields(value, [
+    'fixtureUid',
+    'etag',
+    ...(localized ? ['localeOverride'] : []),
+  ]) &&
     isNonEmptyString(value.fixtureUid) &&
-    (value.etag === undefined || typeof value.etag === 'string')
-    ? { fixtureUid: value.fixtureUid, etag: value.etag }
+    (value.etag === undefined || typeof value.etag === 'string') &&
+    isLocaleOverride(value.localeOverride)
+    ? {
+        fixtureUid: value.fixtureUid,
+        etag: value.etag,
+        localeOverride: value.localeOverride,
+      }
     : undefined;
 }
 
@@ -154,11 +194,18 @@ function parseGetFixturesPayload(
 
   const value = payload as Record<string, unknown>;
   if (
-    !hasOnlyFields(value, ['leagueUid', 'date', 'mode', 'timezone']) ||
+    !hasOnlyFields(value, [
+      'leagueUid',
+      'date',
+      'mode',
+      'timezone',
+      'localeOverride',
+    ]) ||
     !isNonEmptyString(value.leagueUid) ||
     !isDateInputValue(value.date) ||
     !['previous', 'exact', 'nearest'].includes(value.mode as string) ||
-    !isNonEmptyString(value.timezone)
+    !isTimezone(value.timezone) ||
+    !isLocaleOverride(value.localeOverride)
   ) {
     return undefined;
   }
@@ -168,7 +215,21 @@ function parseGetFixturesPayload(
     date: value.date,
     mode: value.mode as GetFixturesPayload['mode'],
     timezone: value.timezone,
+    localeOverride: value.localeOverride,
   };
+}
+
+function parseGetAvailableLeaguesPayload(
+  payload: unknown,
+): GetAvailableLeaguesPayload | undefined {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload))
+    return undefined;
+
+  const value = payload as Record<string, unknown>;
+  return hasOnlyFields(value, ['localeOverride']) &&
+    isLocaleOverride(value.localeOverride)
+    ? { localeOverride: value.localeOverride }
+    : undefined;
 }
 
 function parseGetFixtureDatesPayload(
@@ -184,7 +245,7 @@ function parseGetFixtureDatesPayload(
     !isDateInputValue(value.startDate) ||
     !isDateInputValue(value.endDate) ||
     value.startDate > value.endDate ||
-    !isNonEmptyString(value.timezone)
+    !isTimezone(value.timezone)
   ) {
     return undefined;
   }
@@ -206,6 +267,21 @@ function hasOnlyFields(
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isLocaleOverride(value: unknown): value is LocaleOverride | undefined {
+  return value === undefined || value === 'ko' || value === 'en';
+}
+
+function isTimezone(value: unknown): value is string {
+  if (!isNonEmptyString(value)) return false;
+
+  try {
+    new Intl.DateTimeFormat(undefined, { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function isDateInputValue(value: unknown): value is string {

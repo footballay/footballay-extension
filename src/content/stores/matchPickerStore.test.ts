@@ -3,11 +3,24 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const requestAvailableLeagues = vi.hoisted(() => vi.fn());
 const requestFixtures = vi.hoisted(() => vi.fn());
 const requestFixtureDates = vi.hoisted(() => vi.fn());
+const settings = vi.hoisted(() => {
+  let value: { locale: 'default' | 'ko' | 'en'; timezone: string } = {
+    locale: 'default',
+    timezone: 'default',
+  };
+  return {
+    getState: () => ({ settings: value }),
+    setState: ({ settings: next }: { settings?: typeof value }) => {
+      if (next) value = next;
+    },
+  };
+});
 vi.mock('@/shared/api/client', () => ({
   requestAvailableLeagues,
   requestFixtureDates,
   requestFixtures,
 }));
+vi.mock('@/content/stores/settingsStore', () => ({ useSettingsStore: settings }));
 
 import { useMatchPickerStore } from './matchPickerStore';
 
@@ -27,6 +40,9 @@ describe('match picker store', () => {
       selectedLeagueUid: undefined,
       selectedDate: undefined,
       selectedFixtureUid: undefined,
+    });
+    settings.setState({
+      settings: { locale: 'default', timezone: 'default' },
     });
   });
 
@@ -88,6 +104,51 @@ describe('match picker store', () => {
       selectedFixtureUid: 'fixture-1',
       fixtureStatus: 'ready',
     });
+  });
+
+  it('passes the saved locale and timezone to localized fixture requests', async () => {
+    requestAvailableLeagues.mockResolvedValueOnce({ ok: true, data: [] });
+    requestFixtures.mockResolvedValueOnce({ ok: true, data: [] });
+    requestFixtureDates.mockResolvedValueOnce({ ok: true, data: [] });
+    settings.setState({
+      settings: { locale: 'ko', timezone: 'Asia/Seoul' },
+    });
+
+    await useMatchPickerStore.getState().loadAvailableLeagues();
+    await useMatchPickerStore
+      .getState()
+      .selectLeagueAndLoadFixtures('league-1');
+    await useMatchPickerStore.getState().loadFixtureDates('2026-08-22');
+
+    expect(requestAvailableLeagues).toHaveBeenCalledWith({
+      localeOverride: 'ko',
+    });
+    expect(requestFixtures).toHaveBeenCalledWith(
+      expect.objectContaining({
+        localeOverride: 'ko',
+        timezone: 'Asia/Seoul',
+      }),
+    );
+    expect(requestFixtureDates).toHaveBeenCalledWith(
+      expect.objectContaining({ timezone: 'Asia/Seoul' }),
+    );
+    expect(requestFixtureDates.mock.calls[0]?.[0]).not.toHaveProperty(
+      'localeOverride',
+    );
+  });
+
+  it('uses the system timezone while the setting is default', async () => {
+    requestFixtures.mockResolvedValueOnce({ ok: true, data: [] });
+
+    await useMatchPickerStore
+      .getState()
+      .selectLeagueAndLoadFixtures('league-1');
+
+    expect(requestFixtures).toHaveBeenCalledWith(
+      expect.objectContaining({
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      }),
+    );
   });
 
   it('makes a fixture API failure available to the view', async () => {

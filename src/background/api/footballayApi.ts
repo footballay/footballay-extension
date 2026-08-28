@@ -11,6 +11,7 @@ import type {
   EtaggedResponse,
   GetFixtureDatesPayload,
   GetFixturesPayload,
+  LocaleOverride,
 } from '@/shared/api/protocol';
 
 const footballayApi = axios.create({
@@ -20,10 +21,17 @@ const footballayApi = axios.create({
   headers: { Accept: 'application/json' },
 });
 
-export async function getAvailableLeagues(): Promise<AvailableLeagueDto[]> {
-  const response = await footballayApi.get<AvailableLeagueDto[]>(
-    '/v1/football/leagues/available',
-  );
+export async function getAvailableLeagues(
+  localeOverride?: LocaleOverride,
+): Promise<AvailableLeagueDto[]> {
+  const response = localeOverride
+    ? await footballayApi.get<AvailableLeagueDto[]>(
+        '/v1/football/leagues/available',
+        localeRequestConfig(localeOverride),
+      )
+    : await footballayApi.get<AvailableLeagueDto[]>(
+        '/v1/football/leagues/available',
+      );
   return response.data;
 }
 
@@ -32,11 +40,16 @@ export async function getFixtures({
   date,
   mode,
   timezone,
+  localeOverride,
 }: GetFixturesPayload): Promise<FixtureDto[]> {
   const query = new URLSearchParams({ date, mode, timezone });
-  const response = await footballayApi.get<FixtureDto[]>(
-    `/v1/football/leagues/${encodeURIComponent(leagueUid)}/fixtures?${query}`,
-  );
+  const path = `/v1/football/leagues/${encodeURIComponent(leagueUid)}/fixtures?${query}`;
+  const response = localeOverride
+    ? await footballayApi.get<FixtureDto[]>(
+        path,
+        localeRequestConfig(localeOverride),
+      )
+    : await footballayApi.get<FixtureDto[]>(path);
   return response.data;
 }
 
@@ -63,22 +76,37 @@ export function getFixtureStatus(
 export function getFixtureLineup(
   fixtureUid: string,
   etag?: string,
+  localeOverride?: LocaleOverride,
 ): Promise<EtaggedResponse<FixtureLineupDto>> {
-  return getEtaggedJson(fixturePath(fixtureUid, 'lineup'), etag);
+  return getEtaggedJson(
+    fixturePath(fixtureUid, 'lineup'),
+    etag,
+    localeOverride,
+  );
 }
 
 export function getFixtureEvents(
   fixtureUid: string,
   etag?: string,
+  localeOverride?: LocaleOverride,
 ): Promise<EtaggedResponse<FixtureEventsDto>> {
-  return getEtaggedJson(fixturePath(fixtureUid, 'events'), etag);
+  return getEtaggedJson(
+    fixturePath(fixtureUid, 'events'),
+    etag,
+    localeOverride,
+  );
 }
 
 export function getFixtureStatistics(
   fixtureUid: string,
   etag?: string,
+  localeOverride?: LocaleOverride,
 ): Promise<EtaggedResponse<FixtureStatisticsDto>> {
-  return getEtaggedJson(fixturePath(fixtureUid, 'statistics'), etag);
+  return getEtaggedJson(
+    fixturePath(fixtureUid, 'statistics'),
+    etag,
+    localeOverride,
+  );
 }
 
 function fixturePath(fixtureUid: string, endpoint: string): string {
@@ -88,10 +116,17 @@ function fixturePath(fixtureUid: string, endpoint: string): string {
 function getEtaggedJson<T>(
   path: string,
   etag?: string,
+  localeOverride?: LocaleOverride,
 ): Promise<EtaggedResponse<T>> {
   return footballayApi
     .get<T>(path, {
-      headers: etag ? { 'If-None-Match': etag } : undefined,
+      headers:
+        etag || localeOverride
+          ? {
+              ...(etag && { 'If-None-Match': etag }),
+              ...(localeOverride && { 'Accept-Language': localeOverride }),
+            }
+          : undefined,
       validateStatus: (status) =>
         (status >= 200 && status < 300) || status === 304,
     })
@@ -101,6 +136,12 @@ function getEtaggedJson<T>(
         ? { type: 'not-modified', etag: nextEtag }
         : { type: 'updated', data: response.data, etag: nextEtag };
     });
+}
+
+function localeRequestConfig(localeOverride?: LocaleOverride) {
+  return localeOverride
+    ? { headers: { 'Accept-Language': localeOverride } }
+    : undefined;
 }
 
 function getResponseHeader(headers: unknown, name: string): string | undefined {

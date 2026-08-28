@@ -15,13 +15,18 @@ import {
   type FixtureStatisticsResponse,
   type FixtureStatusResponse,
   type FixturesResponse,
+  type GetAvailableLeaguesPayload,
   type GetFixtureDatesPayload,
   type GetFixturesPayload,
+  type LocalizedFixtureEtagPayload,
 } from './protocol';
 
-export function requestAvailableLeagues(): Promise<AvailableLeaguesResponse> {
+export function requestAvailableLeagues(
+  payload?: GetAvailableLeaguesPayload,
+): Promise<AvailableLeaguesResponse> {
   return chrome.runtime.sendMessage({
     type: GET_AVAILABLE_LEAGUES,
+    ...(payload && { payload }),
   }) as Promise<AvailableLeaguesResponse>;
 }
 
@@ -60,19 +65,19 @@ export function requestFixtureStatus(
 }
 
 export function requestFixtureLineup(
-  payload: FixtureEtagPayload,
+  payload: LocalizedFixtureEtagPayload,
 ): Promise<FixtureLineupResponse> {
   return requestFixtureData(GET_FIXTURE_LINEUP, payload);
 }
 
 export function requestFixtureEvents(
-  payload: FixtureEtagPayload,
+  payload: LocalizedFixtureEtagPayload,
 ): Promise<FixtureEventsResponse> {
   return requestFixtureData(GET_FIXTURE_EVENTS, payload);
 }
 
 export function requestFixtureStatistics(
-  payload: FixtureEtagPayload,
+  payload: LocalizedFixtureEtagPayload,
 ): Promise<FixtureStatisticsResponse> {
   return requestFixtureData(GET_FIXTURE_STATISTICS, payload);
 }

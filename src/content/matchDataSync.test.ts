@@ -12,6 +12,11 @@ vi.mock('./stores/matchDataStore', () => ({
   setMatchDataFixture: actions.setMatchDataFixture,
   useMatchDataStore: { getState: () => actions },
 }));
+vi.mock('@/content/stores/settingsStore', () => ({
+  useSettingsStore: {
+    getState: () => ({ settings: { locale: 'default', timezone: 'default' } }),
+  },
+}));
 
 import { useMatchPickerStore } from './stores/matchPickerStore';
 import { startMatchDataSync, stopMatchDataSync } from './matchDataSync';

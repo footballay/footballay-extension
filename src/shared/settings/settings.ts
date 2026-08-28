@@ -14,9 +14,18 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
 };
 
 const SETTINGS_KEY = 'local:footballay-settings';
-const settingsItem = storage.defineItem<ExtensionSettings>(SETTINGS_KEY, {
-  fallback: DEFAULT_SETTINGS,
-});
+
+function createSettingsItem() {
+  return storage.defineItem<ExtensionSettings>(SETTINGS_KEY, {
+    fallback: DEFAULT_SETTINGS,
+  });
+}
+
+let cachedSettingsItem: ReturnType<typeof createSettingsItem> | undefined;
+
+function settingsItem() {
+  return (cachedSettingsItem ??= createSettingsItem());
+}
 
 function isTimezone(value: unknown): value is string {
   if (typeof value !== 'string' || !value) return false;
@@ -45,17 +54,19 @@ export function normalizeSettings(value: unknown): ExtensionSettings {
 }
 
 export async function loadExtensionSettings(): Promise<ExtensionSettings> {
-  return normalizeSettings(await settingsItem.getValue());
+  return normalizeSettings(await settingsItem().getValue());
 }
 
 export async function saveExtensionSettings(
   settings: ExtensionSettings,
 ): Promise<void> {
-  await settingsItem.setValue(normalizeSettings(settings));
+  await settingsItem().setValue(normalizeSettings(settings));
 }
 
 export function watchExtensionSettings(
   onChange: (settings: ExtensionSettings) => void,
 ): () => void {
-  return settingsItem.watch((settings) => onChange(normalizeSettings(settings)));
+  return settingsItem().watch((settings) =>
+    onChange(normalizeSettings(settings)),
+  );
 }

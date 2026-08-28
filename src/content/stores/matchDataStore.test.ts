@@ -4,12 +4,25 @@ const requestFixtureStatus = vi.hoisted(() => vi.fn());
 const requestFixtureLineup = vi.hoisted(() => vi.fn());
 const requestFixtureEvents = vi.hoisted(() => vi.fn());
 const requestFixtureStatistics = vi.hoisted(() => vi.fn());
+const settings = vi.hoisted(() => {
+  let value: { locale: 'default' | 'ko' | 'en'; timezone: string } = {
+    locale: 'default',
+    timezone: 'default',
+  };
+  return {
+    getState: () => ({ settings: value }),
+    setState: ({ settings: next }: { settings?: typeof value }) => {
+      if (next) value = next;
+    },
+  };
+});
 vi.mock('@/shared/api/client', () => ({
   requestFixtureStatus,
   requestFixtureLineup,
   requestFixtureEvents,
   requestFixtureStatistics,
 }));
+vi.mock('@/content/stores/settingsStore', () => ({ useSettingsStore: settings }));
 
 import { setMatchDataFixture, useMatchDataStore } from './matchDataStore';
 
@@ -24,6 +37,9 @@ describe('match data store', () => {
     requestFixtureLineup.mockReset();
     requestFixtureEvents.mockReset();
     requestFixtureStatistics.mockReset();
+    settings.setState({
+      settings: { locale: 'default', timezone: 'default' },
+    });
     setMatchDataFixture();
   });
 
@@ -104,6 +120,45 @@ describe('match data store', () => {
       events: { loadStatus: 'ready', etag: 'e1' },
       statistics: { loadStatus: 'ready', etag: 't1' },
     });
+  });
+
+  it('adds locale only to localized match-data requests', async () => {
+    requestFixtureStatus.mockResolvedValue({
+      ok: true,
+      data: { type: 'not-modified' },
+    });
+    requestFixtureLineup.mockResolvedValue({
+      ok: true,
+      data: { type: 'not-modified' },
+    });
+    requestFixtureEvents.mockResolvedValue({
+      ok: true,
+      data: { type: 'not-modified' },
+    });
+    requestFixtureStatistics.mockResolvedValue({
+      ok: true,
+      data: { type: 'not-modified' },
+    });
+    settings.setState({
+      settings: { locale: 'en', timezone: 'default' },
+    });
+
+    setMatchDataFixture('fixture-1');
+    await useMatchDataStore.getState().refreshMatchData();
+
+    expect(requestFixtureStatus).toHaveBeenCalledWith({
+      fixtureUid: 'fixture-1',
+      etag: undefined,
+    });
+    expect(requestFixtureLineup).toHaveBeenCalledWith(
+      expect.objectContaining({ localeOverride: 'en' }),
+    );
+    expect(requestFixtureEvents).toHaveBeenCalledWith(
+      expect.objectContaining({ localeOverride: 'en' }),
+    );
+    expect(requestFixtureStatistics).toHaveBeenCalledWith(
+      expect.objectContaining({ localeOverride: 'en' }),
+    );
   });
 
   it('ignores a response after another fixture is selected', async () => {
