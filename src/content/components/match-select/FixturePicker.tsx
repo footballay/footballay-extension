@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
 import { toDateInputValue } from '@/content/utils/date';
+import { t, useContentLocale } from '@/shared/i18n/content';
 
 type FixturePickerProps = {
   view: 'Match' | 'DatePicker';
@@ -8,6 +9,7 @@ type FixturePickerProps = {
 };
 
 export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
+  const locale = useContentLocale();
   const fixtures = useMatchPickerStore((state) => state.fixtures);
   const fixtureDates = useMatchPickerStore((state) => state.fixtureDates);
   const fixtureStatus = useMatchPickerStore((state) => state.fixtureStatus);
@@ -45,8 +47,11 @@ export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
 
   if (!selectedLeagueUid) {
     return view === 'Match' ? (
-      <section className="footballay-fixture-section" aria-label="Fixtures">
-        <p className="footballay-content-status">리그를 선택해주세요.</p>
+      <section
+        className="footballay-fixture-section"
+        aria-label={t(locale, 'fixtures')}
+      >
+        <p className="footballay-content-status">{t(locale, 'selectLeague')}</p>
       </section>
     ) : null;
   }
@@ -63,12 +68,12 @@ export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
       <div
         className="footballay-calendar"
         role="dialog"
-        aria-label="Fixture date picker"
+        aria-label={t(locale, 'fixtureDatePicker')}
       >
         <div className="footballay-calendar-month">
           <button
             type="button"
-            aria-label="Previous month"
+            aria-label={t(locale, 'previousMonth')}
             onClick={() =>
               setCalendarMonth(
                 (date) => new Date(date.getFullYear(), date.getMonth() - 1, 1),
@@ -83,7 +88,7 @@ export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
           </span>
           <button
             type="button"
-            aria-label="Next month"
+            aria-label={t(locale, 'nextMonth')}
             onClick={() =>
               setCalendarMonth(
                 (date) => new Date(date.getFullYear(), date.getMonth() + 1, 1),
@@ -126,33 +131,34 @@ export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
   }
 
   return (
-    <section className="footballay-fixture-section" aria-label="Fixtures">
+    <section
+      className="footballay-fixture-section"
+      aria-label={t(locale, 'fixtures')}
+    >
       {fixtureStatus === 'loading' && (
         <p className="footballay-content-status" role="status">
-          경기를 불러오는 중입니다.
+          {t(locale, 'fixtureLoading')}
         </p>
       )}
       {fixtureStatus === 'error' && (
         <p className="footballay-content-status" role="alert">
-          경기를 불러오지 못했습니다: {fixtureError}
+          {t(locale, 'fixtureError', { error: fixtureError ?? '' })}
         </p>
       )}
       {fixtureStatus === 'ready' && fixtures.length === 0 && (
-        <p className="footballay-content-status">표시할 경기가 없습니다.</p>
+        <p className="footballay-content-status">{t(locale, 'noFixtures')}</p>
       )}
       {fixtures.length > 0 && (
         <div
           className="footballay-fixture-list"
           role="listbox"
-          aria-label="Fixtures"
+          aria-label={t(locale, 'fixtures')}
         >
           {fixtures.map((fixture) => {
-            const homeTeamName =
-              fixture.homeTeam?.nameKo ?? fixture.homeTeam?.name ?? 'TBD';
-            const awayTeamName =
-              fixture.awayTeam?.nameKo ?? fixture.awayTeam?.name ?? 'TBD';
+            const homeTeamName = fixture.homeTeam?.name ?? t(locale, 'tbd');
+            const awayTeamName = fixture.awayTeam?.name ?? t(locale, 'tbd');
             const kickoff = fixture.kickoff
-              ? new Intl.DateTimeFormat('ko-KR', {
+              ? new Intl.DateTimeFormat(locale, {
                   hour: '2-digit',
                   minute: '2-digit',
                   hour12: false,

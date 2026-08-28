@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MatchEventDto } from '@/shared/api/dto';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
+import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
 import { resolveTeamColors } from '../shared/teamColor';
 import substituteMarker from '../../../../assets/events_substitute_marker.png';
 import goalMarker from '../../../../assets/goal_marker.png';
@@ -39,11 +40,12 @@ function timelineValue(event: MatchEventDto) {
   return matchMinuteToTimelineValue(event.elapsed, event.extraTime);
 }
 
-function displayName(name: { name: string; koreanName: string | null }) {
-  return name.koreanName ?? name.name;
+function displayName(name: { name: string }) {
+  return name.name;
 }
 
 export function EventsTab() {
+  const locale = useContentLocale();
   const eventsResource = useMatchDataStore((state) => state.events);
   const events = eventsResource.data?.events ?? [];
   const statistics = useMatchDataStore((state) => state.statistics.data);
@@ -62,24 +64,30 @@ export function EventsTab() {
     <>
       <div className="footballay-match-panel__topbar">
         <div className="footballay-match-panel__title footballay-match-panel__title--events">
-          <span>Events</span>
+          <span>{t(locale, 'events')}</span>
         </div>
       </div>
       <div className="footballay-match-panel__events">
         {home && (
           <TeamTitle side="home" name={displayName(home)} color={colors.home} />
         )}
-        <Timeline events={displayEvents} homeTeamUid={home?.teamUid} />
+        <Timeline
+          events={displayEvents}
+          homeTeamUid={home?.teamUid}
+          locale={locale}
+        />
         {away && (
           <TeamTitle side="away" name={displayName(away)} color={colors.away} />
         )}
         {eventsResource.loadStatus === 'error' && (
           <p className="footballay-match-panel__empty" role="alert">
-            이벤트 데이터를 불러오지 못했습니다: {eventsResource.error}
+            {t(locale, 'eventsError', { error: eventsResource.error ?? '' })}
           </p>
         )}
         {eventsResource.loadStatus === 'loading' && !home && !away && (
-          <p className="footballay-match-panel__empty">데이터 불러오는 중</p>
+          <p className="footballay-match-panel__empty">
+            {t(locale, 'loading')}
+          </p>
         )}
       </div>
     </>
@@ -108,9 +116,11 @@ function TeamTitle({
 function Timeline({
   events,
   homeTeamUid,
+  locale,
 }: {
   events: DisplayEvent[];
   homeTeamUid?: string;
+  locale: ContentLocale;
 }) {
   const timelineRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -148,7 +158,7 @@ function Timeline({
   return (
     <div
       className="footballay-match-panel__timeline"
-      aria-label="Match events timeline"
+      aria-label={t(locale, 'matchEventsTimeline')}
       ref={timelineRef}
     >
       <div className="footballay-match-panel__timeline-line" />
@@ -167,6 +177,7 @@ function Timeline({
         <EventClusterMarker
           cluster={cluster}
           key={`${cluster.side}-${cluster.events[0]?.sequence}`}
+          locale={locale}
         />
       ))}
     </div>
@@ -175,8 +186,10 @@ function Timeline({
 
 function EventClusterMarker({
   cluster,
+  locale,
 }: {
   cluster: EventCluster<DisplayEvent>;
+  locale: ContentLocale;
 }) {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const visibleEvents = cluster.events.slice(0, 3);
@@ -238,12 +251,16 @@ function EventClusterMarker({
             <span>
               {displayTime}{' '}
               <strong>
-                {event.kind === 'substitution' ? 'Substitution' : event.type}
+                {event.kind === 'substitution'
+                  ? t(locale, 'substitution')
+                  : event.type}
               </strong>
             </span>
             <b>{event.player ? displayName(event.player) : '-'}</b>
             {event.assist && (
-              <small>Assist : {displayName(event.assist)}</small>
+              <small>
+                {t(locale, 'assist')}: {displayName(event.assist)}
+              </small>
             )}
           </div>
         ))}

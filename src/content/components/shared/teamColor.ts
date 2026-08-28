@@ -2,9 +2,8 @@ import Color from 'colorjs.io';
 
 type TeamColorSource = {
   playerColor: {
-    primary: string;
-    secondary?: string | null;
-    number: string;
+    primary: string | null;
+    number: string | null;
     border: string | null;
   } | null;
 };
@@ -31,7 +30,7 @@ function normalizeColor(color?: string | null): string | undefined {
 
 function colorCandidates(team?: TeamColorSource) {
   const color = team?.playerColor;
-  return [color?.primary, color?.secondary ?? color?.number, color?.border]
+  return [color?.primary, color?.number, color?.border]
     .map(normalizeColor)
     .filter((value): value is string => Boolean(value));
 }

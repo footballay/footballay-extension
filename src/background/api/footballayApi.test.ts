@@ -16,7 +16,7 @@ describe('Footballay privileged API transport', () => {
 
   it('retrieves the raw available-league response from its declared endpoint', async () => {
     const response = [
-      { uid: 'league-1', name: 'Premier League', nameKo: '프리미어리그' },
+      { uid: 'league-1', name: 'Premier League', shortName: 'PL' },
     ];
     axiosGet.mockResolvedValueOnce({ data: response });
 

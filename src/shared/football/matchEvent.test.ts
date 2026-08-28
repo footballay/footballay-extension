@@ -10,7 +10,7 @@ function event(type: string, detail: string): MatchEventDto {
     team: {
       teamUid: 'scoring-team',
       name: 'Team',
-      koreanName: null,
+      shortName: null,
       playerColor: null,
     },
     player: null,

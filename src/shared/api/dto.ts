@@ -1,20 +1,27 @@
 export type AvailableLeagueDto = {
   uid: string;
   name: string;
-  nameKo?: string | null;
-  logo?: string | null;
+  shortName: string | null;
+  logo: string | null;
 };
 
 export type FixtureDto = {
   uid: string;
-  kickoff?: string | null;
-  homeTeam?: FixtureTeamDto | null;
-  awayTeam?: FixtureTeamDto | null;
-  status: { shortStatus: string };
-  score: { home?: number | null; away?: number | null };
+  kickoff: string | null;
+  round: string;
+  homeTeam: FixtureTeamDto | null;
+  awayTeam: FixtureTeamDto | null;
+  status: { longStatus: string; shortStatus: string; elapsed: number | null };
+  score: { home: number | null; away: number | null };
+  available: boolean;
 };
 
-export type FixtureTeamDto = { name: string; nameKo?: string | null };
+export type FixtureTeamDto = {
+  uid: string | null;
+  name: string;
+  shortName: string | null;
+  logo: string | null;
+};
 export type FixtureStatusDto = {
   fixtureUid: string;
   liveStatus: {
@@ -27,20 +34,19 @@ export type FixtureStatusDto = {
 export type MatchTeamDto = {
   teamUid: string;
   name: string;
-  koreanName: string | null;
+  shortName: string | null;
   playerColor: MatchPlayerColorDto | null;
 };
 export type MatchStatisticsTeamInfoDto = {
   teamUid: string;
   name: string;
-  koreanName: string | null;
+  shortName: string | null;
   logo: string | null;
   playerColor: MatchPlayerColorDto | null;
 };
 export type MatchPlayerColorDto = {
-  primary: string;
-  secondary?: string | null;
-  number: string;
+  primary: string | null;
+  number: string | null;
   border: string | null;
 };
 export type MatchTeamStatisticsDto = {
@@ -67,7 +73,7 @@ export type MatchPlayerDto = {
   matchPlayerUid: string;
   playerUid: string | null;
   name: string;
-  koreanName: string | null;
+  shortName: string | null;
   number: number | null;
 };
 export type MatchStatisticsTeamDto = {
@@ -131,7 +137,7 @@ export type FixtureEventsDto = { fixtureUid: string; events: MatchEventDto[] };
 export type MatchLineupDto = {
   teamUid: string;
   teamName: string;
-  teamKoreanName: string | null;
+  teamShortName: string | null;
   formation: string | null;
   players: MatchLineupPlayerDto[];
   substitutes: MatchLineupPlayerDto[];

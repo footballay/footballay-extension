@@ -1,6 +1,7 @@
 import { CalendarDays, X } from 'lucide-react';
 import { useState } from 'react';
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
+import { t, useContentLocale } from '@/shared/i18n/content';
 import { FixturePicker } from './FixturePicker';
 import { LeaguePicker } from './LeaguePicker';
 import './match-select.css';
@@ -8,6 +9,7 @@ import './match-select.css';
 type MatchSelectView = 'League' | 'Match' | 'DatePicker';
 
 export function MatchSelect() {
+  const locale = useContentLocale();
   const [view, setView] = useState<MatchSelectView>('League');
   const [collapsed, setCollapsed] = useState(false);
   const selectedDate = useMatchPickerStore((state) => state.selectedDate);
@@ -28,7 +30,7 @@ export function MatchSelect() {
         <button
           className="footballay-match-select-expand-button"
           type="button"
-          aria-label="Open match selector"
+          aria-label={t(locale, 'openMatchSelector')}
           onClick={() => setCollapsed(false)}
         >
           <CalendarDays />
@@ -39,7 +41,7 @@ export function MatchSelect() {
             <button
               className="footballay-close-button"
               type="button"
-              aria-label="Close"
+              aria-label={t(locale, 'close')}
               onClick={() => setCollapsed(true)}
             >
               <X />
@@ -50,14 +52,14 @@ export function MatchSelect() {
                 type="button"
                 onClick={() => setView('League')}
               >
-                League
+                {t(locale, 'league')}
               </button>
               <button
                 className={`footballay-topbar-tab${view === 'Match' ? ' footballay-topbar-tab--selected' : view === 'DatePicker' ? ' footballay-topbar-tab--active-text' : ''}`}
                 type="button"
                 onClick={() => setView('Match')}
               >
-                Match
+                {t(locale, 'match')}
               </button>
             </div>
             <div
@@ -65,7 +67,7 @@ export function MatchSelect() {
             >
               <button
                 type="button"
-                aria-label="Previous fixture date"
+                aria-label={t(locale, 'previousFixtureDate')}
                 disabled={!selectedLeagueUid}
                 onClick={() => {
                   setView('Match');
@@ -76,7 +78,7 @@ export function MatchSelect() {
               </button>
               <button
                 type="button"
-                aria-label="Fixture date picker"
+                aria-label={t(locale, 'fixtureDatePicker')}
                 aria-haspopup="dialog"
                 aria-expanded={view === 'DatePicker'}
                 disabled={!selectedLeagueUid}
@@ -88,7 +90,7 @@ export function MatchSelect() {
               </button>
               <button
                 type="button"
-                aria-label="Next fixture date"
+                aria-label={t(locale, 'nextFixtureDate')}
                 disabled={!selectedLeagueUid}
                 onClick={() => {
                   setView('Match');

@@ -36,8 +36,8 @@ describe('match picker store', () => {
       data: [
         {
           uid: 'league-1',
-          name: 'Premier League',
-          nameKo: '프리미어리그',
+          name: '프리미어리그',
+          shortName: 'PL',
           logo: 'logo.png',
         },
       ],
@@ -49,8 +49,8 @@ describe('match picker store', () => {
       leagues: [
         {
           uid: 'league-1',
-          name: 'Premier League',
-          nameKo: '프리미어리그',
+          name: '프리미어리그',
+          shortName: 'PL',
           logo: 'logo.png',
         },
       ],

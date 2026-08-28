@@ -10,7 +10,7 @@ const player = (matchPlayerUid: string, name = matchPlayerUid) => ({
   matchPlayerUid,
   playerUid: null,
   name,
-  koreanName: null,
+  shortName: null,
   number: 1,
   photo: null,
   position: null,
@@ -21,7 +21,7 @@ const player = (matchPlayerUid: string, name = matchPlayerUid) => ({
 const team: MatchLineupDto = {
   teamUid: 'home',
   teamName: 'Home',
-  teamKoreanName: null,
+  teamShortName: null,
   formation: '1-1',
   players: [player('starter')],
   substitutes: [player('sub-1'), player('sub-2')],
@@ -38,7 +38,7 @@ const event = (
   sequence,
   elapsed: 60,
   extraTime: null,
-  team: { teamUid: 'home', name: 'Home', koreanName: null, playerColor: null },
+  team: { teamUid: 'home', name: 'Home', shortName: null, playerColor: null },
   player: playerUid
     ? {
         ...player(playerUid),

@@ -28,10 +28,22 @@ const selectLeagueAndLoadFixtures = vi.fn(async (leagueUid: string) => {
       {
         uid: 'fixture-1',
         kickoff: '2026-08-11T12:00:00.000Z',
-        homeTeam: { name: 'Home', nameKo: '홈' },
-        awayTeam: { name: 'Away', nameKo: '원정' },
-        status: { shortStatus: 'NS' },
+        homeTeam: {
+          uid: 'home-team',
+          name: '홈',
+          shortName: null,
+          logo: null,
+        },
+        awayTeam: {
+          uid: 'away-team',
+          name: '원정',
+          shortName: null,
+          logo: null,
+        },
+        status: { longStatus: 'Not Started', shortStatus: 'NS', elapsed: null },
         score: { home: 1, away: 0 },
+        round: 'Regular Season',
+        available: true,
       },
     ],
   });
@@ -61,8 +73,13 @@ beforeEach(() => {
   useSettingsStore.setState({ hydrated: true });
   useMatchPickerStore.setState({
     leagues: [
-      { uid: 'league-1', name: 'Premier League', nameKo: '프리미어리그' },
-      { uid: 'league-2', name: 'La Liga' },
+      {
+        uid: 'league-1',
+        name: '프리미어리그',
+        shortName: 'PL',
+        logo: null,
+      },
+      { uid: 'league-2', name: 'La Liga', shortName: null, logo: null },
     ],
     leagueStatus: 'ready',
     leagueError: undefined,
@@ -141,15 +158,15 @@ describe('ContentApp', () => {
               extraTime: null,
               team: {
                 teamUid: 'home-team',
-                name: 'Home',
-                koreanName: '홈',
+                name: '홈',
+                shortName: null,
                 playerColor: null,
               },
               player: {
                 matchPlayerUid: 'home-player-1',
                 playerUid: null,
                 name: 'Scorer',
-                koreanName: null,
+                shortName: null,
                 number: 1,
               },
               assist: null,
@@ -163,15 +180,15 @@ describe('ContentApp', () => {
               extraTime: null,
               team: {
                 teamUid: 'home-team',
-                name: 'Home',
-                koreanName: '홈',
+                name: '홈',
+                shortName: null,
                 playerColor: null,
               },
               player: {
                 matchPlayerUid: 'home-player-2',
                 playerUid: null,
                 name: 'Booked',
-                koreanName: null,
+                shortName: null,
                 number: 2,
               },
               assist: null,
@@ -282,7 +299,7 @@ describe('ContentApp', () => {
 
     await user.click(screen.getByRole('button', { name: 'Match' }));
 
-    expect(screen.getByText('리그를 선택해주세요.')).toBeTruthy();
+    expect(screen.getByText('Please select a league.')).toBeTruthy();
     expect(
       screen
         .getByRole('button', { name: 'Previous fixture date' })
@@ -333,7 +350,7 @@ describe('ContentApp', () => {
     render(<ContentApp />);
 
     expect(screen.getByRole('alert').textContent).toBe(
-      '라인업 데이터를 불러오지 못했습니다: lineup failed',
+      'Failed to load lineup data: lineup failed',
     );
     await user.click(screen.getByRole('tab', { name: 'Statistics' }));
     expect(screen.getByText('Possession')).toBeTruthy();
@@ -381,7 +398,7 @@ describe('ContentApp', () => {
     render(<ContentApp />);
 
     await user.click(screen.getByRole('tab', { name: 'Statistics' }));
-    expect(screen.getByText('통계 데이터가 없습니다.')).toBeTruthy();
+    expect(screen.getByText('No statistics data.')).toBeTruthy();
   });
 
   it('normalizes team colors and keeps statistic bar ratios', async () => {

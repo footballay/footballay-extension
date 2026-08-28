@@ -8,13 +8,14 @@ import {
   type LineupTeam,
 } from '@/content/mappers/lineupViewModel';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
+import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
 import { resolveTeamColors } from '../shared/teamColor';
 import './lineup-tab.css';
 
 type TeamSide = 'home' | 'away';
 
 function displayTeamName(team?: LineupTeam) {
-  return team?.teamKoreanName ?? team?.teamName ?? '-';
+  return team?.teamName ?? '-';
 }
 
 function currentPlayer(player: LineupPlayer): LineupPlayer {
@@ -44,13 +45,21 @@ function formationColumns(team?: LineupTeam) {
   });
 }
 
-function PlayerMarkers({ player }: { player: LineupPlayer }) {
+function PlayerMarkers({
+  player,
+  locale,
+}: {
+  player: LineupPlayer;
+  locale: ContentLocale;
+}) {
   const rating = Number(player.rating);
   return (
     <div className="footballay-match-panel__markers">
       {player.subInTime && (
         <span className="footballay-match-panel__sub-in">
-          <ArrowUp aria-label={`Substituted in ${player.subInTime}`} />
+          <ArrowUp
+            aria-label={t(locale, 'substitutedIn', { time: player.subInTime })}
+          />
         </span>
       )}
       {player.rating && (
@@ -65,23 +74,27 @@ function PlayerMarkers({ player }: { player: LineupPlayer }) {
           <i
             className="footballay-match-panel__card footballay-match-panel__card--yellow"
             key={`yellow-${index}`}
-            aria-label="Yellow card"
+            aria-label={t(locale, 'yellowCard')}
           />
         ))}
         {Array.from({ length: player.redCards }, (_, index) => (
           <i
             className="footballay-match-panel__card footballay-match-panel__card--red"
             key={`red-${index}`}
-            aria-label="Red card"
+            aria-label={t(locale, 'redCard')}
           />
         ))}
       </span>
       <span className="footballay-match-panel__goals">
         {Array.from({ length: player.goals }, (_, index) => (
-          <img src={goalMarker} alt="Goal" key={`goal-${index}`} />
+          <img src={goalMarker} alt={t(locale, 'goal')} key={`goal-${index}`} />
         ))}
         {Array.from({ length: player.ownGoals }, (_, index) => (
-          <img src={goalMarker} alt="Own goal" key={`own-goal-${index}`} />
+          <img
+            src={goalMarker}
+            alt={t(locale, 'ownGoal')}
+            key={`own-goal-${index}`}
+          />
         ))}
       </span>
     </div>
@@ -89,6 +102,7 @@ function PlayerMarkers({ player }: { player: LineupPlayer }) {
 }
 
 export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
+  const locale = useContentLocale();
   const [teamSide, setTeamSide] = useState<TeamSide>('home');
   const lineupResource = useMatchDataStore((state) => state.lineup);
   const events = useMatchDataStore((state) => state.events.data);
@@ -110,13 +124,13 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
     <>
       <div className="footballay-match-panel__topbar">
         <div className="footballay-match-panel__title">
-          <span>Lineup</span>
+          <span>{t(locale, 'lineup')}</span>
           <strong>{team?.formation ?? '-'}</strong>
         </div>
         <div
           className="footballay-match-panel__teams"
           role="tablist"
-          aria-label="Lineup teams"
+          aria-label={t(locale, 'lineupTeams')}
         >
           {(['home', 'away'] as const).map((side) => (
             <button
@@ -148,11 +162,11 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
       </div>
       <div
         className="footballay-match-panel__lineup"
-        aria-label="Lineup players"
+        aria-label={t(locale, 'lineupPlayers')}
       >
         {lineupResource.loadStatus === 'error' ? (
           <p className="footballay-match-panel__empty" role="alert">
-            라인업 데이터를 불러오지 못했습니다: {lineupResource.error}
+            {t(locale, 'lineupError', { error: lineupResource.error ?? '' })}
           </p>
         ) : columns.length ? (
           columns.map((column, index) => (
@@ -167,11 +181,9 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
                 >
                   <div className="footballay-match-panel__player-main">
                     <span>{player.player.number ?? '-'}</span>
-                    <strong>
-                      {player.player.koreanName ?? player.player.name}
-                    </strong>
+                    <strong>{player.player.name}</strong>
                   </div>
-                  <PlayerMarkers player={player} />
+                  <PlayerMarkers player={player} locale={locale} />
                 </div>
               ))}
             </div>
@@ -179,8 +191,8 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
         ) : (
           <p className="footballay-match-panel__empty">
             {lineupResource.loadStatus === 'loading'
-              ? '데이터 불러오는 중'
-              : '라인업 정보가 없습니다.'}
+              ? t(locale, 'loading')
+              : t(locale, 'noLineup')}
           </p>
         )}
       </div>

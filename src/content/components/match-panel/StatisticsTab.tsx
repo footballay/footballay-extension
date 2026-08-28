@@ -1,5 +1,6 @@
 import type { MatchStatisticsTeamDto } from '@/shared/api/dto';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
+import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
 import { resolveTeamColors } from '../shared/teamColor';
 import './statistics-tab.css';
 
@@ -8,37 +9,55 @@ type StatisticDefinition = [
   (team: MatchStatisticsTeamDto) => number | string | null,
 ];
 
-const statisticColumns: StatisticDefinition[][] = [
-  [
-    ['Total Passes', (team) => team.teamStatistics.totalPasses],
-    ['Passes Acc', (team) => team.teamStatistics.passesAccurate],
+function statisticColumns(locale: ContentLocale): StatisticDefinition[][] {
+  return [
     [
-      'Possession',
-      (team) =>
-        typeof team.teamStatistics.ballPossession === 'number'
-          ? `${team.teamStatistics.ballPossession}%`
-          : null,
+      [t(locale, 'totalPasses'), (team) => team.teamStatistics.totalPasses],
+      [
+        t(locale, 'passesAccurate'),
+        (team) => team.teamStatistics.passesAccurate,
+      ],
+      [
+        t(locale, 'possession'),
+        (team) =>
+          typeof team.teamStatistics.ballPossession === 'number'
+            ? `${team.teamStatistics.ballPossession}%`
+            : null,
+      ],
     ],
-  ],
-  [
-    ['Total Shots', (team) => team.teamStatistics.totalShots],
-    ['Shots On Goal', (team) => team.teamStatistics.shotsOnGoal],
-    ['xG', (team) => team.teamStatistics.xg.at(-1)?.xg ?? '0'],
-    ['Fouls', (team) => team.teamStatistics.fouls],
-    ['Corner Kicks', (team) => team.teamStatistics.cornerKicks],
-    ['Offsides', (team) => team.teamStatistics.offsides],
-  ],
-  [
-    ['Shots Off Goal', (team) => team.teamStatistics.shotsOffGoal],
-    ['Blocked Shots', (team) => team.teamStatistics.blockedShots],
-    ['Shots Inside Box', (team) => team.teamStatistics.shotsInsideBox],
-    ['Shots Outside Box', (team) => team.teamStatistics.shotsOutsideBox],
-    ['Goalkeeper Saves', (team) => team.teamStatistics.goalkeeperSaves],
-    ['Goals Prevented', (team) => team.teamStatistics.goalsPrevented],
-  ],
-];
+    [
+      [t(locale, 'totalShots'), (team) => team.teamStatistics.totalShots],
+      [t(locale, 'shotsOnGoal'), (team) => team.teamStatistics.shotsOnGoal],
+      ['xG', (team) => team.teamStatistics.xg.at(-1)?.xg ?? '0'],
+      [t(locale, 'fouls'), (team) => team.teamStatistics.fouls],
+      [t(locale, 'cornerKicks'), (team) => team.teamStatistics.cornerKicks],
+      [t(locale, 'offsides'), (team) => team.teamStatistics.offsides],
+    ],
+    [
+      [t(locale, 'shotsOffGoal'), (team) => team.teamStatistics.shotsOffGoal],
+      [t(locale, 'blockedShots'), (team) => team.teamStatistics.blockedShots],
+      [
+        t(locale, 'shotsInsideBox'),
+        (team) => team.teamStatistics.shotsInsideBox,
+      ],
+      [
+        t(locale, 'shotsOutsideBox'),
+        (team) => team.teamStatistics.shotsOutsideBox,
+      ],
+      [
+        t(locale, 'goalkeeperSaves'),
+        (team) => team.teamStatistics.goalkeeperSaves,
+      ],
+      [
+        t(locale, 'goalsPrevented'),
+        (team) => team.teamStatistics.goalsPrevented,
+      ],
+    ],
+  ];
+}
 
 export function StatisticsTab() {
+  const locale = useContentLocale();
   const statisticsResource = useMatchDataStore((state) => state.statistics);
   const statistics = statisticsResource.data;
   const home = statistics?.home;
@@ -50,16 +69,18 @@ export function StatisticsTab() {
     <>
       <div className="footballay-match-panel__topbar footballay-match-panel__topbar--statistics">
         <div className="footballay-match-panel__title">
-          <span>Statistics</span>
+          <span>{t(locale, 'statistics')}</span>
         </div>
       </div>
       <div className="footballay-match-panel__statistics">
         {statisticsResource.loadStatus === 'error' ? (
           <p className="footballay-match-panel__empty" role="alert">
-            통계 데이터를 불러오지 못했습니다: {statisticsResource.error}
+            {t(locale, 'statisticsError', {
+              error: statisticsResource.error ?? '',
+            })}
           </p>
         ) : home && away ? (
-          statisticColumns.map((column, index) => (
+          statisticColumns(locale).map((column, index) => (
             <div
               className={`footballay-match-panel__statistics-column footballay-match-panel__statistics-column--${index}`}
               key={index}
@@ -83,8 +104,8 @@ export function StatisticsTab() {
         ) : (
           <p className="footballay-match-panel__empty">
             {statisticsResource.loadStatus === 'loading'
-              ? '데이터 불러오는 중'
-              : '통계 데이터가 없습니다.'}
+              ? t(locale, 'loading')
+              : t(locale, 'noStatistics')}
           </p>
         )}
       </div>
@@ -107,7 +128,7 @@ function PassAccuracy({
         const value = team.teamStatistics.passesAccuracyPercentage;
         return (
           <div key={team.team.teamUid}>
-            <strong>{team.team.koreanName ?? team.team.name}</strong>
+            <strong>{team.team.name}</strong>
             <i
               style={{
                 background: `radial-gradient(circle, var(--footballay-color-surface-raised) 0 15px, transparent 16px), conic-gradient(${index === 0 ? colors.home : colors.away} ${value}%, var(--footballay-color-disabled) 0)`,

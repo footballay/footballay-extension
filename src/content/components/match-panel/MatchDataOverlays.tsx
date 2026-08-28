@@ -2,6 +2,7 @@ import { BarChart3, Flag, UsersRound, X } from 'lucide-react';
 import { useState } from 'react';
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
 import { useMatchDataStore } from '@/content/stores/matchDataStore';
+import { t, useContentLocale } from '@/shared/i18n/content';
 import { LineupTab } from './LineupTab';
 import { StatisticsTab } from './StatisticsTab';
 import { EventsTab } from './EventsTab';
@@ -10,6 +11,7 @@ import './match-data-overlays.css';
 type DetailTab = 'lineup' | 'statistics' | 'events';
 
 export function MatchDataOverlays() {
+  const locale = useContentLocale();
   const fixtureUid = useMatchPickerStore((state) => state.selectedFixtureUid);
   const lineup = useMatchDataStore((state) => state.lineup.data);
   const [tab, setTab] = useState<DetailTab>('lineup');
@@ -20,12 +22,12 @@ export function MatchDataOverlays() {
     return (
       <aside
         className="footballay-match-panel footballay-match-panel--collapsed"
-        aria-label="Match panel"
+        aria-label={t(locale, 'matchPanel')}
       >
         <button
           className="footballay-match-panel__expand-button"
           type="button"
-          aria-label="Open match panel"
+          aria-label={t(locale, 'openMatchPanel')}
           onClick={() => setCollapsed(false)}
         >
           <UsersRound />
@@ -35,17 +37,20 @@ export function MatchDataOverlays() {
   }
 
   return (
-    <aside className="footballay-match-panel" aria-label="Match panel">
+    <aside
+      className="footballay-match-panel"
+      aria-label={t(locale, 'matchPanel')}
+    >
       <div className="footballay-match-panel__sidebar">
         <div
           className="footballay-match-panel__tabs"
           role="tablist"
-          aria-label="Match panel tabs"
+          aria-label={t(locale, 'matchPanelTabs')}
         >
           <button
             type="button"
             role="tab"
-            aria-label="Lineup"
+            aria-label={t(locale, 'lineup')}
             aria-selected={tab === 'lineup'}
             onClick={() => setTab('lineup')}
           >
@@ -54,7 +59,7 @@ export function MatchDataOverlays() {
           <button
             type="button"
             role="tab"
-            aria-label="Statistics"
+            aria-label={t(locale, 'statistics')}
             aria-selected={tab === 'statistics'}
             onClick={() => setTab('statistics')}
           >
@@ -63,7 +68,7 @@ export function MatchDataOverlays() {
           <button
             type="button"
             role="tab"
-            aria-label="Events"
+            aria-label={t(locale, 'events')}
             aria-selected={tab === 'events'}
             onClick={() => setTab('events')}
           >
@@ -73,7 +78,7 @@ export function MatchDataOverlays() {
         <button
           className="footballay-close-button"
           type="button"
-          aria-label="Minimize match panel"
+          aria-label={t(locale, 'minimizeMatchPanel')}
           onClick={() => setCollapsed(true)}
         >
           <X />

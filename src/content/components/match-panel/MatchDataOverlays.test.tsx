@@ -22,13 +22,13 @@ describe('MatchDataOverlays', () => {
   it('shows the loading message in every tab while match data is loading', () => {
     render(<MatchDataOverlays />);
 
-    expect(screen.getByText('데이터 불러오는 중')).toBeTruthy();
+    expect(screen.getByText('Loading data')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('tab', { name: 'Statistics' }));
-    expect(screen.getByText('데이터 불러오는 중')).toBeTruthy();
+    expect(screen.getByText('Loading data')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
-    expect(screen.getByText('데이터 불러오는 중')).toBeTruthy();
+    expect(screen.getByText('Loading data')).toBeTruthy();
   });
 
   it('shows only the Statistics resource error in the Statistics tab', () => {
@@ -43,7 +43,7 @@ describe('MatchDataOverlays', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Statistics' }));
 
     expect(screen.getByRole('alert').textContent).toBe(
-      '통계 데이터를 불러오지 못했습니다: statistics failed',
+      'Failed to load statistics data: statistics failed',
     );
   });
 
@@ -59,7 +59,7 @@ describe('MatchDataOverlays', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
 
     expect(screen.getByRole('alert').textContent).toBe(
-      '이벤트 데이터를 불러오지 못했습니다: events failed',
+      'Failed to load events data: events failed',
     );
   });
 
@@ -78,7 +78,7 @@ describe('MatchDataOverlays', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
 
     expect(screen.getByLabelText('Match events timeline')).toBeTruthy();
-    expect(screen.queryByText('이벤트 데이터가 없습니다.')).toBeNull();
+    expect(screen.queryByText('No events data.')).toBeNull();
   });
 
   it('collapses and expands the match panel', () => {

@@ -14,7 +14,7 @@ function createLineupPlayer(
     matchPlayerUid,
     playerUid: null,
     name,
-    koreanName: null,
+    shortName: null,
     number,
     photo: null,
     position: null,
@@ -31,8 +31,8 @@ export function createFixtureLineup(
     lineup: {
       home: {
         teamUid: 'home-team',
-        teamName: 'Home',
-        teamKoreanName: '홈',
+        teamName: '홈',
+        teamShortName: null,
         formation: '4-2-3-1',
         players: [createLineupPlayer('home-player-1', 'Home Player', 1)],
         substitutes: [],
@@ -40,8 +40,8 @@ export function createFixtureLineup(
       },
       away: {
         teamUid: 'away-team',
-        teamName: 'Away',
-        teamKoreanName: '원정',
+        teamName: '원정',
+        teamShortName: null,
         formation: '4-3-3',
         players: [createLineupPlayer('away-player-2', 'Away Player', 2)],
         substitutes: [],
@@ -55,11 +55,11 @@ export function createFixtureLineup(
 function createStatisticsTeam(
   teamUid: string,
   name: string,
-  koreanName: string,
+  shortName: string | null,
   ballPossession: number,
 ): MatchStatisticsTeamDto {
   return {
-    team: { teamUid, name, koreanName, logo: null, playerColor: null },
+    team: { teamUid, name, shortName, logo: null, playerColor: null },
     teamStatistics: {
       shotsOnGoal: ballPossession === 55 ? 4 : 2,
       shotsOffGoal: ballPossession === 55 ? 3 : 4,
@@ -89,8 +89,8 @@ export function createFixtureStatistics(
 ): FixtureStatisticsDto {
   return {
     fixture: { uid: 'fixture-1', elapsed: 45, status: 'HT' },
-    home: createStatisticsTeam('home-team', 'Home', '홈', 55),
-    away: createStatisticsTeam('away-team', 'Away', '원정', 45),
+    home: createStatisticsTeam('home-team', '홈', null, 55),
+    away: createStatisticsTeam('away-team', '원정', null, 45),
     ...overrides,
   };
 }

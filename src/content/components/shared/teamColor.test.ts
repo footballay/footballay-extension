@@ -11,15 +11,14 @@ describe('resolveTeamColors', () => {
     ).toEqual({ home: '#ff0000', away: '#0000ff' });
   });
 
-  it('uses secondary before border or the fallback palette for similar primaries', () => {
+  it('uses number before border or the fallback palette for similar primaries', () => {
     expect(
       resolveTeamColors(
         { playerColor: { primary: 'ff0000', number: 'ffffff', border: null } },
         {
           playerColor: {
             primary: 'ee0011',
-            secondary: '00aaff',
-            number: 'ffffff',
+            number: '00aaff',
             border: '00ff00',
           },
         },
@@ -27,15 +26,14 @@ describe('resolveTeamColors', () => {
     ).toBe('#00aaff');
   });
 
-  it('uses border when primary and secondary are similar', () => {
+  it('uses border when primary and number are similar', () => {
     expect(
       resolveTeamColors(
         { playerColor: { primary: 'ff0000', number: 'ffffff', border: null } },
         {
           playerColor: {
             primary: 'ee0011',
-            secondary: 'ee1100',
-            number: 'ffffff',
+            number: 'ee1100',
             border: '00aa55',
           },
         },

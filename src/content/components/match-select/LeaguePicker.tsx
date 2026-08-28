@@ -1,10 +1,12 @@
 import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
+import { t, useContentLocale } from '@/shared/i18n/content';
 
 type LeaguePickerProps = {
   onSelect: () => void;
 };
 
 export function LeaguePicker({ onSelect }: LeaguePickerProps) {
+  const locale = useContentLocale();
   const leagues = useMatchPickerStore((state) => state.leagues);
   const leagueStatus = useMatchPickerStore((state) => state.leagueStatus);
   const leagueError = useMatchPickerStore((state) => state.leagueError);
@@ -22,27 +24,25 @@ export function LeaguePicker({ onSelect }: LeaguePickerProps) {
     <section className="footballay-league-section">
       {leagueStatus === 'loading' && (
         <p className="footballay-content-status" role="status">
-          리그를 불러오는 중입니다.
+          {t(locale, 'leagueLoading')}
         </p>
       )}
       {leagueStatus === 'error' && (
         <div className="footballay-content-status" role="alert">
-          <p>리그를 불러오지 못했습니다: {leagueError}</p>
+          <p>{t(locale, 'leagueError', { error: leagueError ?? '' })}</p>
           <button type="button" onClick={() => void loadAvailableLeagues()}>
-            다시 시도
+            {t(locale, 'retry')}
           </button>
         </div>
       )}
       {leagueStatus === 'ready' && leagues.length === 0 && (
-        <p className="footballay-content-status">
-          사용 가능한 리그가 없습니다.
-        </p>
+        <p className="footballay-content-status">{t(locale, 'noLeagues')}</p>
       )}
       {leagues.length > 0 && (
         <div
           className="footballay-league-list"
           role="listbox"
-          aria-label="Available leagues"
+          aria-label={t(locale, 'availableLeagues')}
         >
           {leagues.map((league) => (
             <button
@@ -55,7 +55,7 @@ export function LeaguePicker({ onSelect }: LeaguePickerProps) {
                 void selectLeagueAndLoadFixtures(league.uid);
               }}
             >
-              {league.nameKo ?? league.name}
+              {league.name}
             </button>
           ))}
         </div>
