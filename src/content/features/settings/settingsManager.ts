@@ -10,7 +10,12 @@ import {
 } from '@/shared/settings/settings';
 
 function sameSettings(left: ExtensionSettings, right: ExtensionSettings) {
-  return left.locale === right.locale && left.timezone === right.timezone;
+  return (
+    left.locale === right.locale &&
+    left.timezone === right.timezone &&
+    left.panelOpacity === right.panelOpacity &&
+    left.lineupPlayerCardOpacity === right.lineupPlayerCardOpacity
+  );
 }
 
 class SettingsManager {
@@ -131,10 +136,26 @@ class SettingsManager {
     const previous = settingsStore.getState().settings;
     const localeChanged = previous.locale !== nextSettings.locale;
     const timezoneChanged = previous.timezone !== nextSettings.timezone;
-    if (!localeChanged && !timezoneChanged) return;
+    const panelOpacityChanged =
+      previous.panelOpacity !== nextSettings.panelOpacity;
+    const lineupPlayerCardOpacityChanged =
+      previous.lineupPlayerCardOpacity !== nextSettings.lineupPlayerCardOpacity;
+    if (
+      !localeChanged &&
+      !timezoneChanged &&
+      !panelOpacityChanged &&
+      !lineupPlayerCardOpacityChanged
+    ) {
+      return;
+    }
 
     settingsStore.setState({ settings: nextSettings });
-    if (!settingsStore.getState().hydrated) return;
+    if (
+      !settingsStore.getState().hydrated ||
+      (!localeChanged && !timezoneChanged)
+    ) {
+      return;
+    }
 
     const tasks: Promise<unknown>[] = [
       fixtureSelection.reloadForSettings({ localeChanged, timezoneChanged }),

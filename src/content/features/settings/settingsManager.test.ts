@@ -4,7 +4,12 @@ import type { ExtensionSettings } from '@/shared/settings/settings';
 const storage = vi.hoisted(() => {
   let listener: ((settings: ExtensionSettings) => void) | undefined;
   return {
-    load: vi.fn(async () => ({ locale: 'default', timezone: 'default' })),
+    load: vi.fn(async () => ({
+      locale: 'default',
+      timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
+    })),
     save: vi.fn(async (settings: ExtensionSettings) => {
       listener?.(settings);
     }),
@@ -27,7 +32,12 @@ const matchData = vi.hoisted(() => ({
 }));
 
 vi.mock('@/shared/settings/settings', () => ({
-  DEFAULT_SETTINGS: { locale: 'default', timezone: 'default' },
+  DEFAULT_SETTINGS: {
+    locale: 'default',
+    timezone: 'default',
+    panelOpacity: 90,
+    lineupPlayerCardOpacity: 100,
+  },
   loadExtensionSettings: storage.load,
   saveExtensionSettings: storage.save,
   watchExtensionSettings: storage.watch,
@@ -56,14 +66,24 @@ describe('SettingsManager', () => {
     fixtureSelection.reloadForSettings.mockClear();
     matchData.reloadLocalized.mockClear();
     settingsStore.setState({
-      settings: { locale: 'default', timezone: 'default' },
+      settings: {
+        locale: 'default',
+        timezone: 'default',
+        panelOpacity: 90,
+        lineupPlayerCardOpacity: 100,
+      },
       hydrated: false,
     });
     await settingsManager.initialize();
   });
 
   it('reacts once when a local save is echoed by the storage watcher', async () => {
-    await settingsManager.updateSettings({ locale: 'ko', timezone: 'default' });
+    await settingsManager.updateSettings({
+      locale: 'ko',
+      timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
+    });
     await flushReactions();
 
     expect(storage.save).toHaveBeenCalledOnce();
@@ -74,13 +94,23 @@ describe('SettingsManager', () => {
     });
     expect(matchData.reloadLocalized).toHaveBeenCalledOnce();
 
-    storage.notify({ locale: 'ko', timezone: 'default' });
+    storage.notify({
+      locale: 'ko',
+      timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
+    });
     await flushReactions();
     expect(fixtureSelection.reloadForSettings).toHaveBeenCalledOnce();
   });
 
   it('reacts to external storage changes through the same path', async () => {
-    storage.notify({ locale: 'default', timezone: 'Asia/Seoul' });
+    storage.notify({
+      locale: 'default',
+      timezone: 'Asia/Seoul',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
+    });
     await flushReactions();
 
     expect(fixtureSelection.reloadForSettings).toHaveBeenCalledWith({
@@ -107,10 +137,14 @@ describe('SettingsManager', () => {
     const first = settingsManager.updateSettings({
       locale: 'ko',
       timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
     });
     const latest = settingsManager.updateSettings({
       locale: 'en',
       timezone: 'Asia/Seoul',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
     });
     resolveFirstSave();
     await Promise.all([first, latest]);
@@ -126,6 +160,8 @@ describe('SettingsManager', () => {
     expect(settingsStore.getState().settings).toEqual({
       locale: 'en',
       timezone: 'Asia/Seoul',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
     });
   });
 
@@ -134,10 +170,14 @@ describe('SettingsManager', () => {
     const firstSettings: ExtensionSettings = {
       locale: 'ko',
       timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
     };
     const latestSettings: ExtensionSettings = {
       locale: 'en',
       timezone: 'Asia/Seoul',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
     };
     storage.save
       .mockImplementationOnce(
@@ -170,8 +210,18 @@ describe('SettingsManager', () => {
   });
 
   it('coalesces rapid external changes and applies only the latest settings', async () => {
-    storage.notify({ locale: 'ko', timezone: 'default' });
-    storage.notify({ locale: 'en', timezone: 'Asia/Seoul' });
+    storage.notify({
+      locale: 'ko',
+      timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
+    });
+    storage.notify({
+      locale: 'en',
+      timezone: 'Asia/Seoul',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
+    });
     await flushReactions();
 
     expect(fixtureSelection.reloadForSettings).toHaveBeenCalledOnce();
@@ -183,6 +233,36 @@ describe('SettingsManager', () => {
     expect(settingsStore.getState().settings).toEqual({
       locale: 'en',
       timezone: 'Asia/Seoul',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
     });
+  });
+
+  it('applies panel opacity without reloading match data', async () => {
+    await settingsManager.updateSettings({
+      locale: 'default',
+      timezone: 'default',
+      panelOpacity: 50,
+      lineupPlayerCardOpacity: 100,
+    });
+    await flushReactions();
+
+    expect(settingsStore.getState().settings.panelOpacity).toBe(50);
+    expect(fixtureSelection.reloadForSettings).not.toHaveBeenCalled();
+    expect(matchData.reloadLocalized).not.toHaveBeenCalled();
+  });
+
+  it('applies lineup player card opacity without reloading match data', async () => {
+    await settingsManager.updateSettings({
+      locale: 'default',
+      timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 50,
+    });
+    await flushReactions();
+
+    expect(settingsStore.getState().settings.lineupPlayerCardOpacity).toBe(50);
+    expect(fixtureSelection.reloadForSettings).not.toHaveBeenCalled();
+    expect(matchData.reloadLocalized).not.toHaveBeenCalled();
   });
 });

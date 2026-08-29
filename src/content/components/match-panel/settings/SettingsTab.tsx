@@ -50,6 +50,42 @@ export function SettingsTab() {
         </select>
       </label>
       <label>
+        <span>{t(locale, 'panelOpacity')}</span>
+        <input
+          aria-label={t(locale, 'panelOpacity')}
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value={settings.panelOpacity}
+          onChange={(event) =>
+            void updateSettings({
+              ...settings,
+              panelOpacity: Number(event.target.value),
+            })
+          }
+        />
+        <span>{settings.panelOpacity}%</span>
+      </label>
+      <label>
+        <span>{t(locale, 'lineupPlayerCardOpacity')}</span>
+        <input
+          aria-label={t(locale, 'lineupPlayerCardOpacity')}
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value={settings.lineupPlayerCardOpacity}
+          onChange={(event) =>
+            void updateSettings({
+              ...settings,
+              lineupPlayerCardOpacity: Number(event.target.value),
+            })
+          }
+        />
+        <span>{settings.lineupPlayerCardOpacity}%</span>
+      </label>
+      <label>
         <span>{t(locale, 'timezone')}</span>
         <select
           aria-label={t(locale, 'timezone')}

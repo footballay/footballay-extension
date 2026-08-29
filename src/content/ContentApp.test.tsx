@@ -91,7 +91,12 @@ function selectFixtureForView(fixtureUid: string) {
 }
 
 vi.mock('@/shared/settings/settings', () => ({
-  DEFAULT_SETTINGS: { locale: 'default', timezone: 'default' },
+  DEFAULT_SETTINGS: {
+    locale: 'default',
+    timezone: 'default',
+    panelOpacity: 90,
+    lineupPlayerCardOpacity: 100,
+  },
   loadExtensionSettings: vi.fn(),
   saveExtensionSettings: vi.fn(),
   watchExtensionSettings: vi.fn(() => () => undefined),
@@ -106,7 +111,12 @@ beforeEach(() => {
   loadFixtureDates.mockClear();
   selectFixture.mockClear();
   settingsStore.setState({
-    settings: { locale: 'default', timezone: 'default' },
+    settings: {
+      locale: 'default',
+      timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
+    },
     hydrated: true,
   });
   fixtureSelectionStore.setState({
@@ -314,7 +324,12 @@ describe('ContentApp', () => {
     loadFixtureDates.mockClear();
     act(() => {
       settingsStore.setState({
-        settings: { locale: 'default', timezone: 'America/New_York' },
+        settings: {
+          locale: 'default',
+          timezone: 'America/New_York',
+          panelOpacity: 90,
+          lineupPlayerCardOpacity: 100,
+        },
       });
     });
 

@@ -1,6 +1,7 @@
 import { BarChart3, Flag, Settings, UsersRound, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useMatchPanel } from '@/content/features/match-data';
+import { useSettings } from '@/content/features/settings';
 import { t, useContentLocale } from '@/shared/i18n/content';
 import { LineupTab } from './lineup/LineupTab';
 import { StatisticsTab } from './statistics/StatisticsTab';
@@ -12,6 +13,7 @@ type DetailTab = 'lineup' | 'statistics' | 'events' | 'settings';
 
 export function MatchDataOverlays() {
   const locale = useContentLocale();
+  const { settings } = useSettings();
   const { fixtureInfo } = useMatchPanel();
   const [tab, setTab] = useState<DetailTab>('lineup');
   const [collapsed, setCollapsed] = useState(false);
@@ -37,8 +39,14 @@ export function MatchDataOverlays() {
 
   return (
     <aside
-      className="footballay-match-panel"
+      className={`footballay-match-panel${tab === 'settings' ? '' : ' footballay-match-panel--data'}`}
       aria-label={t(locale, 'matchPanel')}
+      style={
+        {
+          '--footballay-panel-opacity': `${settings.panelOpacity}%`,
+          '--footballay-lineup-player-card-opacity': `${settings.lineupPlayerCardOpacity}%`,
+        } as CSSProperties
+      }
     >
       <div className="footballay-match-panel__sidebar">
         <div

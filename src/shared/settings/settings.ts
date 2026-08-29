@@ -6,11 +6,18 @@ export type TimezoneSetting = 'default' | string;
 export type ExtensionSettings = {
   locale: LocaleSetting;
   timezone: TimezoneSetting;
+  panelOpacity: number;
+  lineupPlayerCardOpacity: number;
 };
+
+export const DEFAULT_PANEL_OPACITY = 90;
+export const DEFAULT_LINEUP_PLAYER_CARD_OPACITY = 100;
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
   locale: 'default',
   timezone: 'default',
+  panelOpacity: DEFAULT_PANEL_OPACITY,
+  lineupPlayerCardOpacity: DEFAULT_LINEUP_PLAYER_CARD_OPACITY,
 };
 
 const SETTINGS_KEY = 'local:footballay-settings';
@@ -38,6 +45,15 @@ function isTimezone(value: unknown): value is string {
   }
 }
 
+function isOpacity(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    value >= 0 &&
+    value <= 100
+  );
+}
+
 export function normalizeSettings(value: unknown): ExtensionSettings {
   const settings = value as Partial<ExtensionSettings> | null;
 
@@ -50,6 +66,12 @@ export function normalizeSettings(value: unknown): ExtensionSettings {
       settings?.timezone === 'default' || isTimezone(settings?.timezone)
         ? settings.timezone
         : 'default',
+    panelOpacity: isOpacity(settings?.panelOpacity)
+      ? settings.panelOpacity
+      : DEFAULT_PANEL_OPACITY,
+    lineupPlayerCardOpacity: isOpacity(settings?.lineupPlayerCardOpacity)
+      ? settings.lineupPlayerCardOpacity
+      : DEFAULT_LINEUP_PLAYER_CARD_OPACITY,
   };
 }
 

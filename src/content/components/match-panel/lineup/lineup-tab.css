@@ -67,7 +67,7 @@
   height: var(--lineup-player-height);
   overflow: hidden;
   border-radius: 3px;
-  background: var(--footballay-color-surface);
+  background: rgb(10 16 31 / var(--footballay-lineup-player-card-opacity));
   color: var(--footballay-color-white);
   font-size: 12px;
   line-height: var(--lineup-player-height);
@@ -76,7 +76,7 @@
 .footballay-match-panel__player-main span {
   flex: 0 0 var(--lineup-player-number-width);
   color: var(--footballay-color-black);
-  background: var(--footballay-color-text);
+  background: rgb(244 247 251 / var(--footballay-lineup-player-card-opacity));
   text-align: center;
 }
 

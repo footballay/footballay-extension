@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { matchDataStore } from '@/content/features/match-data/matchDataStore';
 import { createFixtureStatistics } from '@/content/test/matchDataFixtures';
@@ -8,7 +9,12 @@ import { MatchDataOverlays } from './MatchDataOverlays';
 import type { FixtureDto } from '@/shared/api/dto';
 
 const settingsView = vi.hoisted(() => ({
-  settings: { locale: 'default', timezone: 'default' },
+  settings: {
+    locale: 'default',
+    timezone: 'default',
+    panelOpacity: 90,
+    lineupPlayerCardOpacity: 100,
+  },
   updateSettings: vi.fn(),
 }));
 
@@ -28,10 +34,24 @@ const fixtureInfo: FixtureDto = {
   available: true,
 };
 
+const matchPanelCss = readFileSync(
+  'src/content/components/match-panel/match-data-overlays.css',
+  'utf8',
+);
+const lineupTabCss = readFileSync(
+  'src/content/components/match-panel/lineup/lineup-tab.css',
+  'utf8',
+);
+
 afterEach(cleanup);
 
 beforeEach(() => {
-  settingsView.settings = { locale: 'default', timezone: 'default' };
+  settingsView.settings = {
+    locale: 'default',
+    timezone: 'default',
+    panelOpacity: 90,
+    lineupPlayerCardOpacity: 100,
+  };
   settingsView.updateSettings.mockReset();
   matchDataStore.setState({
     fixtureInfo,
@@ -160,6 +180,8 @@ describe('MatchDataOverlays', () => {
     expect(updateSettings).toHaveBeenCalledWith({
       locale: 'ko',
       timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
     });
 
     fireEvent.change(screen.getByLabelText('Timezone'), {
@@ -171,6 +193,28 @@ describe('MatchDataOverlays', () => {
     expect(updateSettings).toHaveBeenLastCalledWith({
       locale: 'default',
       timezone: 'Asia/Seoul',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
+    });
+
+    fireEvent.change(screen.getByLabelText('Panel opacity'), {
+      target: { value: '60' },
+    });
+    expect(updateSettings).toHaveBeenLastCalledWith({
+      locale: 'default',
+      timezone: 'default',
+      panelOpacity: 60,
+      lineupPlayerCardOpacity: 100,
+    });
+
+    fireEvent.change(screen.getByLabelText('Player card opacity'), {
+      target: { value: '50' },
+    });
+    expect(updateSettings).toHaveBeenLastCalledWith({
+      locale: 'default',
+      timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 50,
     });
 
     fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
@@ -179,7 +223,12 @@ describe('MatchDataOverlays', () => {
 
   it('does not save an invalid custom timezone over the current setting', () => {
     const updateSettings = vi.fn();
-    settingsView.settings = { locale: 'default', timezone: 'Asia/Seoul' };
+    settingsView.settings = {
+      locale: 'default',
+      timezone: 'Asia/Seoul',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
+    };
     settingsView.updateSettings = updateSettings;
     render(<MatchDataOverlays />);
 
@@ -190,5 +239,69 @@ describe('MatchDataOverlays', () => {
 
     expect(updateSettings).not.toHaveBeenCalled();
     expect(settingsView.settings.timezone).toBe('Asia/Seoul');
+  });
+
+  it('applies panel opacity only outside Settings', () => {
+    settingsView.settings = {
+      locale: 'default',
+      timezone: 'default',
+      panelOpacity: 50,
+      lineupPlayerCardOpacity: 100,
+    };
+    render(<MatchDataOverlays />);
+
+    const panel = screen.getByLabelText('Match panel');
+    expect(panel.className).toContain('footballay-match-panel--data');
+    expect(panel.getAttribute('style')).toContain(
+      '--footballay-panel-opacity: 50%',
+    );
+    expect(panel.getAttribute('style')).toContain(
+      '--footballay-lineup-player-card-opacity: 100%',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(panel.className).not.toContain('footballay-match-panel--data');
+  });
+
+  it('applies opacity to data backgrounds without nesting it at the root', () => {
+    expect(matchPanelCss).toContain(
+      '.footballay-match-panel--data {\n  background: transparent;',
+    );
+    expect(matchPanelCss).toContain(
+      '.footballay-match-panel--data .footballay-match-panel__lineup,',
+    );
+    expect(matchPanelCss).toContain(
+      '.footballay-match-panel--data .footballay-match-panel__events {',
+    );
+    expect(matchPanelCss).toContain(
+      '.footballay-match-panel__statistics:has(\n    > .footballay-match-panel__statistics-column',
+    );
+    expect(matchPanelCss).toContain(
+      '.footballay-match-panel--data .footballay-match-panel__statistics-column {',
+    );
+  });
+
+  it('aligns the panel opacity range thumb with the control edges', () => {
+    expect(matchPanelCss).toContain(
+      "input[type='range'] {\n  --footballay-settings-range-thumb-size: 12px;",
+    );
+    expect(matchPanelCss).toContain(
+      'padding: 0 calc(var(--footballay-settings-range-thumb-size) / 2);',
+    );
+    expect(matchPanelCss).toContain(
+      'width: var(--footballay-settings-range-thumb-size);',
+    );
+    expect(matchPanelCss).toContain(
+      'height: var(--footballay-settings-range-thumb-size);',
+    );
+  });
+
+  it('uses one opacity value for both lineup player card backgrounds', () => {
+    expect(lineupTabCss).toContain(
+      '10 16 31 / var(--footballay-lineup-player-card-opacity)',
+    );
+    expect(lineupTabCss).toContain(
+      '244 247 251 / var(--footballay-lineup-player-card-opacity)',
+    );
   });
 });
