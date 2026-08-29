@@ -96,10 +96,10 @@ function PassAccuracy({
           <strong>{team.name}</strong>
           <i
             style={{
-              background: `radial-gradient(circle, var(--footballay-color-surface-raised) 0 15px, transparent 16px), conic-gradient(${team.color} ${team.value}%, var(--footballay-color-disabled) 0)`,
+              background: `radial-gradient(circle, var(--footballay-color-surface-raised) 0 15px, transparent 16px), conic-gradient(${team.color} ${team.value ?? 0}%, var(--footballay-color-disabled) 0)`,
             }}
           >
-            {team.value}%
+            {team.value === undefined ? null : `${team.value}%`}
           </i>
         </div>
       ))}
@@ -144,7 +144,12 @@ function Statistic({
   homeColor: string;
   awayColor: string;
 }) {
-  if (statistic.homeValue === null || statistic.awayValue === null) return null;
+  if (
+    statistic.label !== 'xG' &&
+    (statistic.homeValue === null || statistic.awayValue === null)
+  ) {
+    return null;
+  }
 
   return (
     <div className="footballay-match-panel__stat">

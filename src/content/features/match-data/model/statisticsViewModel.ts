@@ -49,7 +49,7 @@ const STATISTIC_COLUMNS: StatisticDefinition[][] = [
   [
     ['totalShots', (team) => team.teamStatistics.totalShots],
     ['shotsOnGoal', (team) => team.teamStatistics.shotsOnGoal],
-    ['xG', (team) => team.teamStatistics.xg.at(-1)?.xg ?? '0'],
+    ['xG', xg],
     ['fouls', (team) => team.teamStatistics.fouls],
     ['cornerKicks', (team) => team.teamStatistics.cornerKicks],
     ['offsides', (team) => team.teamStatistics.offsides],
@@ -64,24 +64,48 @@ const STATISTIC_COLUMNS: StatisticDefinition[][] = [
   ],
 ];
 
+function xg(team: MatchStatisticsTeamDto): number | string | null {
+  const value: unknown = team.teamStatistics.xg.at(-1)?.xg;
+  if (
+    value === null ||
+    value === undefined ||
+    (typeof value === 'string' && value.trim() === '')
+  ) {
+    return null;
+  }
+
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) && numberValue > 0
+    ? (value as number | string)
+    : null;
+}
+
 function ratios(
   homeValue: number | string | null,
   awayValue: number | string | null,
 ) {
   const homeNumber = Number.parseFloat(String(homeValue));
   const awayNumber = Number.parseFloat(String(awayValue));
-  const total =
-    Number.isFinite(homeNumber) && Number.isFinite(awayNumber)
-      ? homeNumber + awayNumber || 1
-      : 1;
+  const hasHomeNumber = Number.isFinite(homeNumber);
+  const hasAwayNumber = Number.isFinite(awayNumber);
+
+  if (!hasHomeNumber && !hasAwayNumber) {
+    return { homeRatio: 0, awayRatio: 0 };
+  }
+
+  if (!hasHomeNumber) {
+    return { homeRatio: 0, awayRatio: 100 };
+  }
+
+  if (!hasAwayNumber) {
+    return { homeRatio: 100, awayRatio: 0 };
+  }
+
+  const total = homeNumber + awayNumber || 1;
 
   return {
-    homeRatio: Number.isFinite(homeNumber)
-      ? Math.round((homeNumber / total) * 1000) / 10
-      : 0,
-    awayRatio: Number.isFinite(awayNumber)
-      ? Math.round((awayNumber / total) * 1000) / 10
-      : 0,
+    homeRatio: Math.round((homeNumber / total) * 1000) / 10,
+    awayRatio: Math.round((awayNumber / total) * 1000) / 10,
   };
 }
 
@@ -104,7 +128,11 @@ function buildRow(
 function passAccuracy(team: MatchStatisticsTeamDto): number | undefined {
   const { passesAccuracyPercentage, passesAccurate, totalPasses } =
     team.teamStatistics;
-  if (Number.isFinite(passesAccuracyPercentage)) {
+  if (
+    Number.isFinite(passesAccuracyPercentage) &&
+    passesAccuracyPercentage > 0 &&
+    passesAccuracyPercentage <= 100
+  ) {
     return passesAccuracyPercentage;
   }
 
@@ -143,7 +171,14 @@ export function buildStatisticsViewModel(
       awayRed: away.teamStatistics.redCards,
     },
     columns: STATISTIC_COLUMNS.map((column) =>
-      column.map(([label, value]) => buildRow(label, value, home, away)),
+      column
+        .map(([label, value]) => buildRow(label, value, home, away))
+        .filter(
+          (row) =>
+            row.label !== 'xG' ||
+            row.homeValue !== null ||
+            row.awayValue !== null,
+        ),
     ),
   };
 }

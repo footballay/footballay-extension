@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { matchDataStore } from '@/content/features/match-data/matchDataStore';
+import { createFixtureStatistics } from '@/content/test/matchDataFixtures';
 import { MatchDataOverlays } from './MatchDataOverlays';
 import type { FixtureDto } from '@/shared/api/dto';
 
@@ -68,6 +69,31 @@ describe('MatchDataOverlays', () => {
     expect(screen.getByRole('alert').textContent).toBe(
       'Failed to load statistics data: statistics failed',
     );
+  });
+
+  it('does not render undefined pass accuracy text or progress', () => {
+    const statistics = createFixtureStatistics();
+    Object.assign(statistics.home!.teamStatistics, {
+      passesAccuracyPercentage: Number.NaN,
+      passesAccurate: 0,
+      totalPasses: 100,
+    });
+    matchDataStore.setState({
+      status: { loadStatus: 'ready' },
+      lineup: { loadStatus: 'ready' },
+      events: { loadStatus: 'ready' },
+      statistics: { loadStatus: 'ready', data: statistics },
+    });
+    render(<MatchDataOverlays />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Statistics' }));
+
+    const circle = document.querySelector(
+      '.footballay-match-panel__pass-accuracy i',
+    );
+    expect(screen.queryByText('undefined%')).toBeNull();
+    expect(circle?.getAttribute('style')).not.toContain('undefined%');
+    expect(circle?.getAttribute('style')).toContain('0%');
   });
 
   it('shows only the Events resource error in the Events tab', () => {

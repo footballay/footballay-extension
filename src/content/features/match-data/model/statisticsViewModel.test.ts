@@ -25,7 +25,12 @@ describe('buildStatisticsViewModel', () => {
       homeRatio: 55,
       awayRatio: 45,
     });
-    expect(xg).toMatchObject({ homeValue: '1.8', awayValue: '1.1' });
+    expect(xg).toMatchObject({
+      homeValue: '1.8',
+      awayValue: '1.1',
+      homeRatio: 62.1,
+      awayRatio: 37.9,
+    });
     expect(view.passAccuracy).toEqual({ home: 80, away: 78 });
     expect(view.cards).toEqual({
       homeYellow: 2,
@@ -36,7 +41,7 @@ describe('buildStatisticsViewModel', () => {
     expect(view).toMatchObject({ homeTeamName: '홈', awayTeamName: '원정' });
   });
 
-  it('uses the source pass accuracy before the pass count fallback', () => {
+  it('uses a valid source pass accuracy before the pass count fallback', () => {
     const statistics = createFixtureStatistics();
     Object.assign(statistics.home!.teamStatistics, {
       passesAccuracyPercentage: 71,
@@ -47,15 +52,37 @@ describe('buildStatisticsViewModel', () => {
     expect(buildStatisticsViewModel(statistics)!.passAccuracy.home).toBe(71);
   });
 
-  it('calculates pass accuracy from valid pass counts', () => {
+  it.each([
+    [0, 556, 626, 89],
+    [-1, 425, 500, 85],
+    [101, 425, 500, 85],
+  ])(
+    'calculates pass accuracy from valid counts when source %s is invalid',
+    (passesAccuracyPercentage, passesAccurate, totalPasses, expected) => {
+      const statistics = createFixtureStatistics();
+      Object.assign(statistics.home!.teamStatistics, {
+        passesAccuracyPercentage,
+        passesAccurate,
+        totalPasses,
+      });
+
+      expect(buildStatisticsViewModel(statistics)!.passAccuracy.home).toBe(
+        expected,
+      );
+    },
+  );
+
+  it('leaves pass accuracy undefined when source and counts are invalid', () => {
     const statistics = createFixtureStatistics();
     Object.assign(statistics.home!.teamStatistics, {
-      passesAccuracyPercentage: undefined as never,
-      passesAccurate: 425,
+      passesAccuracyPercentage: Number.NaN,
+      passesAccurate: 0,
       totalPasses: 500,
     });
 
-    expect(buildStatisticsViewModel(statistics)!.passAccuracy.home).toBe(85);
+    expect(
+      buildStatisticsViewModel(statistics)!.passAccuracy.home,
+    ).toBeUndefined();
   });
 
   it.each([
@@ -77,6 +104,94 @@ describe('buildStatisticsViewModel', () => {
 
       expect(
         buildStatisticsViewModel(statistics)!.passAccuracy.home,
+      ).toBeUndefined();
+    },
+  );
+
+  it('omits xG when neither team has a displayable latest value', () => {
+    const statistics = createFixtureStatistics();
+    statistics.home!.teamStatistics.xg = [];
+    statistics.away!.teamStatistics.xg = [];
+
+    expect(
+      buildStatisticsViewModel(statistics)!.columns[1]!.find(
+        ({ label }) => label === 'xG',
+      ),
+    ).toBeUndefined();
+  });
+
+  it.each(['0', '0.0'])('omits xG when both latest values are %s', (xg) => {
+    const statistics = createFixtureStatistics();
+    statistics.home!.teamStatistics.xg = [{ elapsed: 45, xg }];
+    statistics.away!.teamStatistics.xg = [{ elapsed: 45, xg }];
+
+    expect(
+      buildStatisticsViewModel(statistics)!.columns[1]!.find(
+        ({ label }) => label === 'xG',
+      ),
+    ).toBeUndefined();
+  });
+
+  it.each([null, undefined])(
+    'omits xG when both latest values are missing: %s',
+    (xg) => {
+      const statistics = createFixtureStatistics();
+      statistics.home!.teamStatistics.xg = [{ elapsed: 45, xg: xg as never }];
+      statistics.away!.teamStatistics.xg = [{ elapsed: 45, xg: xg as never }];
+
+      expect(
+        buildStatisticsViewModel(statistics)!.columns[1]!.find(
+          ({ label }) => label === 'xG',
+        ),
+      ).toBeUndefined();
+    },
+  );
+
+  it('keeps xG when only one team has a displayable latest value', () => {
+    const statistics = createFixtureStatistics();
+    statistics.home!.teamStatistics.xg = [{ elapsed: 45, xg: '1.4' }];
+    statistics.away!.teamStatistics.xg = [{ elapsed: 45, xg: '0' }];
+
+    expect(
+      buildStatisticsViewModel(statistics)!.columns[1]!.find(
+        ({ label }) => label === 'xG',
+      ),
+    ).toMatchObject({
+      homeValue: '1.4',
+      awayValue: null,
+      homeRatio: 100,
+      awayRatio: 0,
+    });
+  });
+
+  it('keeps xG when only the away team has a displayable latest value', () => {
+    const statistics = createFixtureStatistics();
+    statistics.home!.teamStatistics.xg = [{ elapsed: 45, xg: '0' }];
+    statistics.away!.teamStatistics.xg = [{ elapsed: 45, xg: '0.8' }];
+
+    expect(
+      buildStatisticsViewModel(statistics)!.columns[1]!.find(
+        ({ label }) => label === 'xG',
+      ),
+    ).toMatchObject({
+      homeValue: null,
+      awayValue: '0.8',
+      homeRatio: 0,
+      awayRatio: 100,
+    });
+  });
+
+  it.each([[''], ['NaN'], ['Infinity'], ['-0.1']])(
+    'does not use a historical xG value when the latest value is invalid: %s',
+    (xg) => {
+      const statistics = createFixtureStatistics();
+      statistics.home!.teamStatistics.xg.push({ elapsed: 60, xg });
+      statistics.away!.teamStatistics.xg = [{ elapsed: 45, xg: '0' }];
+
+      expect(
+        buildStatisticsViewModel(statistics)!.columns[1]!.find(
+          ({ label }) => label === 'xG',
+        ),
       ).toBeUndefined();
     },
   );
