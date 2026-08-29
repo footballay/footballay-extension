@@ -24,7 +24,9 @@ vi.mock('@/shared/api/client', () => ({
   requestFixtureEvents,
   requestFixtureStatistics,
 }));
-vi.mock('@/content/settings', () => ({ getSettings: settings.getSettings }));
+vi.mock('@/content/features/settings', () => ({
+  getSettings: settings.getSettings,
+}));
 
 import { matchDataManager } from './matchDataManager';
 import { createMatchDataState, matchDataStore } from './matchDataStore';

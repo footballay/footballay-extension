@@ -33,8 +33,8 @@ vi.mock('@/shared/settings/settings', () => ({
   watchExtensionSettings: storage.watch,
   normalizeSettings: (settings: ExtensionSettings) => settings,
 }));
-vi.mock('@/content/fixture-selection', () => ({ fixtureSelection }));
-vi.mock('@/content/match-data', () => ({ matchData }));
+vi.mock('@/content/features/fixture-selection', () => ({ fixtureSelection }));
+vi.mock('@/content/features/match-data', () => ({ matchData }));
 
 import { settingsManager } from './settingsManager';
 import { settingsStore } from './settingsStore';

@@ -26,7 +26,7 @@ const lifecycle = vi.hoisted(() => {
   };
 });
 
-vi.mock('@/content/settings', () => ({
+vi.mock('@/content/features/settings', () => ({
   settings: {
     initialize: lifecycle.initializeSettings,
     dispose: lifecycle.disposeSettings,
@@ -37,13 +37,13 @@ vi.mock('@/content/settings', () => ({
     updateSettings: vi.fn(),
   }),
 }));
-vi.mock('@/content/fixture-selection', () => ({
+vi.mock('@/content/features/fixture-selection', () => ({
   fixtureSelection: {
     initialize: lifecycle.initializeFixtureSelection,
     dispose: lifecycle.disposeFixtureSelection,
   },
 }));
-vi.mock('@/content/match-data', () => ({
+vi.mock('@/content/features/match-data', () => ({
   matchData: { dispose: lifecycle.disposeMatchData },
 }));
 vi.mock('@/content/components/match-select/MatchSelect', () => ({

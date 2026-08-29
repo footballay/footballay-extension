@@ -2,25 +2,25 @@ import { useStore } from 'zustand';
 import type { FixtureDto } from '@/shared/api/dto';
 import { matchDataManager } from './matchDataManager';
 import { matchDataStore } from './matchDataStore';
-import { buildLineupViewModel } from './view/lineupViewModel';
+import { buildLineupViewModel } from './model/lineupViewModel';
 import {
   buildEventsViewModel,
   matchMinuteToTimelineValue,
   timelineMax,
-} from './view/eventsViewModel';
-import { buildStatisticsViewModel } from './view/statisticsViewModel';
+} from './model/eventsViewModel';
+import { buildStatisticsViewModel } from './model/statisticsViewModel';
 
 export type {
   LineupPlayer,
   LineupTeamView,
   LineupViewModel,
-} from './view/lineupViewModel';
-export type { DisplayEvent, EventsViewModel } from './view/eventsViewModel';
+} from './model/lineupViewModel';
+export type { DisplayEvent, EventsViewModel } from './model/eventsViewModel';
 export type {
   StatisticLabel,
   StatisticRow,
   StatisticsViewModel,
-} from './view/statisticsViewModel';
+} from './model/statisticsViewModel';
 export { matchMinuteToTimelineValue, timelineMax };
 
 export const matchData = Object.freeze({

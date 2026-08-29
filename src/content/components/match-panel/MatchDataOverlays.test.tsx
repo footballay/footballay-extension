@@ -11,7 +11,7 @@ const settingsView = vi.hoisted(() => ({
   updateSettings: vi.fn(),
 }));
 
-vi.mock('@/content/settings', () => ({
+vi.mock('@/content/features/settings', () => ({
   getSettings: () => settingsView.settings,
   useSettings: () => settingsView,
 }));

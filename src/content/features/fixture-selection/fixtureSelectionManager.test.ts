@@ -24,8 +24,10 @@ vi.mock('@/shared/api/client', () => ({
   requestFixtures,
   requestFixtureDates,
 }));
-vi.mock('@/content/match-data', () => ({ matchData }));
-vi.mock('@/content/settings', () => ({ getSettings: settings.getSettings }));
+vi.mock('@/content/features/match-data', () => ({ matchData }));
+vi.mock('@/content/features/settings', () => ({
+  getSettings: settings.getSettings,
+}));
 
 import { fixtureSelectionManager } from './fixtureSelectionManager';
 import { fixtureSelectionStore } from './fixtureSelectionStore';

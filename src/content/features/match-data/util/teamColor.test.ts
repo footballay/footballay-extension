@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveTeamColors } from '../model/teamColor';
+import { resolveTeamColors } from './teamColor';
 
 describe('resolveTeamColors', () => {
   it('keeps distinct primary colors', () => {
