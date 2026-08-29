@@ -132,7 +132,7 @@
     "message": "Key stats"
   },
   "extension_description": {
-    "message": "Compact live football stats overlay for streaming pages."
+    "message": "A Footballay overlay for viewing lineups, match events, and statistics while watching live football."
   },
   "extension_name": {
     "message": "Footballay"

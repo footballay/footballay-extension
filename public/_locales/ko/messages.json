@@ -132,7 +132,7 @@
     "message": "주요 스탯"
   },
   "extension_description": {
-    "message": "스트리밍 페이지에 표시되는 컴팩트한 실시간 축구 통계 오버레이입니다."
+    "message": "라이브 축구 경기 시청 중 라인업, 경기 이벤트 및 통계 정보를 확인할 수 있는 오버레이입니다."
   },
   "extension_name": {
     "message": "Footballay"

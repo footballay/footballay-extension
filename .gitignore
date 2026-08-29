@@ -11,3 +11,4 @@ dist/
 .external/
 plan/
 .DS_Store
+docs/
