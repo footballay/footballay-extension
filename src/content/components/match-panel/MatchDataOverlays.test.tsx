@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { matchDataStore } from '@/content/match-data/matchDataStore';
+import { matchDataStore } from '@/content/features/match-data/matchDataStore';
 import { MatchDataOverlays } from './MatchDataOverlays';
 import type { FixtureDto } from '@/shared/api/dto';
 

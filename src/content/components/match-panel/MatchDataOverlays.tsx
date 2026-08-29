@@ -1,11 +1,11 @@
 import { BarChart3, Flag, Settings, UsersRound, X } from 'lucide-react';
 import { useState } from 'react';
-import { useMatchPanel } from '@/content/match-data';
+import { useMatchPanel } from '@/content/features/match-data';
 import { t, useContentLocale } from '@/shared/i18n/content';
-import { LineupTab } from './LineupTab';
-import { StatisticsTab } from './StatisticsTab';
-import { EventsTab } from './EventsTab';
-import { SettingsTab } from './SettingsTab';
+import { LineupTab } from './lineup/LineupTab';
+import { StatisticsTab } from './statistics/StatisticsTab';
+import { EventsTab } from './events/EventsTab';
+import { SettingsTab } from './settings/SettingsTab';
 import './match-data-overlays.css';
 
 type DetailTab = 'lineup' | 'statistics' | 'events' | 'settings';

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useFixtureSelection } from '@/content/fixture-selection';
+import { useFixtureSelection } from '@/content/features/fixture-selection';
 import {
   addDateMonths,
   calendarGridDates,

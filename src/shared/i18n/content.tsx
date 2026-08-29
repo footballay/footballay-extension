@@ -128,7 +128,7 @@ const messages = {
     goal: '골',
     ownGoal: '자책골',
     totalPasses: '총 패스',
-    passesAccurate: '정확한 패스',
+    passesAccurate: '성공한 패스',
     possession: '점유율',
     totalShots: '총 슈팅',
     shotsOnGoal: '유효 슈팅',

@@ -4,7 +4,7 @@ import type {
   MatchEventDto,
   MatchPlayerColorDto,
 } from '@/shared/api/dto';
-import { resolveTeamColors } from './teamColor';
+import { resolveTeamColors } from '../util/teamColor';
 
 export type DisplayEvent = MatchEventDto & {
   kind: 'goal' | 'card' | 'substitution';

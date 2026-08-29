@@ -14,8 +14,8 @@ import {
   resolveTimezone,
   toLocaleOverride,
 } from '@/shared/settings/resolution';
-import { getSettings } from '@/content/settings';
-import { matchData } from '@/content/match-data';
+import { getSettings } from '@/content/features/settings';
+import { matchData } from '@/content/features/match-data';
 import {
   createFixtureSelectionState,
   fixtureSelectionStore,

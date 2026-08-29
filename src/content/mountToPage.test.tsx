@@ -4,12 +4,7 @@ import { act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 
-const sync = vi.hoisted(() => ({
-  stopMatchDataSync: vi.fn(),
-}));
-
 vi.mock('@/content/ContentApp', () => ({ ContentApp: () => null }));
-vi.mock('@/content/matchDataSync', () => sync);
 
 import { mountToPage } from './mountToPage';
 
@@ -28,7 +23,6 @@ function createContext() {
 }
 
 beforeEach(() => {
-  sync.stopMatchDataSync.mockClear();
   document.getElementById('footballay-content-root')?.remove();
 });
 
@@ -43,7 +37,6 @@ describe('mountToPage', () => {
 
     mountToPage(context.ctx);
     expect(document.getElementById('footballay-content-root')).toBeTruthy();
-    expect(sync.stopMatchDataSync).not.toHaveBeenCalled();
   });
 
   it('cleans up on invalidation', () => {
@@ -53,6 +46,5 @@ describe('mountToPage', () => {
 
     act(context.invalidate);
     expect(document.getElementById('footballay-content-root')).toBeNull();
-    expect(sync.stopMatchDataSync).toHaveBeenCalledOnce();
   });
 });

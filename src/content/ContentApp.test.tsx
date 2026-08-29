@@ -11,13 +11,10 @@ import {
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentApp } from './ContentApp';
-import { useMatchDataStore } from './stores/matchDataStore';
-import { useMatchPickerStore } from './stores/matchPickerStore';
-import { useSettingsStore } from './stores/settingsStore';
-import { fixtureSelectionManager } from './fixture-selection/fixtureSelectionManager';
-import { fixtureSelectionStore } from './fixture-selection/fixtureSelectionStore';
-import { matchDataStore } from './match-data/matchDataStore';
-import { settingsStore } from './settings/settingsStore';
+import { fixtureSelectionManager } from './features/fixture-selection/fixtureSelectionManager';
+import { fixtureSelectionStore } from './features/fixture-selection/fixtureSelectionStore';
+import { matchDataStore } from './features/match-data/matchDataStore';
+import { settingsStore } from './features/settings/settingsStore';
 import type { FixtureDto } from '@/shared/api/dto';
 import {
   createFixtureLineup,
@@ -60,7 +57,6 @@ const selectDateAndLoadFixtures = vi.fn(async (date: string) => {
 });
 const navigateFixtureDate = vi.fn(async () => undefined);
 const loadFixtureDates = vi.fn(async () => undefined);
-const reloadFixturesForTimezone = vi.fn(async () => undefined);
 const selectFixture = vi.fn((fixtureUid: string) => {
   fixtureSelectionStore.setState({ selectedFixtureUid: fixtureUid });
   matchDataStore.setState({
@@ -100,10 +96,6 @@ vi.mock('@/shared/settings/settings', () => ({
   saveExtensionSettings: vi.fn(),
   watchExtensionSettings: vi.fn(() => () => undefined),
 }));
-vi.mock('@/content/matchDataSync', () => ({
-  startMatchDataSync: vi.fn(),
-}));
-
 afterEach(cleanup);
 
 beforeEach(() => {
@@ -112,53 +104,10 @@ beforeEach(() => {
   selectDateAndLoadFixtures.mockClear();
   navigateFixtureDate.mockClear();
   loadFixtureDates.mockClear();
-  reloadFixturesForTimezone.mockClear();
   selectFixture.mockClear();
-  useSettingsStore.setState({ hydrated: true });
   settingsStore.setState({
     settings: { locale: 'default', timezone: 'default' },
     hydrated: true,
-  });
-  useMatchPickerStore.setState({
-    leagues: [
-      {
-        uid: 'league-1',
-        name: '프리미어리그',
-        shortName: 'PL',
-        logo: null,
-      },
-      { uid: 'league-2', name: 'La Liga', shortName: null, logo: null },
-    ],
-    leagueStatus: 'ready',
-    leagueError: undefined,
-    fixtures: [],
-    fixtureDates: ['2026-08-22'],
-    fixtureStatus: 'idle',
-    fixtureError: undefined,
-    selectedLeagueUid: 'league-1',
-    selectedDate: '2026-08-11',
-    selectedFixtureUid: undefined,
-    loadAvailableLeagues,
-    selectLeagueAndLoadFixtures,
-    selectDateAndLoadFixtures,
-    navigateFixtureDate,
-    loadFixtureDates,
-    reloadFixturesForTimezone,
-  });
-  useMatchDataStore.setState({
-    status: { loadStatus: 'ready' },
-    lineup: {
-      loadStatus: 'ready',
-      data: createFixtureLineup(),
-    },
-    statistics: {
-      loadStatus: 'ready',
-      data: createFixtureStatistics(),
-    },
-    events: {
-      loadStatus: 'ready',
-      data: { fixtureUid: 'fixture-1', events: [] },
-    },
   });
   fixtureSelectionStore.setState({
     leagues: [
@@ -364,9 +313,6 @@ describe('ContentApp', () => {
     );
     loadFixtureDates.mockClear();
     act(() => {
-      useSettingsStore.setState({
-        settings: { locale: 'default', timezone: 'America/New_York' },
-      });
       settingsStore.setState({
         settings: { locale: 'default', timezone: 'America/New_York' },
       });

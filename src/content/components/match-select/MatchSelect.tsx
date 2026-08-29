@@ -1,6 +1,6 @@
 import { CalendarDays, X } from 'lucide-react';
 import { useState } from 'react';
-import { useFixtureSelection } from '@/content/fixture-selection';
+import { useFixtureSelection } from '@/content/features/fixture-selection';
 import { t, useContentLocale } from '@/shared/i18n/content';
 import { FixturePicker } from './FixturePicker';
 import { LeaguePicker } from './LeaguePicker';

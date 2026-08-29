@@ -1,11 +1,14 @@
 import { getMatchEventKind } from '@/shared/football/matchEvent';
 import type {
   FixtureEventsDto,
+  FixtureLineupDto,
+  FixtureStatisticsDto,
   MatchEventDto,
   MatchLineupDto,
   MatchLineupPlayerDto,
   MatchStatisticsTeamDto,
 } from '@/shared/api/dto';
+import { resolveTeamColors } from '../util/teamColor';
 
 export type LineupPlayer = {
   player: MatchLineupPlayerDto;
@@ -20,6 +23,16 @@ export type LineupPlayer = {
 
 export type LineupTeam = Omit<MatchLineupDto, 'players'> & {
   players: LineupPlayer[];
+};
+
+export type LineupTeamView = LineupTeam & {
+  columns: LineupPlayer[][];
+  color: string;
+};
+
+export type LineupViewModel = {
+  home?: LineupTeamView;
+  away?: LineupTeamView;
 };
 
 function eventTime(event: MatchEventDto) {
@@ -43,8 +56,28 @@ function currentPlayer(player: LineupPlayer): LineupPlayer {
   return player.replacement ? currentPlayer(player.replacement) : player;
 }
 
-function players(player: LineupPlayer): LineupPlayer[] {
-  return [player, ...(player.replacement ? players(player.replacement) : [])];
+function playerChain(player: LineupPlayer): LineupPlayer[] {
+  return [
+    player,
+    ...(player.replacement ? playerChain(player.replacement) : []),
+  ];
+}
+
+function formationColumns(team: LineupTeam): LineupPlayer[][] {
+  const counts = (team.formation ?? '')
+    .split('-')
+    .map(Number)
+    .filter((count) => Number.isInteger(count) && count > 0);
+  const columnSizes = [1, ...counts];
+  const playerCount = columnSizes.reduce((sum, count) => sum + count, 0);
+  const players = team.players.slice(0, playerCount).map(currentPlayer);
+  let offset = 0;
+
+  return columnSizes.map((count) => {
+    const column = players.slice(offset, offset + count);
+    offset += count;
+    return column;
+  });
 }
 
 export function buildLineupTeam(
@@ -94,17 +127,17 @@ export function buildLineupTeam(
 
   const playerByUid = new Map(
     starters
-      .flatMap(players)
+      .flatMap(playerChain)
       .flatMap((player) =>
         player.player.matchPlayerUid
-          ? [[player.player.matchPlayerUid, player]]
+          ? [[player.player.matchPlayerUid, player] as const]
           : [],
       ),
   );
   const statisticsByUid = new Map(
     (statistics?.playerStatistics ?? []).flatMap((statistic) =>
       statistic.player.matchPlayerUid
-        ? [[statistic.player.matchPlayerUid, statistic]]
+        ? [[statistic.player.matchPlayerUid, statistic] as const]
         : [],
     ),
   );
@@ -127,4 +160,23 @@ export function buildLineupTeam(
   }
 
   return { ...team, players: starters };
+}
+
+export function buildLineupViewModel(
+  lineup: FixtureLineupDto | undefined,
+  events: FixtureEventsDto | undefined,
+  statistics: FixtureStatisticsDto | undefined,
+): LineupViewModel {
+  const home = buildLineupTeam(lineup?.lineup.home, events, statistics?.home);
+  const away = buildLineupTeam(lineup?.lineup.away, events, statistics?.away);
+  const colors = resolveTeamColors(home, away);
+
+  return {
+    home: home
+      ? { ...home, columns: formationColumns(home), color: colors.home }
+      : undefined,
+    away: away
+      ? { ...away, columns: formationColumns(away), color: colors.away }
+      : undefined,
+  };
 }

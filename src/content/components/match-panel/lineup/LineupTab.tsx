@@ -1,11 +1,11 @@
 import { ArrowUp } from 'lucide-react';
 import { useState } from 'react';
-import goalMarker from '../../../../assets/goal_marker.png';
+import goalMarker from '../../../../../assets/goal_marker.png';
 import {
   useMatchPanel,
   type LineupPlayer,
   type LineupTeamView,
-} from '@/content/match-data';
+} from '@/content/features/match-data';
 import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
 import './lineup-tab.css';
 

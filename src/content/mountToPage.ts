@@ -2,7 +2,6 @@ import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { ContentApp } from '@/content/ContentApp';
-import { stopMatchDataSync } from '@/content/matchDataSync';
 
 /** Mounts the React Content App into the current page and removes it on invalidation. */
 export function mountToPage(ctx: ContentScriptContext): void {
@@ -22,7 +21,6 @@ export function mountToPage(ctx: ContentScriptContext): void {
   function unmount() {
     if (!root || !rootElement) return;
 
-    stopMatchDataSync();
     root.unmount();
     rootElement.remove();
     root = undefined;

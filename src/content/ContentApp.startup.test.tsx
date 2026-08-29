@@ -3,34 +3,49 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const settingsApi = vi.hoisted(() => {
-  let resolve:
-    | ((settings: { locale: 'default'; timezone: 'default' }) => void)
-    | undefined;
+const lifecycle = vi.hoisted(() => {
+  let resolveSettings: (() => void) | undefined;
+
   return {
-    loadExtensionSettings: vi.fn(
+    calls: [] as string[],
+    resolveSettings: () => resolveSettings?.(),
+    initializeSettings: vi.fn(
       () =>
-        new Promise<{ locale: 'default'; timezone: 'default' }>((next) => {
-          resolve = next;
+        new Promise<void>((resolve) => {
+          resolveSettings = resolve;
         }),
     ),
-    watchExtensionSettings: vi.fn(() => () => undefined),
-    saveExtensionSettings: vi.fn(),
-    resolve: () => resolve?.({ locale: 'default', timezone: 'default' }),
+    disposeSettings: vi.fn(() => lifecycle.calls.push('settings.dispose')),
+    initializeFixtureSelection: vi.fn(async () => {
+      lifecycle.calls.push('fixtureSelection.initialize');
+    }),
+    disposeFixtureSelection: vi.fn(() =>
+      lifecycle.calls.push('fixtureSelection.dispose'),
+    ),
+    disposeMatchData: vi.fn(() => lifecycle.calls.push('matchData.dispose')),
   };
 });
 
-const sync = vi.hoisted(() => ({ startMatchDataSync: vi.fn() }));
-const loadAvailableLeagues = vi.fn(async () => undefined);
-const reloadFixturesForLocale = vi.fn(async () => undefined);
-const reloadFixturesForTimezone = vi.fn(async () => undefined);
-const reloadLocalizedMatchData = vi.fn(async () => undefined);
-
-vi.mock('@/shared/settings/settings', () => ({
-  DEFAULT_SETTINGS: { locale: 'default', timezone: 'default' },
-  ...settingsApi,
+vi.mock('@/content/settings', () => ({
+  settings: {
+    initialize: lifecycle.initializeSettings,
+    dispose: lifecycle.disposeSettings,
+  },
+  useSettings: () => ({
+    settings: { locale: 'default', timezone: 'default' },
+    hydrated: false,
+    updateSettings: vi.fn(),
+  }),
 }));
-vi.mock('@/content/matchDataSync', () => sync);
+vi.mock('@/content/fixture-selection', () => ({
+  fixtureSelection: {
+    initialize: lifecycle.initializeFixtureSelection,
+    dispose: lifecycle.disposeFixtureSelection,
+  },
+}));
+vi.mock('@/content/match-data', () => ({
+  matchData: { dispose: lifecycle.disposeMatchData },
+}));
 vi.mock('@/content/components/match-select/MatchSelect', () => ({
   MatchSelect: () => null,
 }));
@@ -39,75 +54,46 @@ vi.mock('@/content/components/match-panel/MatchDataOverlays', () => ({
 }));
 
 import { ContentApp } from './ContentApp';
-import { useMatchDataStore } from './stores/matchDataStore';
-import { useMatchPickerStore } from './stores/matchPickerStore';
-import { useSettingsStore } from './stores/settingsStore';
 
 afterEach(cleanup);
 
 beforeEach(() => {
-  settingsApi.loadExtensionSettings.mockClear();
-  sync.startMatchDataSync.mockClear();
-  loadAvailableLeagues.mockClear();
-  reloadFixturesForLocale.mockClear();
-  reloadFixturesForTimezone.mockClear();
-  reloadLocalizedMatchData.mockClear();
-  useSettingsStore.setState({
-    hydrated: false,
-    settings: { locale: 'default', timezone: 'default' },
-  });
-  useMatchPickerStore.setState({
-    loadAvailableLeagues,
-    reloadFixturesForLocale,
-    reloadFixturesForTimezone,
-  });
-  useMatchDataStore.setState({ reloadLocalizedMatchData });
+  lifecycle.calls.length = 0;
+  lifecycle.initializeSettings.mockClear();
+  lifecycle.disposeSettings.mockClear();
+  lifecycle.initializeFixtureSelection.mockClear();
+  lifecycle.disposeFixtureSelection.mockClear();
+  lifecycle.disposeMatchData.mockClear();
 });
 
-describe('ContentApp startup', () => {
-  it('waits for settings hydration before loading leagues and starting polling', async () => {
-    render(<ContentApp />);
+describe('ContentApp lifecycle', () => {
+  it('initializes Fixture Selection after Settings and disposes every feature', async () => {
+    const view = render(<ContentApp />);
 
-    expect(loadAvailableLeagues).not.toHaveBeenCalled();
-    expect(sync.startMatchDataSync).not.toHaveBeenCalled();
+    expect(lifecycle.initializeSettings).toHaveBeenCalledOnce();
+    expect(lifecycle.initializeFixtureSelection).not.toHaveBeenCalled();
 
-    await act(async () => settingsApi.resolve());
+    await act(async () => lifecycle.resolveSettings());
+    expect(lifecycle.initializeFixtureSelection).toHaveBeenCalledOnce();
 
-    expect(loadAvailableLeagues).toHaveBeenCalledOnce();
-    expect(sync.startMatchDataSync).toHaveBeenCalledOnce();
+    view.unmount();
+    expect(lifecycle.calls).toEqual([
+      'fixtureSelection.initialize',
+      'fixtureSelection.dispose',
+      'matchData.dispose',
+      'settings.dispose',
+    ]);
   });
 
-  it('reloads only locale-dependent resources after a language change', async () => {
-    render(<ContentApp />);
-    await act(async () => settingsApi.resolve());
-    loadAvailableLeagues.mockClear();
+  it('does not initialize Fixture Selection after unmount', async () => {
+    const view = render(<ContentApp />);
 
-    await act(async () => {
-      useSettingsStore.setState({
-        settings: { locale: 'ko', timezone: 'default' },
-      });
-    });
+    view.unmount();
+    await act(async () => lifecycle.resolveSettings());
 
-    expect(loadAvailableLeagues).toHaveBeenCalledOnce();
-    expect(reloadFixturesForLocale).toHaveBeenCalledOnce();
-    expect(reloadLocalizedMatchData).toHaveBeenCalledOnce();
-    expect(reloadFixturesForTimezone).not.toHaveBeenCalled();
-  });
-
-  it('reloads the current fixture date for a timezone change without a localized reload', async () => {
-    render(<ContentApp />);
-    await act(async () => settingsApi.resolve());
-    loadAvailableLeagues.mockClear();
-
-    await act(async () => {
-      useSettingsStore.setState({
-        settings: { locale: 'default', timezone: 'Asia/Seoul' },
-      });
-    });
-
-    expect(reloadFixturesForTimezone).toHaveBeenCalledOnce();
-    expect(loadAvailableLeagues).not.toHaveBeenCalled();
-    expect(reloadFixturesForLocale).not.toHaveBeenCalled();
-    expect(reloadLocalizedMatchData).not.toHaveBeenCalled();
+    expect(lifecycle.initializeFixtureSelection).not.toHaveBeenCalled();
+    expect(lifecycle.disposeFixtureSelection).toHaveBeenCalledOnce();
+    expect(lifecycle.disposeMatchData).toHaveBeenCalledOnce();
+    expect(lifecycle.disposeSettings).toHaveBeenCalledOnce();
   });
 });

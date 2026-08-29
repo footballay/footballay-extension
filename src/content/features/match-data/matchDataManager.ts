@@ -11,7 +11,7 @@ import type {
 } from '@/shared/api/protocol';
 import { getFixtureStatusGroup } from '@/shared/football/fixtureStatus';
 import { toLocaleOverride } from '@/shared/settings/resolution';
-import { getSettings } from '@/content/settings';
+import { getSettings } from '@/content/features/settings';
 import {
   createMatchDataState,
   emptyResource,

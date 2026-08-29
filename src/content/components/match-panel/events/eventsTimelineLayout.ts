@@ -1,4 +1,7 @@
-import { matchMinuteToTimelineValue, timelineMax } from '@/content/match-data';
+import {
+  matchMinuteToTimelineValue,
+  timelineMax,
+} from '@/content/features/match-data';
 
 export { matchMinuteToTimelineValue, timelineMax };
 

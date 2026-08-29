@@ -2,7 +2,7 @@ import {
   useMatchPanel,
   type StatisticLabel,
   type StatisticRow,
-} from '@/content/match-data';
+} from '@/content/features/match-data';
 import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
 import './statistics-tab.css';
 

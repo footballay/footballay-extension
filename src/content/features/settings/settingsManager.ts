@@ -1,5 +1,5 @@
-import { fixtureSelection } from '@/content/fixture-selection';
-import { matchData } from '@/content/match-data';
+import { fixtureSelection } from '@/content/features/fixture-selection';
+import { matchData } from '@/content/features/match-data';
 import { settingsStore } from './settingsStore';
 import {
   loadExtensionSettings,

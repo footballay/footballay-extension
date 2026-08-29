@@ -1,4 +1,4 @@
-import { useFixtureSelection } from '@/content/fixture-selection';
+import { useFixtureSelection } from '@/content/features/fixture-selection';
 import { t, useContentLocale } from '@/shared/i18n/content';
 
 type LeaguePickerProps = {

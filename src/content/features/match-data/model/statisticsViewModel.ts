@@ -3,7 +3,7 @@ import type {
   MatchStatisticsTeamDto,
 } from '@/shared/api/dto';
 import type { ContentMessageKey } from '@/shared/i18n/content';
-import { resolveTeamColors } from './teamColor';
+import { resolveTeamColors } from '../util/teamColor';
 
 export type StatisticLabel = ContentMessageKey | 'xG';
 

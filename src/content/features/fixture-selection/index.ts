@@ -1,6 +1,6 @@
 import { useStore } from 'zustand';
 import { resolveTimezone } from '@/shared/settings/resolution';
-import { useSettings } from '@/content/settings';
+import { useSettings } from '@/content/features/settings';
 import {
   fixtureSelectionManager,
   type FixtureSelectionSettingsChange,

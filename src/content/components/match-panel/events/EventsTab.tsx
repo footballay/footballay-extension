@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { useMatchPanel, type DisplayEvent } from '@/content/match-data';
+import {
+  useMatchPanel,
+  type DisplayEvent,
+} from '@/content/features/match-data';
 import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
-import substituteMarker from '../../../../assets/events_substitute_marker.png';
-import goalMarker from '../../../../assets/goal_marker.png';
+import substituteMarker from '../../../../../assets/events_substitute_marker.png';
+import goalMarker from '../../../../../assets/goal_marker.png';
 import {
   clusterPositionedEvents,
   clusterTime,

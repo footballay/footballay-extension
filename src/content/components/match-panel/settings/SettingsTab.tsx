@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSettings } from '@/content/settings';
+import { useSettings } from '@/content/features/settings';
 import { t, useContentLocale } from '@/shared/i18n/content';
 import type { LocaleSetting } from '@/shared/settings/settings';
 import { resolveTimezone } from '@/shared/settings/resolution';
