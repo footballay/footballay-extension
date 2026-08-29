@@ -29,6 +29,12 @@
   background: transparent;
 }
 
+.footballay-match-panel--chrome-hidden .footballay-match-panel__sidebar,
+.footballay-match-panel--chrome-hidden .footballay-match-panel__topbar {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .footballay-match-panel--data .footballay-match-panel__lineup,
 .footballay-match-panel--data .footballay-match-panel__events {
   background: rgb(45 51 60 / var(--footballay-panel-opacity));
@@ -60,6 +66,8 @@
   align-items: center;
   border-right: 1px solid var(--footballay-color-border);
   background: var(--footballay-color-surface);
+  opacity: 1;
+  transition: opacity 0.2s ease;
 }
 
 .footballay-match-panel__tabs {
@@ -256,6 +264,8 @@
   justify-content: space-between;
   height: 18px;
   background: var(--footballay-color-surface);
+  opacity: 1;
+  transition: opacity 0.2s ease;
 }
 
 .footballay-match-panel__title {

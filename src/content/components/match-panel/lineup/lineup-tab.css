@@ -128,7 +128,7 @@
   padding: 0 2px;
   border-radius: 2px;
   color: var(--footballay-color-surface);
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 10px;
 }
@@ -148,8 +148,8 @@
   color: var(--footballay-color-text);
 }
 .footballay-match-panel__goals img {
-  width: 10px;
-  height: 10px;
+  width: 15px;
+  height: 15px;
 }
 .footballay-match-panel__rating--good {
   background: var(--footballay-color-success);

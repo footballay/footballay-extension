@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { matchDataStore } from '@/content/features/match-data/matchDataStore';
@@ -303,5 +309,165 @@ describe('MatchDataOverlays', () => {
     expect(lineupTabCss).toContain(
       '244 247 251 / var(--footballay-lineup-player-card-opacity)',
     );
+  });
+
+  it('uses the requested lineup marker sizes', () => {
+    expect(lineupTabCss).toMatch(
+      /\.footballay-match-panel__rating \{[\s\S]*font-size: 11px;/,
+    );
+    expect(lineupTabCss).toMatch(
+      /\.footballay-match-panel__goals img \{[\s\S]*width: 15px;[\s\S]*height: 15px;/,
+    );
+  });
+
+  it('fades sidebar and topbar without removing their layout', () => {
+    expect(matchPanelCss).toContain(
+      '.footballay-match-panel--chrome-hidden .footballay-match-panel__sidebar,',
+    );
+    expect(matchPanelCss).toContain(
+      '.footballay-match-panel--chrome-hidden .footballay-match-panel__topbar {\n  opacity: 0;\n  pointer-events: none;',
+    );
+    expect(matchPanelCss).not.toContain(
+      '.footballay-match-panel--chrome-hidden .footballay-match-panel__topbar {\n  display: none;',
+    );
+    expect(matchPanelCss).toMatch(
+      /\.footballay-match-panel__sidebar \{[\s\S]*opacity: 1;[\s\S]*transition: opacity 0\.2s ease;/,
+    );
+    expect(matchPanelCss).toMatch(
+      /\.footballay-match-panel__topbar \{[\s\S]*opacity: 1;[\s\S]*transition: opacity 0\.2s ease;/,
+    );
+  });
+
+  it('starts the initial chrome hide timer while the pointer is outside', () => {
+    vi.useFakeTimers();
+    try {
+      render(<MatchDataOverlays />);
+      const panel = screen.getByLabelText('Match panel');
+
+      act(() => vi.advanceTimersByTime(2_499));
+      expect(panel.className).not.toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+
+      act(() => vi.advanceTimersByTime(1));
+      expect(panel.className).toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+      expect(
+        panel.querySelector('.footballay-match-panel__sidebar'),
+      ).toBeTruthy();
+      expect(
+        panel.querySelector('.footballay-match-panel__topbar'),
+      ).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('cancels the initial chrome hide timer when the pointer enters', () => {
+    vi.useFakeTimers();
+    try {
+      render(<MatchDataOverlays />);
+      const panel = screen.getByLabelText('Match panel');
+
+      act(() => vi.advanceTimersByTime(1_000));
+      fireEvent.pointerEnter(panel);
+      act(() => vi.advanceTimersByTime(2_500));
+      expect(panel.className).not.toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('hides and restores panel chrome after pointer leave', () => {
+    vi.useFakeTimers();
+    try {
+      render(<MatchDataOverlays />);
+      const panel = screen.getByLabelText('Match panel');
+
+      expect(panel.className).not.toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+      fireEvent.pointerLeave(panel);
+      act(() => vi.advanceTimersByTime(2_499));
+      expect(panel.className).not.toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+
+      act(() => vi.advanceTimersByTime(1));
+      expect(panel.className).toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+
+      fireEvent.pointerEnter(panel);
+      expect(panel.className).not.toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+
+      fireEvent.pointerLeave(panel);
+      act(() => vi.advanceTimersByTime(2_499));
+      fireEvent.pointerEnter(panel);
+      act(() => vi.advanceTimersByTime(1));
+      expect(panel.className).not.toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+
+      fireEvent.pointerLeave(panel);
+      act(() => vi.advanceTimersByTime(2_500));
+      expect(panel.className).toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps the expand button visible and clears pending timers while collapsed', () => {
+    vi.useFakeTimers();
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    try {
+      render(<MatchDataOverlays />);
+      const panel = screen.getByLabelText('Match panel');
+      fireEvent.pointerLeave(panel);
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Minimize match panel' }),
+      );
+
+      act(() => vi.advanceTimersByTime(2_500));
+      expect(
+        screen.getByRole('button', { name: 'Open match panel' }),
+      ).toBeTruthy();
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Open match panel' }));
+      const expandedPanel = screen.getByLabelText('Match panel');
+      expect(expandedPanel.className).not.toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+      act(() => vi.advanceTimersByTime(2_500));
+      expect(expandedPanel.className).toContain(
+        'footballay-match-panel--chrome-hidden',
+      );
+    } finally {
+      clearTimeoutSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it('clears pending chrome timers on unmount', () => {
+    vi.useFakeTimers();
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    try {
+      const { unmount } = render(<MatchDataOverlays />);
+      fireEvent.pointerLeave(screen.getByLabelText('Match panel'));
+      unmount();
+
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+    } finally {
+      clearTimeoutSpy.mockRestore();
+      vi.useRealTimers();
+    }
   });
 });

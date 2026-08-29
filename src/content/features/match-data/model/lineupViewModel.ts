@@ -12,6 +12,7 @@ import { resolveTeamColors } from '../util/teamColor';
 
 export type LineupPlayer = {
   player: MatchLineupPlayerDto;
+  displayName: string;
   replacement?: LineupPlayer;
   subInTime?: string;
   goals: number;
@@ -37,6 +38,11 @@ export type LineupViewModel = {
 
 function eventTime(event: MatchEventDto) {
   return `${event.elapsed}${event.extraTime ? `+${event.extraTime}` : ''}'`;
+}
+
+function displayName(player: MatchLineupPlayerDto): string {
+  const shortName = player.shortName?.trim();
+  return shortName || player.name;
 }
 
 function fallbackPlayer(
@@ -95,6 +101,7 @@ export function buildLineupTeam(
   );
   const starters: LineupPlayer[] = team.players.map((player) => ({
     player,
+    displayName: displayName(player),
     goals: 0,
     ownGoals: 0,
     yellowCards: 0,
@@ -116,6 +123,7 @@ export function buildLineupTeam(
 
     outgoing.replacement = {
       player: incoming,
+      displayName: displayName(incoming),
       subInTime: eventTime(event),
       goals: 0,
       ownGoals: 0,

@@ -1,5 +1,5 @@
 import { BarChart3, Flag, Settings, UsersRound, X } from 'lucide-react';
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useMatchPanel } from '@/content/features/match-data';
 import { useSettings } from '@/content/features/settings';
 import { t, useContentLocale } from '@/shared/i18n/content';
@@ -11,12 +11,58 @@ import './match-data-overlays.css';
 
 type DetailTab = 'lineup' | 'statistics' | 'events' | 'settings';
 
+const MATCH_PANEL_CHROME_HIDE_DELAY_MS = 2_500;
+
 export function MatchDataOverlays() {
   const locale = useContentLocale();
   const { settings } = useSettings();
   const { fixtureInfo } = useMatchPanel();
   const [tab, setTab] = useState<DetailTab>('lineup');
   const [collapsed, setCollapsed] = useState(false);
+  const [chromeHidden, setChromeHidden] = useState(false);
+  const hideChromeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const panelRef = useRef<HTMLElement | null>(null);
+  const pointerInsidePanel = useRef(false);
+
+  const clearChromeHideTimer = () => {
+    if (hideChromeTimer.current === undefined) return;
+    clearTimeout(hideChromeTimer.current);
+    hideChromeTimer.current = undefined;
+  };
+
+  const showChrome = () => {
+    pointerInsidePanel.current = true;
+    clearChromeHideTimer();
+    setChromeHidden(false);
+  };
+
+  const scheduleChromeHide = () => {
+    clearChromeHideTimer();
+    hideChromeTimer.current = setTimeout(() => {
+      hideChromeTimer.current = undefined;
+      if (pointerInsidePanel.current || panelRef.current?.matches(':hover')) {
+        return;
+      }
+      setChromeHidden(true);
+    }, MATCH_PANEL_CHROME_HIDE_DELAY_MS);
+  };
+
+  useEffect(() => () => clearChromeHideTimer(), []);
+
+  useEffect(() => {
+    if (!fixtureInfo || collapsed) {
+      pointerInsidePanel.current = false;
+      clearChromeHideTimer();
+      setChromeHidden(false);
+      return;
+    }
+
+    pointerInsidePanel.current = panelRef.current?.matches(':hover') ?? false;
+    setChromeHidden(false);
+    if (!pointerInsidePanel.current) scheduleChromeHide();
+  }, [collapsed, fixtureInfo?.uid]);
 
   if (!fixtureInfo) return null;
   if (collapsed) {
@@ -29,7 +75,11 @@ export function MatchDataOverlays() {
           className="footballay-match-panel__expand-button"
           type="button"
           aria-label={t(locale, 'openMatchPanel')}
-          onClick={() => setCollapsed(false)}
+          onClick={() => {
+            clearChromeHideTimer();
+            setChromeHidden(false);
+            setCollapsed(false);
+          }}
         >
           <UsersRound />
         </button>
@@ -39,8 +89,14 @@ export function MatchDataOverlays() {
 
   return (
     <aside
-      className={`footballay-match-panel${tab === 'settings' ? '' : ' footballay-match-panel--data'}`}
+      className={`footballay-match-panel${tab === 'settings' ? '' : ' footballay-match-panel--data'}${chromeHidden ? ' footballay-match-panel--chrome-hidden' : ''}`}
       aria-label={t(locale, 'matchPanel')}
+      ref={panelRef}
+      onPointerEnter={showChrome}
+      onPointerLeave={() => {
+        pointerInsidePanel.current = false;
+        scheduleChromeHide();
+      }}
       style={
         {
           '--footballay-panel-opacity': `${settings.panelOpacity}%`,
@@ -95,7 +151,10 @@ export function MatchDataOverlays() {
             className="footballay-close-button"
             type="button"
             aria-label={t(locale, 'minimizeMatchPanel')}
-            onClick={() => setCollapsed(true)}
+            onClick={() => {
+              showChrome();
+              setCollapsed(true);
+            }}
           >
             <X />
           </button>

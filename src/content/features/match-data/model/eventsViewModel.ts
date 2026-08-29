@@ -34,6 +34,7 @@ type TeamSource = {
 
 function eventKind(event: MatchEventDto): DisplayEvent['kind'] | undefined {
   if (event.type === 'Goal') return 'goal';
+  // 교체 이벤트에서는 player가 IN, assist가 OUT을 의미한다.
   if (event.type === 'Subst') return 'substitution';
   if (/card/i.test(event.type) || /card/i.test(event.detail)) return 'card';
 }

@@ -234,11 +234,20 @@ function EventClusterMarker({
                   : event.type}
               </strong>
             </span>
-            <b>{event.player?.name ?? '-'}</b>
-            {event.assist && (
-              <small>
-                {t(locale, 'assist')}: {event.assist.name}
-              </small>
+            {event.kind === 'substitution' ? (
+              <>
+                <small>IN: {event.player?.name ?? '-'}</small>
+                {event.assist && <small>OUT: {event.assist.name}</small>}
+              </>
+            ) : (
+              <>
+                <b>{event.player?.name ?? '-'}</b>
+                {event.assist && (
+                  <small>
+                    {t(locale, 'assist')}: {event.assist.name}
+                  </small>
+                )}
+              </>
             )}
           </div>
         ))}

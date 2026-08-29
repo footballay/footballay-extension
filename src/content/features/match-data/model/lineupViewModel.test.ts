@@ -43,6 +43,34 @@ function event(
 }
 
 describe('buildLineupViewModel', () => {
+  it.each([
+    ['Short Name', 'Short Name'],
+    [null, 'starter'],
+    ['', 'starter'],
+    ['   ', 'starter'],
+  ])('uses %s as the lineup display name', (shortName, expected) => {
+    const starter = { ...player('starter'), shortName };
+    const lineup: FixtureLineupDto = {
+      fixtureUid: 'fixture',
+      lineup: {
+        home: {
+          teamUid: 'home',
+          teamName: 'Home',
+          teamShortName: null,
+          formation: '1',
+          players: [starter],
+          substitutes: [],
+          playerColor: null,
+        },
+        away: null,
+      },
+    };
+
+    expect(
+      buildLineupViewModel(lineup, undefined, undefined).home?.players[0],
+    ).toMatchObject({ displayName: expected });
+  });
+
   it('builds the current formation player with substitution and match markers', () => {
     const lineup: FixtureLineupDto = {
       fixtureUid: 'fixture',
