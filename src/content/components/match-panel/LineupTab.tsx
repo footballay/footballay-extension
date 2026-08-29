@@ -1,48 +1,18 @@
 import { ArrowUp } from 'lucide-react';
 import { useState } from 'react';
 import goalMarker from '../../../../assets/goal_marker.png';
-import type { FixtureLineupDto } from '@/shared/api/dto';
 import {
-  buildLineupTeam,
+  useMatchPanel,
   type LineupPlayer,
-  type LineupTeam,
-} from '@/content/mappers/lineupViewModel';
-import { useMatchDataStore } from '@/content/stores/matchDataStore';
+  type LineupTeamView,
+} from '@/content/match-data';
 import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
-import { resolveTeamColors } from '../shared/teamColor';
 import './lineup-tab.css';
 
 type TeamSide = 'home' | 'away';
 
-function displayTeamName(team?: LineupTeam) {
+function displayTeamName(team?: LineupTeamView) {
   return team?.teamName ?? '-';
-}
-
-function currentPlayer(player: LineupPlayer): LineupPlayer {
-  return player.replacement ? currentPlayer(player.replacement) : player;
-}
-
-function formationColumns(team?: LineupTeam) {
-  if (!team) return [];
-
-  const counts = (team.formation ?? '')
-    .split('-')
-    .map(Number)
-    .filter((count) => Number.isInteger(count) && count > 0);
-  const columns = [1, ...counts];
-  const players = team.players
-    .slice(
-      0,
-      columns.reduce((sum, count) => sum + count, 0),
-    )
-    .map(currentPlayer);
-  let offset = 0;
-
-  return columns.map((count) => {
-    const column = players.slice(offset, offset + count);
-    offset += count;
-    return column;
-  });
 }
 
 function PlayerMarkers({
@@ -101,24 +71,21 @@ function PlayerMarkers({
   );
 }
 
-export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
+export function LineupTab() {
   const locale = useContentLocale();
+  const { lineup } = useMatchPanel();
   const [teamSide, setTeamSide] = useState<TeamSide>('home');
-  const lineupResource = useMatchDataStore((state) => state.lineup);
-  const events = useMatchDataStore((state) => state.events.data);
-  const statistics = useMatchDataStore((state) => state.statistics.data);
   const teams = {
-    home: buildLineupTeam(lineup?.lineup.home, events, statistics?.home),
-    away: buildLineupTeam(lineup?.lineup.away, events, statistics?.away),
+    home: lineup.data.home,
+    away: lineup.data.away,
   };
-  const teamColors = resolveTeamColors(teams.home, teams.away);
   const selectedTeamSide: TeamSide = teams[teamSide]
     ? teamSide
     : teams.home
       ? 'home'
       : 'away';
   const team = teams[selectedTeamSide];
-  const columns = formationColumns(team);
+  const columns = team?.columns ?? [];
 
   return (
     <>
@@ -145,12 +112,12 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
                 side === 'home'
                   ? {
                       borderLeftColor: teams[side]
-                        ? teamColors.home
+                        ? teams[side].color
                         : 'var(--footballay-color-red)',
                     }
                   : {
                       borderRightColor: teams[side]
-                        ? teamColors.away
+                        ? teams[side].color
                         : 'var(--footballay-color-blue)',
                     }
               }
@@ -164,9 +131,9 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
         className="footballay-match-panel__lineup"
         aria-label={t(locale, 'lineupPlayers')}
       >
-        {lineupResource.loadStatus === 'error' ? (
+        {lineup.loadStatus === 'error' ? (
           <p className="footballay-match-panel__empty" role="alert">
-            {t(locale, 'lineupError', { error: lineupResource.error ?? '' })}
+            {t(locale, 'lineupError', { error: lineup.error ?? '' })}
           </p>
         ) : columns.length ? (
           columns.map((column, index) => (
@@ -190,7 +157,7 @@ export function LineupTab({ lineup }: { lineup?: FixtureLineupDto }) {
           ))
         ) : (
           <p className="footballay-match-panel__empty">
-            {lineupResource.loadStatus === 'loading'
+            {lineup.loadStatus === 'loading'
               ? t(locale, 'loading')
               : t(locale, 'noLineup')}
           </p>

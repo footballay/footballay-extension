@@ -1,3 +1,7 @@
+import { matchMinuteToTimelineValue, timelineMax } from '@/content/match-data';
+
+export { matchMinuteToTimelineValue, timelineMax };
+
 export type TimelineSide = 'home' | 'away';
 
 export type TimelineEvent<T> = {
@@ -19,19 +23,6 @@ export type EventCluster<T> = {
 };
 
 export type TimelineScale = { min: number; max: number; width: number };
-
-export function timelineMax(events: readonly { elapsed: number }[]) {
-  return events.some((event) => event.elapsed > 90) ? 120 : 90;
-}
-
-export function matchMinuteToTimelineValue(
-  elapsed: number,
-  extraTime: number | null,
-) {
-  if (elapsed > 90) return elapsed;
-  if (extraTime === null) return elapsed;
-  return elapsed <= 45 ? 45 : 90;
-}
 
 export function timelineValueToX(value: number, scale: TimelineScale) {
   if (scale.max <= scale.min || scale.width <= 0) return 0;

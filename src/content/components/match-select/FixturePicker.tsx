@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
+import { useFixtureSelection } from '@/content/fixture-selection';
 import {
   addDateMonths,
   calendarGridDates,
@@ -8,9 +8,7 @@ import {
   startOfDateMonth,
   todayInTimezone,
 } from '@/content/utils/date';
-import { useSettingsStore } from '@/content/stores/settingsStore';
 import { t, useContentLocale } from '@/shared/i18n/content';
-import { resolveTimezone } from '@/shared/settings/resolution';
 
 type FixturePickerProps = {
   view: 'Match' | 'DatePicker';
@@ -19,27 +17,19 @@ type FixturePickerProps = {
 
 export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
   const locale = useContentLocale();
-  const timezone = useSettingsStore((state) =>
-    resolveTimezone(state.settings.timezone),
-  );
-  const fixtures = useMatchPickerStore((state) => state.fixtures);
-  const fixtureDates = useMatchPickerStore((state) => state.fixtureDates);
-  const fixtureStatus = useMatchPickerStore((state) => state.fixtureStatus);
-  const fixtureError = useMatchPickerStore((state) => state.fixtureError);
-  const selectedLeagueUid = useMatchPickerStore(
-    (state) => state.selectedLeagueUid,
-  );
-  const selectedDate = useMatchPickerStore((state) => state.selectedDate);
-  const selectedFixtureUid = useMatchPickerStore(
-    (state) => state.selectedFixtureUid,
-  );
-  const selectDateAndLoadFixtures = useMatchPickerStore(
-    (state) => state.selectDateAndLoadFixtures,
-  );
-  const selectFixture = useMatchPickerStore((state) => state.selectFixture);
-  const loadFixtureDates = useMatchPickerStore(
-    (state) => state.loadFixtureDates,
-  );
+  const {
+    timezone,
+    fixtures,
+    fixtureDates,
+    fixtureStatus,
+    fixtureError,
+    selectedLeagueUid,
+    selectedDate,
+    selectedFixtureUid,
+    selectDate,
+    selectFixture,
+    loadFixtureDates,
+  } = useFixtureSelection();
   const [calendarMonth, setCalendarMonth] = useState(() =>
     startOfDateMonth(selectedDate ?? todayInTimezone(timezone)),
   );
@@ -110,7 +100,7 @@ export function FixturePicker({ view, onDateSelect }: FixturePickerProps) {
                 aria-pressed={value === selectedDate}
                 onClick={() => {
                   onDateSelect();
-                  void selectDateAndLoadFixtures(value);
+                  void selectDate(value);
                 }}
               >
                 {label}

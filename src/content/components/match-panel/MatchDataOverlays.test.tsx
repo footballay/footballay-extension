@@ -2,20 +2,38 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useMatchDataStore } from '@/content/stores/matchDataStore';
-import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
-import { useSettingsStore } from '@/content/stores/settingsStore';
+import { matchDataStore } from '@/content/match-data/matchDataStore';
 import { MatchDataOverlays } from './MatchDataOverlays';
+import type { FixtureDto } from '@/shared/api/dto';
+
+const settingsView = vi.hoisted(() => ({
+  settings: { locale: 'default', timezone: 'default' },
+  updateSettings: vi.fn(),
+}));
+
+vi.mock('@/content/settings', () => ({
+  getSettings: () => settingsView.settings,
+  useSettings: () => settingsView,
+}));
+
+const fixtureInfo: FixtureDto = {
+  uid: 'fixture-1',
+  kickoff: null,
+  round: 'Regular Season',
+  homeTeam: null,
+  awayTeam: null,
+  status: { longStatus: 'Not Started', shortStatus: 'NS', elapsed: null },
+  score: { home: null, away: null },
+  available: true,
+};
 
 afterEach(cleanup);
 
 beforeEach(() => {
-  useSettingsStore.setState({
-    settings: { locale: 'default', timezone: 'default' },
-    updateSettings: vi.fn(),
-  });
-  useMatchPickerStore.setState({ selectedFixtureUid: 'fixture-1' });
-  useMatchDataStore.setState({
+  settingsView.settings = { locale: 'default', timezone: 'default' };
+  settingsView.updateSettings.mockReset();
+  matchDataStore.setState({
+    fixtureInfo,
     status: { loadStatus: 'loading' },
     lineup: { loadStatus: 'loading' },
     events: { loadStatus: 'loading' },
@@ -37,7 +55,7 @@ describe('MatchDataOverlays', () => {
   });
 
   it('shows only the Statistics resource error in the Statistics tab', () => {
-    useMatchDataStore.setState({
+    matchDataStore.setState({
       status: { loadStatus: 'ready' },
       lineup: { loadStatus: 'ready' },
       events: { loadStatus: 'ready' },
@@ -53,7 +71,7 @@ describe('MatchDataOverlays', () => {
   });
 
   it('shows only the Events resource error in the Events tab', () => {
-    useMatchDataStore.setState({
+    matchDataStore.setState({
       status: { loadStatus: 'ready' },
       lineup: { loadStatus: 'ready' },
       events: { loadStatus: 'error', error: 'events failed' },
@@ -69,7 +87,7 @@ describe('MatchDataOverlays', () => {
   });
 
   it('keeps an empty events timeline without an empty-state message', () => {
-    useMatchDataStore.setState({
+    matchDataStore.setState({
       status: { loadStatus: 'ready' },
       lineup: { loadStatus: 'ready' },
       events: {
@@ -101,8 +119,7 @@ describe('MatchDataOverlays', () => {
   });
 
   it('opens Settings from the sidebar and saves language and timezone choices', () => {
-    const updateSettings = useSettingsStore.getState()
-      .updateSettings as ReturnType<typeof vi.fn>;
+    const updateSettings = settingsView.updateSettings;
     render(<MatchDataOverlays />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
@@ -136,10 +153,8 @@ describe('MatchDataOverlays', () => {
 
   it('does not save an invalid custom timezone over the current setting', () => {
     const updateSettings = vi.fn();
-    useSettingsStore.setState({
-      settings: { locale: 'default', timezone: 'Asia/Seoul' },
-      updateSettings,
-    });
+    settingsView.settings = { locale: 'default', timezone: 'Asia/Seoul' };
+    settingsView.updateSettings = updateSettings;
     render(<MatchDataOverlays />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
@@ -148,6 +163,6 @@ describe('MatchDataOverlays', () => {
     });
 
     expect(updateSettings).not.toHaveBeenCalled();
-    expect(useSettingsStore.getState().settings.timezone).toBe('Asia/Seoul');
+    expect(settingsView.settings.timezone).toBe('Asia/Seoul');
   });
 });

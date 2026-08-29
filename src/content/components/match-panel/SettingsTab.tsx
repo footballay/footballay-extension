@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSettingsStore } from '@/content/stores/settingsStore';
+import { useSettings } from '@/content/settings';
 import { t, useContentLocale } from '@/shared/i18n/content';
 import type { LocaleSetting } from '@/shared/settings/settings';
 import { resolveTimezone } from '@/shared/settings/resolution';
@@ -17,8 +17,7 @@ function isTimezone(value: string) {
 
 export function SettingsTab() {
   const locale = useContentLocale();
-  const settings = useSettingsStore((state) => state.settings);
-  const updateSettings = useSettingsStore((state) => state.updateSettings);
+  const { settings, updateSettings } = useSettings();
   const [timezoneInput, setTimezoneInput] = useState(
     settings.timezone === 'default' ? '' : settings.timezone,
   );

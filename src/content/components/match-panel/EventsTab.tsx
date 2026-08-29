@@ -1,22 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import type { MatchEventDto } from '@/shared/api/dto';
-import { useMatchDataStore } from '@/content/stores/matchDataStore';
+import { useMatchPanel, type DisplayEvent } from '@/content/match-data';
 import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
-import { resolveTeamColors } from '../shared/teamColor';
 import substituteMarker from '../../../../assets/events_substitute_marker.png';
 import goalMarker from '../../../../assets/goal_marker.png';
 import {
   clusterPositionedEvents,
   clusterTime,
-  matchMinuteToTimelineValue,
   positionTimelineEvents,
-  timelineMax,
   type EventCluster,
   type TimelineSide,
 } from './eventsTimelineLayout';
 import './events-tab.css';
-
-type DisplayEvent = MatchEventDto & { kind: 'goal' | 'card' | 'substitution' };
 
 const EVENT_CLUSTER_WINDOW_PX = 22;
 const TOOLTIP_POINTER_OFFSET_PX = 12;
@@ -26,39 +20,10 @@ const MARKER_STACK_ORDER: Record<DisplayEvent['kind'], number> = {
   goal: 2,
 };
 
-function eventKind(event: MatchEventDto): DisplayEvent['kind'] | undefined {
-  if (event.type === 'Goal') return 'goal';
-  if (event.type === 'Subst') return 'substitution';
-  if (/card/i.test(event.type) || /card/i.test(event.detail)) return 'card';
-}
-
-function eventTime(event: MatchEventDto) {
-  return `${event.elapsed}${event.extraTime ? `+${event.extraTime}` : ''}'`;
-}
-
-function timelineValue(event: MatchEventDto) {
-  return matchMinuteToTimelineValue(event.elapsed, event.extraTime);
-}
-
-function displayName(name: { name: string }) {
-  return name.name;
-}
-
 export function EventsTab() {
   const locale = useContentLocale();
-  const eventsResource = useMatchDataStore((state) => state.events);
-  const events = eventsResource.data?.events ?? [];
-  const statistics = useMatchDataStore((state) => state.statistics.data);
-  const displayEvents = events.flatMap((event) => {
-    if (event.elapsed < 0) return [];
-    const kind = eventKind(event);
-    return kind ? [{ ...event, kind }] : [];
-  });
-  const home = statistics?.home?.team ?? displayEvents[0]?.team;
-  const away =
-    statistics?.away?.team ??
-    displayEvents.find((event) => event.team.teamUid !== home?.teamUid)?.team;
-  const colors = resolveTeamColors(home, away);
+  const { events } = useMatchPanel();
+  const view = events.data;
 
   return (
     <>
@@ -68,23 +33,32 @@ export function EventsTab() {
         </div>
       </div>
       <div className="footballay-match-panel__events">
-        {home && (
-          <TeamTitle side="home" name={displayName(home)} color={colors.home} />
+        {view.home && (
+          <TeamTitle
+            side="home"
+            name={view.home.name}
+            color={view.home.color}
+          />
         )}
         <Timeline
-          events={displayEvents}
-          homeTeamUid={home?.teamUid}
+          events={view.events}
+          homeTeamUid={view.home?.teamUid}
+          max={view.max}
           locale={locale}
         />
-        {away && (
-          <TeamTitle side="away" name={displayName(away)} color={colors.away} />
+        {view.away && (
+          <TeamTitle
+            side="away"
+            name={view.away.name}
+            color={view.away.color}
+          />
         )}
-        {eventsResource.loadStatus === 'error' && (
+        {events.loadStatus === 'error' && (
           <p className="footballay-match-panel__empty" role="alert">
-            {t(locale, 'eventsError', { error: eventsResource.error ?? '' })}
+            {t(locale, 'eventsError', { error: events.error ?? '' })}
           </p>
         )}
-        {eventsResource.loadStatus === 'loading' && !home && !away && (
+        {events.loadStatus === 'loading' && !view.home && !view.away && (
           <p className="footballay-match-panel__empty">
             {t(locale, 'loading')}
           </p>
@@ -116,15 +90,16 @@ function TeamTitle({
 function Timeline({
   events,
   homeTeamUid,
+  max,
   locale,
 }: {
   events: DisplayEvent[];
   homeTeamUid?: string;
+  max: 90 | 120;
   locale: ContentLocale;
 }) {
   const timelineRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
-  const max = timelineMax(events);
 
   useEffect(() => {
     const timeline = timelineRef.current;
@@ -144,9 +119,9 @@ function Timeline({
       side: (event.team.teamUid === homeTeamUid
         ? 'home'
         : 'away') as TimelineSide,
-      timelineValue: timelineValue(event),
+      timelineValue: event.timelineValue,
       sequence: event.sequence,
-      displayTime: eventTime(event),
+      displayTime: event.displayTime,
     })),
     { min: 0, max, width },
   );
@@ -243,23 +218,23 @@ function EventClusterMarker({
         popover="manual"
         ref={tooltipRef}
       >
-        {cluster.events.map(({ event, displayTime }) => (
+        {cluster.events.map(({ event }) => (
           <div
             className="footballay-match-panel__event-tooltip-item"
             key={event.sequence}
           >
             <span>
-              {displayTime}{' '}
+              {event.displayTime}{' '}
               <strong>
                 {event.kind === 'substitution'
                   ? t(locale, 'substitution')
                   : event.type}
               </strong>
             </span>
-            <b>{event.player ? displayName(event.player) : '-'}</b>
+            <b>{event.player?.name ?? '-'}</b>
             {event.assist && (
               <small>
-                {t(locale, 'assist')}: {displayName(event.assist)}
+                {t(locale, 'assist')}: {event.assist.name}
               </small>
             )}
           </div>

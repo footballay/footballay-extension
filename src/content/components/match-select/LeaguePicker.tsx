@@ -1,4 +1,4 @@
-import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
+import { useFixtureSelection } from '@/content/fixture-selection';
 import { t, useContentLocale } from '@/shared/i18n/content';
 
 type LeaguePickerProps = {
@@ -7,18 +7,14 @@ type LeaguePickerProps = {
 
 export function LeaguePicker({ onSelect }: LeaguePickerProps) {
   const locale = useContentLocale();
-  const leagues = useMatchPickerStore((state) => state.leagues);
-  const leagueStatus = useMatchPickerStore((state) => state.leagueStatus);
-  const leagueError = useMatchPickerStore((state) => state.leagueError);
-  const selectedLeagueUid = useMatchPickerStore(
-    (state) => state.selectedLeagueUid,
-  );
-  const loadAvailableLeagues = useMatchPickerStore(
-    (state) => state.loadAvailableLeagues,
-  );
-  const selectLeagueAndLoadFixtures = useMatchPickerStore(
-    (state) => state.selectLeagueAndLoadFixtures,
-  );
+  const {
+    leagues,
+    leagueStatus,
+    leagueError,
+    selectedLeagueUid,
+    loadAvailableLeagues,
+    selectLeague,
+  } = useFixtureSelection();
 
   return (
     <section className="footballay-league-section">
@@ -52,7 +48,7 @@ export function LeaguePicker({ onSelect }: LeaguePickerProps) {
               aria-pressed={league.uid === selectedLeagueUid}
               onClick={() => {
                 onSelect();
-                void selectLeagueAndLoadFixtures(league.uid);
+                void selectLeague(league.uid);
               }}
             >
               {league.name}

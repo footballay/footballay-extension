@@ -1,7 +1,6 @@
 import { BarChart3, Flag, Settings, UsersRound, X } from 'lucide-react';
 import { useState } from 'react';
-import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
-import { useMatchDataStore } from '@/content/stores/matchDataStore';
+import { useMatchPanel } from '@/content/match-data';
 import { t, useContentLocale } from '@/shared/i18n/content';
 import { LineupTab } from './LineupTab';
 import { StatisticsTab } from './StatisticsTab';
@@ -13,12 +12,11 @@ type DetailTab = 'lineup' | 'statistics' | 'events' | 'settings';
 
 export function MatchDataOverlays() {
   const locale = useContentLocale();
-  const fixtureUid = useMatchPickerStore((state) => state.selectedFixtureUid);
-  const lineup = useMatchDataStore((state) => state.lineup.data);
+  const { fixtureInfo } = useMatchPanel();
   const [tab, setTab] = useState<DetailTab>('lineup');
   const [collapsed, setCollapsed] = useState(false);
 
-  if (!fixtureUid) return null;
+  if (!fixtureInfo) return null;
   if (collapsed) {
     return (
       <aside
@@ -97,7 +95,7 @@ export function MatchDataOverlays() {
       </div>
       <section className="footballay-match-panel__content">
         {tab === 'lineup' ? (
-          <LineupTab lineup={lineup} />
+          <LineupTab />
         ) : tab === 'statistics' ? (
           <StatisticsTab />
         ) : tab === 'events' ? (

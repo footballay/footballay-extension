@@ -1,6 +1,6 @@
 import { CalendarDays, X } from 'lucide-react';
 import { useState } from 'react';
-import { useMatchPickerStore } from '@/content/stores/matchPickerStore';
+import { useFixtureSelection } from '@/content/fixture-selection';
 import { t, useContentLocale } from '@/shared/i18n/content';
 import { FixturePicker } from './FixturePicker';
 import { LeaguePicker } from './LeaguePicker';
@@ -12,13 +12,8 @@ export function MatchSelect() {
   const locale = useContentLocale();
   const [view, setView] = useState<MatchSelectView>('League');
   const [collapsed, setCollapsed] = useState(false);
-  const selectedDate = useMatchPickerStore((state) => state.selectedDate);
-  const selectedLeagueUid = useMatchPickerStore(
-    (state) => state.selectedLeagueUid,
-  );
-  const navigateFixtureDate = useMatchPickerStore(
-    (state) => state.navigateFixtureDate,
-  );
+  const { selectedDate, selectedLeagueUid, navigateDate } =
+    useFixtureSelection();
 
   return (
     <aside
@@ -71,7 +66,7 @@ export function MatchSelect() {
                 disabled={!selectedLeagueUid}
                 onClick={() => {
                   setView('Match');
-                  void navigateFixtureDate('previous');
+                  void navigateDate('previous');
                 }}
               >
                 <span className="footballay-caret footballay-caret--left" />
@@ -94,7 +89,7 @@ export function MatchSelect() {
                 disabled={!selectedLeagueUid}
                 onClick={() => {
                   setView('Match');
-                  void navigateFixtureDate('next');
+                  void navigateDate('next');
                 }}
               >
                 <span className="footballay-caret footballay-caret--right" />

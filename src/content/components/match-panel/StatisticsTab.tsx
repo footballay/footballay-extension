@@ -1,69 +1,19 @@
-import type { MatchStatisticsTeamDto } from '@/shared/api/dto';
-import { useMatchDataStore } from '@/content/stores/matchDataStore';
+import {
+  useMatchPanel,
+  type StatisticLabel,
+  type StatisticRow,
+} from '@/content/match-data';
 import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
-import { resolveTeamColors } from '../shared/teamColor';
 import './statistics-tab.css';
 
-type StatisticDefinition = [
-  string,
-  (team: MatchStatisticsTeamDto) => number | string | null,
-];
-
-function statisticColumns(locale: ContentLocale): StatisticDefinition[][] {
-  return [
-    [
-      [t(locale, 'totalPasses'), (team) => team.teamStatistics.totalPasses],
-      [
-        t(locale, 'passesAccurate'),
-        (team) => team.teamStatistics.passesAccurate,
-      ],
-      [
-        t(locale, 'possession'),
-        (team) =>
-          typeof team.teamStatistics.ballPossession === 'number'
-            ? `${team.teamStatistics.ballPossession}%`
-            : null,
-      ],
-    ],
-    [
-      [t(locale, 'totalShots'), (team) => team.teamStatistics.totalShots],
-      [t(locale, 'shotsOnGoal'), (team) => team.teamStatistics.shotsOnGoal],
-      ['xG', (team) => team.teamStatistics.xg.at(-1)?.xg ?? '0'],
-      [t(locale, 'fouls'), (team) => team.teamStatistics.fouls],
-      [t(locale, 'cornerKicks'), (team) => team.teamStatistics.cornerKicks],
-      [t(locale, 'offsides'), (team) => team.teamStatistics.offsides],
-    ],
-    [
-      [t(locale, 'shotsOffGoal'), (team) => team.teamStatistics.shotsOffGoal],
-      [t(locale, 'blockedShots'), (team) => team.teamStatistics.blockedShots],
-      [
-        t(locale, 'shotsInsideBox'),
-        (team) => team.teamStatistics.shotsInsideBox,
-      ],
-      [
-        t(locale, 'shotsOutsideBox'),
-        (team) => team.teamStatistics.shotsOutsideBox,
-      ],
-      [
-        t(locale, 'goalkeeperSaves'),
-        (team) => team.teamStatistics.goalkeeperSaves,
-      ],
-      [
-        t(locale, 'goalsPrevented'),
-        (team) => team.teamStatistics.goalsPrevented,
-      ],
-    ],
-  ];
+function statisticName(locale: ContentLocale, label: StatisticLabel) {
+  return label === 'xG' ? 'xG' : t(locale, label);
 }
 
 export function StatisticsTab() {
   const locale = useContentLocale();
-  const statisticsResource = useMatchDataStore((state) => state.statistics);
-  const statistics = statisticsResource.data;
-  const home = statistics?.home;
-  const away = statistics?.away;
-  const teamColors =
-    home && away ? resolveTeamColors(home.team, away.team) : undefined;
+  const { statistics } = useMatchPanel();
+  const view = statistics.data;
 
   return (
     <>
@@ -73,37 +23,43 @@ export function StatisticsTab() {
         </div>
       </div>
       <div className="footballay-match-panel__statistics">
-        {statisticsResource.loadStatus === 'error' ? (
+        {statistics.loadStatus === 'error' ? (
           <p className="footballay-match-panel__empty" role="alert">
             {t(locale, 'statisticsError', {
-              error: statisticsResource.error ?? '',
+              error: statistics.error ?? '',
             })}
           </p>
-        ) : home && away ? (
-          statisticColumns(locale).map((column, index) => (
+        ) : view ? (
+          view.columns.map((column, index) => (
             <div
               className={`footballay-match-panel__statistics-column footballay-match-panel__statistics-column--${index}`}
               key={index}
             >
               {index === 0 && (
-                <PassAccuracy home={home} away={away} colors={teamColors!} />
+                <PassAccuracy
+                  homeName={view.homeTeamName}
+                  awayName={view.awayTeamName}
+                  homeValue={view.passAccuracy.home}
+                  awayValue={view.passAccuracy.away}
+                  homeColor={view.colors.home}
+                  awayColor={view.colors.away}
+                />
               )}
-              {index === 1 && <Cards home={home} away={away} />}
-              {column.map(([name, value]) => (
+              {index === 1 && <Cards cards={view.cards} />}
+              {column.map((statistic) => (
                 <Statistic
-                  key={name}
-                  name={name}
-                  homeValue={value(home)}
-                  awayValue={value(away)}
-                  homeColor={teamColors!.home}
-                  awayColor={teamColors!.away}
+                  key={statistic.label}
+                  statistic={statistic}
+                  name={statisticName(locale, statistic.label)}
+                  homeColor={view.colors.home}
+                  awayColor={view.colors.away}
                 />
               ))}
             </div>
           ))
         ) : (
           <p className="footballay-match-panel__empty">
-            {statisticsResource.loadStatus === 'loading'
+            {statistics.loadStatus === 'loading'
               ? t(locale, 'loading')
               : t(locale, 'noStatistics')}
           </p>
@@ -114,102 +70,109 @@ export function StatisticsTab() {
 }
 
 function PassAccuracy({
-  home,
-  away,
-  colors,
+  homeName,
+  awayName,
+  homeValue,
+  awayValue,
+  homeColor,
+  awayColor,
 }: {
-  home: MatchStatisticsTeamDto;
-  away: MatchStatisticsTeamDto;
-  colors: { home: string; away: string };
+  homeName: string;
+  awayName: string;
+  homeValue: number;
+  awayValue: number;
+  homeColor: string;
+  awayColor: string;
 }) {
+  const teams = [
+    { name: homeName, value: homeValue, color: homeColor },
+    { name: awayName, value: awayValue, color: awayColor },
+  ];
+
   return (
     <div className="footballay-match-panel__pass-accuracy">
-      {[home, away].map((team, index) => {
-        const value = team.teamStatistics.passesAccuracyPercentage;
-        return (
-          <div key={team.team.teamUid}>
-            <strong>{team.team.name}</strong>
-            <i
-              style={{
-                background: `radial-gradient(circle, var(--footballay-color-surface-raised) 0 15px, transparent 16px), conic-gradient(${index === 0 ? colors.home : colors.away} ${value}%, var(--footballay-color-disabled) 0)`,
-              }}
-            >
-              {value}%
-            </i>
-          </div>
-        );
-      })}
+      {teams.map((team) => (
+        <div key={team.name}>
+          <strong>{team.name}</strong>
+          <i
+            style={{
+              background: `radial-gradient(circle, var(--footballay-color-surface-raised) 0 15px, transparent 16px), conic-gradient(${team.color} ${team.value}%, var(--footballay-color-disabled) 0)`,
+            }}
+          >
+            {team.value}%
+          </i>
+        </div>
+      ))}
     </div>
   );
 }
 
 function Cards({
-  home,
-  away,
+  cards,
 }: {
-  home: MatchStatisticsTeamDto;
-  away: MatchStatisticsTeamDto;
+  cards: {
+    homeYellow: number;
+    homeRed: number;
+    awayYellow: number;
+    awayRed: number;
+  };
 }) {
   return (
     <div className="footballay-match-panel__cards">
       <span>
-        {home.teamStatistics.yellowCards} / {home.teamStatistics.redCards}
+        {cards.homeYellow} / {cards.homeRed}
       </span>
       <span className="footballay-match-panel__card-types">
         <i className="footballay-match-panel__card footballay-match-panel__card--yellow" />
         <i className="footballay-match-panel__card footballay-match-panel__card--red" />
       </span>
       <span>
-        {away.teamStatistics.yellowCards} / {away.teamStatistics.redCards}
+        {cards.awayYellow} / {cards.awayRed}
       </span>
     </div>
   );
 }
 
 function Statistic({
+  statistic,
   name,
-  homeValue,
-  awayValue,
   homeColor,
   awayColor,
 }: {
+  statistic: StatisticRow;
   name: string;
-  homeValue: number | string | null;
-  awayValue: number | string | null;
   homeColor: string;
   awayColor: string;
 }) {
-  if (homeValue === null || awayValue === null) return null;
-  const homeNumber = Number.parseFloat(String(homeValue));
-  const awayNumber = Number.parseFloat(String(awayValue));
-  const total =
-    Number.isFinite(homeNumber) && Number.isFinite(awayNumber)
-      ? homeNumber + awayNumber || 1
-      : 1;
-  const homeRatio = Number.isFinite(homeNumber)
-    ? Math.round((homeNumber / total) * 1000) / 10
-    : 0;
-  const awayRatio = Number.isFinite(awayNumber)
-    ? Math.round((awayNumber / total) * 1000) / 10
-    : 0;
+  if (statistic.homeValue === null || statistic.awayValue === null) return null;
 
   return (
     <div className="footballay-match-panel__stat">
-      <span>{homeValue}</span>
+      <span>{statistic.homeValue}</span>
       <div>
         <strong>{name}</strong>
         <i
           className={
-            homeRatio === 0 && awayRatio === 0
+            statistic.homeRatio === 0 && statistic.awayRatio === 0
               ? 'footballay-match-panel__stat-track--empty'
               : undefined
           }
         >
-          <b style={{ flex: `0 0 ${homeRatio}%`, background: homeColor }} />
-          <em style={{ flex: `0 0 ${awayRatio}%`, background: awayColor }} />
+          <b
+            style={{
+              flex: `0 0 ${statistic.homeRatio}%`,
+              background: homeColor,
+            }}
+          />
+          <em
+            style={{
+              flex: `0 0 ${statistic.awayRatio}%`,
+              background: awayColor,
+            }}
+          />
         </i>
       </div>
-      <span>{awayValue}</span>
+      <span>{statistic.awayValue}</span>
     </div>
   );
 }
