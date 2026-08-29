@@ -19,7 +19,7 @@ export type StatisticsViewModel = {
   homeTeamName: string;
   awayTeamName: string;
   colors: { home: string; away: string };
-  passAccuracy: { home: number; away: number };
+  passAccuracy: { home: number | undefined; away: number | undefined };
   cards: {
     homeYellow: number;
     homeRed: number;
@@ -101,6 +101,26 @@ function buildRow(
   };
 }
 
+function passAccuracy(team: MatchStatisticsTeamDto): number | undefined {
+  const { passesAccuracyPercentage, passesAccurate, totalPasses } =
+    team.teamStatistics;
+  if (Number.isFinite(passesAccuracyPercentage)) {
+    return passesAccuracyPercentage;
+  }
+
+  if (
+    !Number.isFinite(passesAccurate) ||
+    !Number.isFinite(totalPasses) ||
+    passesAccurate <= 0 ||
+    totalPasses <= 0 ||
+    passesAccurate > totalPasses
+  ) {
+    return undefined;
+  }
+
+  return Math.round((passesAccurate / totalPasses) * 100);
+}
+
 export function buildStatisticsViewModel(
   statistics: FixtureStatisticsDto | undefined,
 ): StatisticsViewModel | undefined {
@@ -113,8 +133,8 @@ export function buildStatisticsViewModel(
     awayTeamName: away.team.name,
     colors: resolveTeamColors(home.team, away.team),
     passAccuracy: {
-      home: home.teamStatistics.passesAccuracyPercentage,
-      away: away.teamStatistics.passesAccuracyPercentage,
+      home: passAccuracy(home),
+      away: passAccuracy(away),
     },
     cards: {
       homeYellow: home.teamStatistics.yellowCards,

@@ -79,8 +79,8 @@ function PassAccuracy({
 }: {
   homeName: string;
   awayName: string;
-  homeValue: number;
-  awayValue: number;
+  homeValue: number | undefined;
+  awayValue: number | undefined;
   homeColor: string;
   awayColor: string;
 }) {
