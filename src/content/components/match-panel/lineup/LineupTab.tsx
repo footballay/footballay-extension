@@ -12,7 +12,7 @@ import './lineup-tab.css';
 type TeamSide = 'home' | 'away';
 
 function displayTeamName(team?: LineupTeamView) {
-  return team?.teamName ?? '-';
+  return team?.teamShortName?.trim() || team?.teamName || '-';
 }
 
 function PlayerMarkers({
@@ -136,28 +136,35 @@ export function LineupTab() {
             {t(locale, 'lineupError', { error: lineup.error ?? '' })}
           </p>
         ) : columns.length ? (
-          columns.map((column, index) => (
-            <div className="footballay-match-panel__line" key={index}>
-              {column.map((player, playerIndex) => (
-                <div
-                  className="footballay-match-panel__player"
-                  key={
-                    player.player.matchPlayerUid ||
-                    `${player.player.number}-${player.player.name}-${playerIndex}`
-                  }
-                >
-                  <div className="footballay-match-panel__player-main">
-                    <span>{player.player.number ?? '-'}</span>
-                    <strong>{player.displayName}</strong>
+          columns.map((column, index) => {
+            const tooltipDirection =
+              index < columns.length / 2 ? 'right' : 'left';
+
+            return (
+              <div className="footballay-match-panel__line" key={index}>
+                {column.map((player, playerIndex) => (
+                  <div
+                    className="footballay-match-panel__player"
+                    key={
+                      player.player.matchPlayerUid ||
+                      `${player.player.number}-${player.player.name}-${playerIndex}`
+                    }
+                  >
+                    <div className="footballay-match-panel__player-main">
+                      <span>{player.player.number ?? '-'}</span>
+                      <strong>{player.displayName}</strong>
+                    </div>
+                    <div
+                      className={`footballay-match-panel__player-name-tooltip footballay-match-panel__player-name-tooltip--${tooltipDirection}`}
+                    >
+                      {player.player.name}
+                    </div>
+                    <PlayerMarkers player={player} locale={locale} />
                   </div>
-                  <div className="footballay-match-panel__player-name-tooltip">
-                    {player.player.name}
-                  </div>
-                  <PlayerMarkers player={player} locale={locale} />
-                </div>
-              ))}
-            </div>
-          ))
+                ))}
+              </div>
+            );
+          })
         ) : (
           <p className="footballay-match-panel__empty">
             {lineup.loadStatus === 'loading'

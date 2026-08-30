@@ -93,7 +93,6 @@
   position: absolute;
   z-index: 2;
   top: 0;
-  left: 0;
   padding: 0 4px;
   border-radius: 3px;
   color: var(--footballay-color-white);
@@ -104,6 +103,14 @@
   pointer-events: none;
   transition: opacity 0.2s ease;
   white-space: nowrap;
+}
+.footballay-match-panel__player-name-tooltip--right {
+  left: 0;
+  right: auto;
+}
+.footballay-match-panel__player-name-tooltip--left {
+  right: 0;
+  left: auto;
 }
 .footballay-match-panel__player-main:hover
   ~ .footballay-match-panel__player-name-tooltip {

@@ -10,7 +10,10 @@ import {
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { matchDataStore } from '@/content/features/match-data/matchDataStore';
-import { createFixtureStatistics } from '@/content/test/matchDataFixtures';
+import {
+  createFixtureLineup,
+  createFixtureStatistics,
+} from '@/content/test/matchDataFixtures';
 import { MatchDataOverlays } from './MatchDataOverlays';
 import type { FixtureDto } from '@/shared/api/dto';
 
@@ -348,16 +351,102 @@ describe('MatchDataOverlays', () => {
 
   it('keeps full player names available on lineup hover', () => {
     expect(lineupTabSource).toContain(
-      '<div className="footballay-match-panel__player-name-tooltip">',
+      "index < columns.length / 2 ? 'right' : 'left'",
     );
     expect(lineupTabSource).toContain('{player.player.name}');
     expect(lineupTabSource).not.toContain('title={player.player.name}');
+    expect(lineupTabSource).not.toContain('createPortal');
+    expect(lineupTabSource).not.toContain('getBoundingClientRect');
     expect(lineupTabCss).toContain(
       '.footballay-match-panel__player-name-tooltip {\n  position: absolute;',
+    );
+    expect(lineupTabCss).toContain(
+      '.footballay-match-panel__player-name-tooltip--right {\n  left: 0;\n  right: auto;',
+    );
+    expect(lineupTabCss).toContain(
+      '.footballay-match-panel__player-name-tooltip--left {\n  right: 0;\n  left: auto;',
     );
     expect(lineupTabCss).toContain('transition: opacity 0.2s ease;');
     expect(lineupTabCss).toContain(
       '.footballay-match-panel__player-main:hover\n  ~ .footballay-match-panel__player-name-tooltip {\n  opacity: 1;\n  transition: none;',
+    );
+    expect(matchPanelCss).toContain('overflow: hidden;');
+    expect(matchPanelCss).toContain('border-radius: 5px;');
+  });
+
+  it('extends lineup player names toward the panel center', () => {
+    const lineup = createFixtureLineup();
+    const player = lineup.lineup.home!.players[0]!;
+    lineup.lineup.home!.formation = '1-1-1';
+    lineup.lineup.home!.players = [
+      'GK',
+      'Left Player',
+      'Center Player',
+      'Mohammed Kudus',
+    ].map((name, index) => ({
+      ...player,
+      matchPlayerUid: `home-player-${index}`,
+      name,
+      number: index + 1,
+    }));
+    matchDataStore.setState({
+      fixtureInfo,
+      status: { loadStatus: 'ready' },
+      lineup: { loadStatus: 'ready', data: lineup },
+      events: {
+        loadStatus: 'ready',
+        data: { fixtureUid: 'fixture-1', events: [] },
+      },
+      statistics: { loadStatus: 'ready', data: createFixtureStatistics() },
+    });
+    render(<MatchDataOverlays />);
+
+    expect(
+      Array.from(
+        document.querySelectorAll(
+          '.footballay-match-panel__player-name-tooltip--right',
+        ),
+        (tooltip) => tooltip.textContent,
+      ),
+    ).toContain('GK');
+    expect(
+      Array.from(
+        document.querySelectorAll(
+          '.footballay-match-panel__player-name-tooltip--left',
+        ),
+        (tooltip) => tooltip.textContent,
+      ),
+    ).toContain('Mohammed Kudus');
+  });
+
+  it('uses lineup team short names only when they contain text', () => {
+    const lineup = createFixtureLineup();
+    lineup.lineup.home!.teamShortName = 'HOM';
+    lineup.lineup.away!.teamShortName = '   ';
+    matchDataStore.setState({
+      fixtureInfo,
+      status: { loadStatus: 'ready' },
+      lineup: { loadStatus: 'ready', data: lineup },
+      events: {
+        loadStatus: 'ready',
+        data: { fixtureUid: 'fixture-1', events: [] },
+      },
+      statistics: { loadStatus: 'ready', data: createFixtureStatistics() },
+    });
+    render(<MatchDataOverlays />);
+
+    expect(screen.getByRole('tab', { name: 'HOM' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: '원정' })).toBeTruthy();
+
+    cleanup();
+    lineup.lineup.home!.teamShortName = null;
+    lineup.lineup.away!.teamShortName = '';
+    render(<MatchDataOverlays />);
+
+    expect(screen.getByRole('tab', { name: '홈' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: '원정' })).toBeTruthy();
+    expect(lineupTabSource).toContain(
+      "return team?.teamShortName?.trim() || team?.teamName || '-';",
     );
   });
 
