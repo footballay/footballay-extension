@@ -28,6 +28,9 @@
 .footballay-match-panel--data {
   background: transparent;
 }
+.footballay-match-panel--settings {
+  background: transparent;
+}
 .footballay-match-panel--chrome-hidden .footballay-match-panel__sidebar,
 .footballay-match-panel--chrome-hidden .footballay-match-panel__topbar {
   opacity: 0;
@@ -192,6 +195,7 @@
   display: grid;
   gap: 12px;
   padding: 16px;
+  background: rgb(45 51 60 / var(--footballay-panel-opacity));
   scrollbar-color: var(--footballay-color-scrollbar)
     var(--footballay-color-scrollbar-track);
   scrollbar-width: thin;

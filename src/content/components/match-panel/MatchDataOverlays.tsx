@@ -89,7 +89,7 @@ export function MatchDataOverlays() {
 
   return (
     <aside
-      className={`footballay-match-panel${tab === 'settings' ? '' : ' footballay-match-panel--data'}${chromeHidden ? ' footballay-match-panel--chrome-hidden' : ''}`}
+      className={`footballay-match-panel footballay-match-panel--${tab === 'settings' ? 'settings' : 'data'}${chromeHidden ? ' footballay-match-panel--chrome-hidden' : ''}`}
       aria-label={t(locale, 'matchPanel')}
       ref={panelRef}
       onPointerEnter={showChrome}

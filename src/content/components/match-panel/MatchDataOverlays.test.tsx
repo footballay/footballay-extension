@@ -255,7 +255,7 @@ describe('MatchDataOverlays', () => {
     expect(settingsView.settings.timezone).toBe('Asia/Seoul');
   });
 
-  it('applies panel opacity only outside Settings', () => {
+  it('keeps the panel opacity variable available in Settings', () => {
     settingsView.settings = {
       locale: 'default',
       timezone: 'default',
@@ -275,6 +275,24 @@ describe('MatchDataOverlays', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     expect(panel.className).not.toContain('footballay-match-panel--data');
+    expect(panel.className).toContain('footballay-match-panel--settings');
+    expect(panel.getAttribute('style')).toContain(
+      '--footballay-panel-opacity: 50%',
+    );
+  });
+
+  it('applies panel opacity only to the Settings background', () => {
+    const settingsRule = matchPanelCss.match(
+      /\.footballay-match-panel__settings \{([\s\S]*?)\n\}/,
+    )?.[1];
+
+    expect(settingsRule).toContain(
+      'background: rgb(45 51 60 / var(--footballay-panel-opacity));',
+    );
+    expect(settingsRule).not.toContain('opacity:');
+    expect(matchPanelCss).toContain(
+      '.footballay-match-panel--settings {\n  background: transparent;',
+    );
   });
 
   it('applies opacity to data backgrounds without nesting it at the root', () => {
