@@ -6,14 +6,23 @@ import {
   useContentLocale,
 } from '@/shared/i18n/content';
 import {
+  DEFAULT_SETTINGS,
   loadExtensionSettings,
-  type LocaleSetting,
+  saveExtensionSettings,
+  type ExtensionSettings,
 } from '@/shared/settings/settings';
 
 const SUPPORT_EMAIL = 'physickskim@gmail.com';
 
-function PopupContent() {
+function PopupContent({
+  enabled,
+  onEnabledChange,
+}: {
+  enabled: boolean | undefined;
+  onEnabledChange: (enabled: boolean) => void;
+}) {
   const locale = useContentLocale();
+  const [toggleReady, setToggleReady] = useState(false);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -27,6 +36,10 @@ function PopupContent() {
   };
 
   useEffect(() => () => clearFeedbackTimer(), []);
+
+  useEffect(() => {
+    if (enabled !== undefined) setToggleReady(true);
+  }, [enabled]);
 
   const copySupportEmail = () => {
     void navigator.clipboard.writeText(SUPPORT_EMAIL).then(
@@ -50,6 +63,17 @@ function PopupContent() {
         alt=""
       />
       <h1>Footballay</h1>
+      <button
+        className={`footballay-popup__enabled-toggle${toggleReady ? '' : ' footballay-popup__enabled-toggle--loading'}`}
+        type="button"
+        role="switch"
+        aria-label="Footballay"
+        aria-checked={enabled ?? false}
+        disabled={!toggleReady}
+        onClick={() => onEnabledChange(!(enabled ?? false))}
+      >
+        <span />
+      </button>
       <p className="footballay-popup__description">
         {t(locale, 'popupDescription')}
       </p>
@@ -83,13 +107,13 @@ function PopupContent() {
 }
 
 export function Popup() {
-  const [localeSetting, setLocaleSetting] = useState<LocaleSetting>('default');
+  const [popupSettings, setPopupSettings] = useState<ExtensionSettings>();
 
   useEffect(() => {
     let stale = false;
 
-    void loadExtensionSettings().then(({ locale }) => {
-      if (!stale) setLocaleSetting(locale);
+    void loadExtensionSettings().then((settings) => {
+      if (!stale) setPopupSettings({ ...DEFAULT_SETTINGS, ...settings });
     });
 
     return () => {
@@ -97,9 +121,19 @@ export function Popup() {
     };
   }, []);
 
+  const updateEnabled = (enabled: boolean) => {
+    if (!popupSettings) return;
+    const nextSettings = { ...popupSettings, enabled };
+    setPopupSettings(nextSettings);
+    void saveExtensionSettings(nextSettings);
+  };
+
   return (
-    <ContentI18nProvider setting={localeSetting}>
-      <PopupContent />
+    <ContentI18nProvider setting={popupSettings?.locale ?? 'default'}>
+      <PopupContent
+        enabled={popupSettings?.enabled}
+        onEnabledChange={updateEnabled}
+      />
     </ContentI18nProvider>
   );
 }

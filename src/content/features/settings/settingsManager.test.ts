@@ -5,6 +5,7 @@ const storage = vi.hoisted(() => {
   let listener: ((settings: ExtensionSettings) => void) | undefined;
   return {
     load: vi.fn(async () => ({
+      enabled: true,
       locale: 'default',
       timezone: 'default',
       panelOpacity: 90,
@@ -33,6 +34,7 @@ const matchData = vi.hoisted(() => ({
 
 vi.mock('@/shared/settings/settings', () => ({
   DEFAULT_SETTINGS: {
+    enabled: true,
     locale: 'default',
     timezone: 'default',
     panelOpacity: 90,
@@ -67,6 +69,7 @@ describe('SettingsManager', () => {
     matchData.reloadLocalized.mockClear();
     settingsStore.setState({
       settings: {
+        enabled: true,
         locale: 'default',
         timezone: 'default',
         panelOpacity: 90,
@@ -79,6 +82,7 @@ describe('SettingsManager', () => {
 
   it('reacts once when a local save is echoed by the storage watcher', async () => {
     await settingsManager.updateSettings({
+      enabled: true,
       locale: 'ko',
       timezone: 'default',
       panelOpacity: 90,
@@ -95,6 +99,7 @@ describe('SettingsManager', () => {
     expect(matchData.reloadLocalized).toHaveBeenCalledOnce();
 
     storage.notify({
+      enabled: true,
       locale: 'ko',
       timezone: 'default',
       panelOpacity: 90,
@@ -106,6 +111,7 @@ describe('SettingsManager', () => {
 
   it('reacts to external storage changes through the same path', async () => {
     storage.notify({
+      enabled: true,
       locale: 'default',
       timezone: 'Asia/Seoul',
       panelOpacity: 90,
@@ -135,12 +141,14 @@ describe('SettingsManager', () => {
       });
 
     const first = settingsManager.updateSettings({
+      enabled: true,
       locale: 'ko',
       timezone: 'default',
       panelOpacity: 90,
       lineupPlayerCardOpacity: 100,
     });
     const latest = settingsManager.updateSettings({
+      enabled: true,
       locale: 'en',
       timezone: 'Asia/Seoul',
       panelOpacity: 90,
@@ -158,6 +166,7 @@ describe('SettingsManager', () => {
     });
     expect(matchData.reloadLocalized).toHaveBeenCalledOnce();
     expect(settingsStore.getState().settings).toEqual({
+      enabled: true,
       locale: 'en',
       timezone: 'Asia/Seoul',
       panelOpacity: 90,
@@ -168,12 +177,14 @@ describe('SettingsManager', () => {
   it('ignores a delayed echo from an older local save', async () => {
     let resolveFirstSave!: () => void;
     const firstSettings: ExtensionSettings = {
+      enabled: true,
       locale: 'ko',
       timezone: 'default',
       panelOpacity: 90,
       lineupPlayerCardOpacity: 100,
     };
     const latestSettings: ExtensionSettings = {
+      enabled: true,
       locale: 'en',
       timezone: 'Asia/Seoul',
       panelOpacity: 90,
@@ -211,12 +222,14 @@ describe('SettingsManager', () => {
 
   it('coalesces rapid external changes and applies only the latest settings', async () => {
     storage.notify({
+      enabled: true,
       locale: 'ko',
       timezone: 'default',
       panelOpacity: 90,
       lineupPlayerCardOpacity: 100,
     });
     storage.notify({
+      enabled: true,
       locale: 'en',
       timezone: 'Asia/Seoul',
       panelOpacity: 90,
@@ -231,6 +244,7 @@ describe('SettingsManager', () => {
     });
     expect(matchData.reloadLocalized).toHaveBeenCalledOnce();
     expect(settingsStore.getState().settings).toEqual({
+      enabled: true,
       locale: 'en',
       timezone: 'Asia/Seoul',
       panelOpacity: 90,
@@ -240,6 +254,7 @@ describe('SettingsManager', () => {
 
   it('applies panel opacity without reloading match data', async () => {
     await settingsManager.updateSettings({
+      enabled: true,
       locale: 'default',
       timezone: 'default',
       panelOpacity: 50,
@@ -254,6 +269,7 @@ describe('SettingsManager', () => {
 
   it('applies lineup player card opacity without reloading match data', async () => {
     await settingsManager.updateSettings({
+      enabled: true,
       locale: 'default',
       timezone: 'default',
       panelOpacity: 90,
@@ -262,6 +278,21 @@ describe('SettingsManager', () => {
     await flushReactions();
 
     expect(settingsStore.getState().settings.lineupPlayerCardOpacity).toBe(50);
+    expect(fixtureSelection.reloadForSettings).not.toHaveBeenCalled();
+    expect(matchData.reloadLocalized).not.toHaveBeenCalled();
+  });
+
+  it('applies enabled state without reloading match data', async () => {
+    await settingsManager.updateSettings({
+      enabled: false,
+      locale: 'default',
+      timezone: 'default',
+      panelOpacity: 90,
+      lineupPlayerCardOpacity: 100,
+    });
+    await flushReactions();
+
+    expect(settingsStore.getState().settings.enabled).toBe(false);
     expect(fixtureSelection.reloadForSettings).not.toHaveBeenCalled();
     expect(matchData.reloadLocalized).not.toHaveBeenCalled();
   });

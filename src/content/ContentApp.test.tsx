@@ -92,6 +92,7 @@ function selectFixtureForView(fixtureUid: string) {
 
 vi.mock('@/shared/settings/settings', () => ({
   DEFAULT_SETTINGS: {
+    enabled: true,
     locale: 'default',
     timezone: 'default',
     panelOpacity: 90,
@@ -112,6 +113,7 @@ beforeEach(() => {
   selectFixture.mockClear();
   settingsStore.setState({
     settings: {
+      enabled: true,
       locale: 'default',
       timezone: 'default',
       panelOpacity: 90,
@@ -152,6 +154,17 @@ beforeEach(() => {
 });
 
 describe('ContentApp', () => {
+  it('hides content panels when the extension is disabled', () => {
+    settingsStore.setState((state) => ({
+      settings: { ...state.settings, enabled: false },
+    }));
+
+    const { container } = render(<ContentApp />);
+
+    expect(container.querySelector('[data-footballay-content-app]')).toBeNull();
+    expect(screen.queryByLabelText('Match panel')).toBeNull();
+  });
+
   it('loads fixtures from a clicked league and keeps a clicked fixture selection in memory', async () => {
     const user = userEvent.setup();
     render(<ContentApp />);
@@ -467,6 +480,7 @@ describe('ContentApp', () => {
     act(() => {
       settingsStore.setState({
         settings: {
+          enabled: true,
           locale: 'default',
           timezone: 'America/New_York',
           panelOpacity: 90,

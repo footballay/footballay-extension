@@ -6,6 +6,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -14,15 +15,18 @@ import { Popup } from './Popup';
 const popupCss = readFileSync('src/entrypoints/popup/style.css', 'utf8');
 
 const loadExtensionSettings = vi.hoisted(() => vi.fn());
+const saveExtensionSettings = vi.hoisted(() => vi.fn(async () => undefined));
 const writeText = vi.hoisted(() => vi.fn(async () => undefined));
 
 vi.mock('@/shared/settings/settings', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/settings/settings')>()),
   loadExtensionSettings,
+  saveExtensionSettings,
 }));
 
 beforeEach(() => {
   loadExtensionSettings.mockResolvedValue({ locale: 'en' });
+  saveExtensionSettings.mockClear();
   writeText.mockClear();
   vi.stubGlobal('chrome', {
     i18n: { getAcceptLanguages: vi.fn(async () => ['en-US']) },
@@ -96,6 +100,32 @@ describe('Popup', () => {
     ).toBeTruthy();
     expect(screen.getByText('이메일')).toBeTruthy();
     expect(screen.getByRole('button', { name: '복사' })).toBeTruthy();
+  });
+
+  it('toggles the content UI setting with a compact switch', async () => {
+    render(<Popup />);
+
+    const toggle = await screen.findByRole('switch', { name: 'Footballay' });
+    await waitFor(() => expect(toggle.getAttribute('disabled')).toBeNull());
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(toggle);
+
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+    expect(saveExtensionSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: false }),
+    );
+    expect(popupCss).toContain('height: 18px;');
+    expect(popupCss).toContain('transform: translateX(14px);');
+  });
+
+  it('waits for the saved enabled state before rendering the switch', async () => {
+    loadExtensionSettings.mockResolvedValue({ locale: 'en', enabled: false });
+    render(<Popup />);
+
+    const toggle = screen.getByRole('switch', { name: 'Footballay' });
+    expect(toggle.getAttribute('disabled')).toBe('');
+    await waitFor(() => expect(toggle.getAttribute('disabled')).toBeNull());
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
   });
 
   it('copies the support email and fades the separate feedback out after one second', async () => {

@@ -52,6 +52,7 @@ beforeEach(() => {
 describe('settings storage', () => {
   it('uses the default panel opacity constant', () => {
     expect(DEFAULT_PANEL_OPACITY).toBe(90);
+    expect(DEFAULT_SETTINGS.enabled).toBe(true);
     expect(DEFAULT_SETTINGS.panelOpacity).toBe(DEFAULT_PANEL_OPACITY);
     expect(DEFAULT_LINEUP_PLAYER_CARD_OPACITY).toBe(100);
     expect(DEFAULT_SETTINGS.lineupPlayerCardOpacity).toBe(
@@ -66,12 +67,18 @@ describe('settings storage', () => {
     );
     expect(normalizeSettings({ locale: 'ko', timezone: 'Asia/Seoul' })).toEqual(
       {
+        enabled: true,
         locale: 'ko',
         timezone: 'Asia/Seoul',
         panelOpacity: DEFAULT_PANEL_OPACITY,
         lineupPlayerCardOpacity: DEFAULT_LINEUP_PLAYER_CARD_OPACITY,
       },
     );
+  });
+
+  it('keeps false for a disabled content UI and defaults other values to enabled', () => {
+    expect(normalizeSettings({ enabled: false }).enabled).toBe(false);
+    expect(normalizeSettings({ enabled: 'false' }).enabled).toBe(true);
   });
 
   it.each([0, 50, 100])('keeps a valid panel opacity: %s', (panelOpacity) => {
@@ -106,12 +113,14 @@ describe('settings storage', () => {
     );
 
     await saveExtensionSettings({
+      enabled: true,
       locale: 'ko',
       timezone: 'Asia/Seoul',
       panelOpacity: 50,
       lineupPlayerCardOpacity: 50,
     });
     expect(await loadExtensionSettings()).toEqual({
+      enabled: true,
       locale: 'ko',
       timezone: 'Asia/Seoul',
       panelOpacity: 50,
@@ -119,6 +128,7 @@ describe('settings storage', () => {
     });
 
     storageState.notify({
+      enabled: false,
       locale: 'en',
       timezone: 'Europe/London',
       panelOpacity: 0,
@@ -126,12 +136,14 @@ describe('settings storage', () => {
     });
     expect(changes).toEqual([
       {
+        enabled: true,
         locale: 'ko',
         timezone: 'Asia/Seoul',
         panelOpacity: 50,
         lineupPlayerCardOpacity: 50,
       },
       {
+        enabled: false,
         locale: 'en',
         timezone: 'Europe/London',
         panelOpacity: 0,

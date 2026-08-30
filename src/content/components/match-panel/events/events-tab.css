@@ -283,7 +283,8 @@
   color: #aebce8;
   font-weight: 500;
 }
-.footballay-match-panel__event-tooltip strong.footballay-match-panel__event-tooltip-title--own-goal {
+.footballay-match-panel__event-tooltip
+  strong.footballay-match-panel__event-tooltip-title--own-goal {
   color: #f0a1a5;
 }
 .footballay-match-panel__event-tooltip-item {

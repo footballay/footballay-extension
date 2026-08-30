@@ -31,8 +31,12 @@ export function ContentApp() {
 
   return (
     <ContentI18nProvider setting={currentSettings.locale}>
-      <MatchSelect />
-      <MatchDataOverlays />
+      {currentSettings.enabled !== false && (
+        <>
+          <MatchSelect />
+          <MatchDataOverlays />
+        </>
+      )}
     </ContentI18nProvider>
   );
 }

@@ -4,6 +4,7 @@ export type LocaleSetting = 'default' | 'ko' | 'en';
 export type TimezoneSetting = 'default' | string;
 
 export type ExtensionSettings = {
+  enabled: boolean;
   locale: LocaleSetting;
   timezone: TimezoneSetting;
   panelOpacity: number;
@@ -14,6 +15,7 @@ export const DEFAULT_PANEL_OPACITY = 90;
 export const DEFAULT_LINEUP_PLAYER_CARD_OPACITY = 100;
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
+  enabled: true,
   locale: 'default',
   timezone: 'default',
   panelOpacity: DEFAULT_PANEL_OPACITY,
@@ -58,6 +60,7 @@ export function normalizeSettings(value: unknown): ExtensionSettings {
   const settings = value as Partial<ExtensionSettings> | null;
 
   return {
+    enabled: settings?.enabled !== false,
     locale:
       settings?.locale === 'ko' || settings?.locale === 'en'
         ? settings.locale

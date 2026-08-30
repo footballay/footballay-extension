@@ -11,6 +11,7 @@ import {
 
 function sameSettings(left: ExtensionSettings, right: ExtensionSettings) {
   return (
+    left.enabled === right.enabled &&
     left.locale === right.locale &&
     left.timezone === right.timezone &&
     left.panelOpacity === right.panelOpacity &&
@@ -134,6 +135,7 @@ class SettingsManager {
     if (generation !== this.changeGeneration) return;
 
     const previous = settingsStore.getState().settings;
+    const enabledChanged = previous.enabled !== nextSettings.enabled;
     const localeChanged = previous.locale !== nextSettings.locale;
     const timezoneChanged = previous.timezone !== nextSettings.timezone;
     const panelOpacityChanged =
@@ -144,7 +146,8 @@ class SettingsManager {
       !localeChanged &&
       !timezoneChanged &&
       !panelOpacityChanged &&
-      !lineupPlayerCardOpacityChanged
+      !lineupPlayerCardOpacityChanged &&
+      !enabledChanged
     ) {
       return;
     }
