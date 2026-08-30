@@ -148,7 +148,9 @@ export function LineupTab() {
                 >
                   <div className="footballay-match-panel__player-main">
                     <span>{player.player.number ?? '-'}</span>
-                    <strong>{player.displayName}</strong>
+                    <strong title={player.player.name}>
+                      {player.displayName}
+                    </strong>
                   </div>
                   <PlayerMarkers player={player} locale={locale} />
                 </div>

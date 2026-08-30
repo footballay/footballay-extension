@@ -28,11 +28,16 @@
 .footballay-match-panel--data {
   background: transparent;
 }
-
 .footballay-match-panel--chrome-hidden .footballay-match-panel__sidebar,
 .footballay-match-panel--chrome-hidden .footballay-match-panel__topbar {
   opacity: 0;
   pointer-events: none;
+}
+
+.footballay-match-panel--chrome-hidden .footballay-match-panel__lineup,
+.footballay-match-panel--chrome-hidden .footballay-match-panel__events,
+.footballay-match-panel--chrome-hidden .footballay-match-panel__statistics {
+  border-radius: 5px;
 }
 
 .footballay-match-panel--data .footballay-match-panel__lineup,
@@ -67,7 +72,7 @@
   border-right: 1px solid var(--footballay-color-border);
   background: var(--footballay-color-surface);
   opacity: 1;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.35s ease;
 }
 
 .footballay-match-panel__tabs {
@@ -265,7 +270,7 @@
   height: 18px;
   background: var(--footballay-color-surface);
   opacity: 1;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.35s ease;
 }
 
 .footballay-match-panel__title {

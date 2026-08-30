@@ -98,6 +98,9 @@
 .footballay-match-panel__pass-accuracy i {
   text-shadow: 0 0 1px var(--footballay-color-black);
 }
+.footballay-match-panel__pass-accuracy i > span {
+  transform: translateY(1px);
+}
 .footballay-match-panel__cards {
   display: flex;
   align-items: center;

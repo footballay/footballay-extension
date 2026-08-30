@@ -99,7 +99,7 @@ function PassAccuracy({
               background: `radial-gradient(circle, var(--footballay-color-surface-raised) 0 15px, transparent 16px), conic-gradient(${team.color} ${team.value ?? 0}%, var(--footballay-color-disabled) 0)`,
             }}
           >
-            {team.value === undefined ? null : `${team.value}%`}
+            {team.value === undefined ? null : <span>{`${team.value}%`}</span>}
           </i>
         </div>
       ))}

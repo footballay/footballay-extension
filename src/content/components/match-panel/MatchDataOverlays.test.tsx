@@ -48,6 +48,14 @@ const lineupTabCss = readFileSync(
   'src/content/components/match-panel/lineup/lineup-tab.css',
   'utf8',
 );
+const lineupTabSource = readFileSync(
+  'src/content/components/match-panel/lineup/LineupTab.tsx',
+  'utf8',
+);
+const statisticsTabCss = readFileSync(
+  'src/content/components/match-panel/statistics/statistics-tab.css',
+  'utf8',
+);
 
 afterEach(cleanup);
 
@@ -313,10 +321,22 @@ describe('MatchDataOverlays', () => {
 
   it('uses the requested lineup marker sizes', () => {
     expect(lineupTabCss).toMatch(
-      /\.footballay-match-panel__rating \{[\s\S]*font-size: 11px;/,
+      /\.footballay-match-panel__rating \{[\s\S]*height: 10px;[\s\S]*padding: 1px 2px 0;[\s\S]*font-size: 11px;[\s\S]*line-height: 9px;/,
     );
     expect(lineupTabCss).toMatch(
       /\.footballay-match-panel__goals img \{[\s\S]*width: 15px;[\s\S]*height: 15px;/,
+    );
+  });
+
+  it('keeps full player names available on lineup hover', () => {
+    expect(lineupTabSource).toMatch(
+      /<strong title=\{player\.player\.name\}>\s*\{player\.displayName\}\s*<\/strong>/,
+    );
+  });
+
+  it('moves only pass accuracy text down by one pixel', () => {
+    expect(statisticsTabCss).toContain(
+      '.footballay-match-panel__pass-accuracy i > span {\n  transform: translateY(1px);',
     );
   });
 
@@ -331,10 +351,16 @@ describe('MatchDataOverlays', () => {
       '.footballay-match-panel--chrome-hidden .footballay-match-panel__topbar {\n  display: none;',
     );
     expect(matchPanelCss).toMatch(
-      /\.footballay-match-panel__sidebar \{[\s\S]*opacity: 1;[\s\S]*transition: opacity 0\.2s ease;/,
+      /\.footballay-match-panel__sidebar \{[\s\S]*opacity: 1;[\s\S]*transition: opacity 0\.35s ease;/,
     );
     expect(matchPanelCss).toMatch(
-      /\.footballay-match-panel__topbar \{[\s\S]*opacity: 1;[\s\S]*transition: opacity 0\.2s ease;/,
+      /\.footballay-match-panel__topbar \{[\s\S]*opacity: 1;[\s\S]*transition: opacity 0\.35s ease;/,
+    );
+    expect(matchPanelCss).toContain(
+      '.footballay-match-panel--chrome-hidden .footballay-match-panel__lineup,\n.footballay-match-panel--chrome-hidden .footballay-match-panel__events,\n.footballay-match-panel--chrome-hidden .footballay-match-panel__statistics {\n  border-radius: 5px;',
+    );
+    expect(statisticsTabCss).toMatch(
+      /\.footballay-match-panel__statistics \{[\s\S]*overflow: hidden;/,
     );
   });
 
@@ -344,7 +370,7 @@ describe('MatchDataOverlays', () => {
       render(<MatchDataOverlays />);
       const panel = screen.getByLabelText('Match panel');
 
-      act(() => vi.advanceTimersByTime(2_499));
+      act(() => vi.advanceTimersByTime(1_499));
       expect(panel.className).not.toContain(
         'footballay-match-panel--chrome-hidden',
       );
@@ -372,7 +398,7 @@ describe('MatchDataOverlays', () => {
 
       act(() => vi.advanceTimersByTime(1_000));
       fireEvent.pointerEnter(panel);
-      act(() => vi.advanceTimersByTime(2_500));
+      act(() => vi.advanceTimersByTime(1_500));
       expect(panel.className).not.toContain(
         'footballay-match-panel--chrome-hidden',
       );
@@ -391,7 +417,7 @@ describe('MatchDataOverlays', () => {
         'footballay-match-panel--chrome-hidden',
       );
       fireEvent.pointerLeave(panel);
-      act(() => vi.advanceTimersByTime(2_499));
+      act(() => vi.advanceTimersByTime(1_499));
       expect(panel.className).not.toContain(
         'footballay-match-panel--chrome-hidden',
       );
@@ -407,7 +433,7 @@ describe('MatchDataOverlays', () => {
       );
 
       fireEvent.pointerLeave(panel);
-      act(() => vi.advanceTimersByTime(2_499));
+      act(() => vi.advanceTimersByTime(1_499));
       fireEvent.pointerEnter(panel);
       act(() => vi.advanceTimersByTime(1));
       expect(panel.className).not.toContain(
@@ -415,7 +441,7 @@ describe('MatchDataOverlays', () => {
       );
 
       fireEvent.pointerLeave(panel);
-      act(() => vi.advanceTimersByTime(2_500));
+      act(() => vi.advanceTimersByTime(1_500));
       expect(panel.className).toContain(
         'footballay-match-panel--chrome-hidden',
       );
@@ -435,7 +461,7 @@ describe('MatchDataOverlays', () => {
         screen.getByRole('button', { name: 'Minimize match panel' }),
       );
 
-      act(() => vi.advanceTimersByTime(2_500));
+      act(() => vi.advanceTimersByTime(1_500));
       expect(
         screen.getByRole('button', { name: 'Open match panel' }),
       ).toBeTruthy();
@@ -446,7 +472,7 @@ describe('MatchDataOverlays', () => {
       expect(expandedPanel.className).not.toContain(
         'footballay-match-panel--chrome-hidden',
       );
-      act(() => vi.advanceTimersByTime(2_500));
+      act(() => vi.advanceTimersByTime(1_500));
       expect(expandedPanel.className).toContain(
         'footballay-match-panel--chrome-hidden',
       );

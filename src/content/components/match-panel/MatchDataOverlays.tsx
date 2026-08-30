@@ -11,7 +11,7 @@ import './match-data-overlays.css';
 
 type DetailTab = 'lineup' | 'statistics' | 'events' | 'settings';
 
-const MATCH_PANEL_CHROME_HIDE_DELAY_MS = 2_500;
+const MATCH_PANEL_CHROME_HIDE_DELAY_MS = 1_500;
 
 export function MatchDataOverlays() {
   const locale = useContentLocale();
