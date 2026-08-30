@@ -543,7 +543,7 @@ describe('ContentApp', () => {
     expect(screen.getAllByText('Corner Kicks')).toHaveLength(1);
     expect(screen.getAllByText('Offsides')).toHaveLength(1);
     expect(screen.getByText('Goalkeeper Saves')).toBeTruthy();
-    expect(screen.getByText('Goals Prevented')).toBeTruthy();
+    expect(screen.queryByText('Goals Prevented')).toBeNull();
   });
 
   it('shows a lineup error without hiding successful statistics', async () => {

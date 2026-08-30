@@ -60,7 +60,6 @@ const STATISTIC_COLUMNS: StatisticDefinition[][] = [
     ['shotsInsideBox', (team) => team.teamStatistics.shotsInsideBox],
     ['shotsOutsideBox', (team) => team.teamStatistics.shotsOutsideBox],
     ['goalkeeperSaves', (team) => team.teamStatistics.goalkeeperSaves],
-    ['goalsPrevented', (team) => team.teamStatistics.goalsPrevented],
   ],
 ];
 

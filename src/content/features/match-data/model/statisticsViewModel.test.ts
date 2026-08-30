@@ -18,7 +18,7 @@ describe('buildStatisticsViewModel', () => {
     );
     const xg = view.columns[1]!.find(({ label }) => label === 'xG');
 
-    expect(view.columns.map((column) => column.length)).toEqual([3, 6, 6]);
+    expect(view.columns.map((column) => column.length)).toEqual([3, 6, 5]);
     expect(possession).toMatchObject({
       homeValue: '55%',
       awayValue: '45%',
@@ -39,6 +39,19 @@ describe('buildStatisticsViewModel', () => {
       awayRed: 0,
     });
     expect(view).toMatchObject({ homeTeamName: '홈', awayTeamName: '원정' });
+  });
+
+  it('omits goals prevented from the display columns while retaining other goalkeeper statistics', () => {
+    const statistics = createFixtureStatistics();
+    statistics.home!.teamStatistics.goalsPrevented = 2;
+    statistics.away!.teamStatistics.goalsPrevented = 1;
+
+    const rows = buildStatisticsViewModel(statistics)!.columns.flat();
+
+    expect(
+      rows.find(({ label }) => label === 'goalsPrevented'),
+    ).toBeUndefined();
+    expect(rows.find(({ label }) => label === 'goalkeeperSaves')).toBeTruthy();
   });
 
   it('uses a valid source pass accuracy before the pass count fallback', () => {
