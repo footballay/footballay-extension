@@ -530,9 +530,9 @@ describe('ContentApp', () => {
     expect(
       screen.getByRole('tab', { name: 'Lineup' }).getAttribute('aria-selected'),
     ).toBe('true');
-    expect(screen.getByText('Home Player')).toBeTruthy();
+    expect(screen.getAllByText('Home Player')).toHaveLength(2);
     await user.click(screen.getByRole('tab', { name: '원정' }));
-    expect(screen.getByText('Away Player')).toBeTruthy();
+    expect(screen.getAllByText('Away Player')).toHaveLength(2);
     await user.click(screen.getByRole('tab', { name: 'Statistics' }));
     expect(
       screen
@@ -583,7 +583,7 @@ describe('ContentApp', () => {
       }));
     });
 
-    expect(screen.getByText('Home Player')).toBeTruthy();
+    expect(screen.getAllByText('Home Player')).toHaveLength(2);
     expect(
       screen.getByRole('tab', { name: '홈' }).getAttribute('aria-selected'),
     ).toBe('true');

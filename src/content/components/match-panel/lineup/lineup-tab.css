@@ -89,6 +89,27 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.footballay-match-panel__player-name-tooltip {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  padding: 0 4px;
+  border-radius: 3px;
+  color: var(--footballay-color-white);
+  background: var(--footballay-color-surface);
+  font-size: 12px;
+  line-height: var(--lineup-player-height);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+.footballay-match-panel__player-main:hover
+  ~ .footballay-match-panel__player-name-tooltip {
+  opacity: 1;
+  transition: none;
+}
 .footballay-match-panel__markers {
   position: absolute;
   inset: 0;

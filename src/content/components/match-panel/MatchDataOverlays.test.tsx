@@ -329,8 +329,17 @@ describe('MatchDataOverlays', () => {
   });
 
   it('keeps full player names available on lineup hover', () => {
-    expect(lineupTabSource).toMatch(
-      /<strong title=\{player\.player\.name\}>\s*\{player\.displayName\}\s*<\/strong>/,
+    expect(lineupTabSource).toContain(
+      '<div className="footballay-match-panel__player-name-tooltip">',
+    );
+    expect(lineupTabSource).toContain('{player.player.name}');
+    expect(lineupTabSource).not.toContain('title={player.player.name}');
+    expect(lineupTabCss).toContain(
+      '.footballay-match-panel__player-name-tooltip {\n  position: absolute;',
+    );
+    expect(lineupTabCss).toContain('transition: opacity 0.2s ease;');
+    expect(lineupTabCss).toContain(
+      '.footballay-match-panel__player-main:hover\n  ~ .footballay-match-panel__player-name-tooltip {\n  opacity: 1;\n  transition: none;',
     );
   });
 
