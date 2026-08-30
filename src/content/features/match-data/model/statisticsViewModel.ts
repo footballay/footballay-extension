@@ -79,6 +79,11 @@ function xg(team: MatchStatisticsTeamDto): number | string | null {
     : null;
 }
 
+function displayTeamName(team: MatchStatisticsTeamDto): string {
+  const shortName = team.team.shortName?.trim();
+  return shortName || team.team.name;
+}
+
 function ratios(
   homeValue: number | string | null,
   awayValue: number | string | null,
@@ -156,8 +161,8 @@ export function buildStatisticsViewModel(
   if (!home || !away) return undefined;
 
   return {
-    homeTeamName: home.team.name,
-    awayTeamName: away.team.name,
+    homeTeamName: displayTeamName(home),
+    awayTeamName: displayTeamName(away),
     colors: resolveTeamColors(home.team, away.team),
     passAccuracy: {
       home: passAccuracy(home),

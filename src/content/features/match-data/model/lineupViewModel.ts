@@ -45,6 +45,11 @@ function displayName(player: MatchLineupPlayerDto): string {
   return shortName || player.name;
 }
 
+function displayTeamName(team: MatchLineupDto): string {
+  const shortName = team.teamShortName?.trim();
+  return shortName || team.teamName;
+}
+
 function fallbackPlayer(
   event: MatchEventDto,
 ): MatchLineupPlayerDto | undefined {
@@ -167,7 +172,7 @@ export function buildLineupTeam(
     else player.goals += 1;
   }
 
-  return { ...team, players: starters };
+  return { ...team, teamName: displayTeamName(team), players: starters };
 }
 
 export function buildLineupViewModel(

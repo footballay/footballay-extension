@@ -3,6 +3,26 @@ import { createFixtureStatistics } from '@/content/test/matchDataFixtures';
 import { buildStatisticsViewModel } from './statisticsViewModel';
 
 describe('buildStatisticsViewModel', () => {
+  it.each([
+    ['Home Short', 'Away Short'],
+    [null, null],
+    [undefined as never, undefined as never],
+    ['', ''],
+    ['   ', '   '],
+  ])(
+    'uses %s and %s as the statistics team display names',
+    (homeShortName, awayShortName) => {
+      const statistics = createFixtureStatistics();
+      statistics.home!.team.shortName = homeShortName;
+      statistics.away!.team.shortName = awayShortName;
+
+      expect(buildStatisticsViewModel(statistics)).toMatchObject({
+        homeTeamName: homeShortName?.trim() || '홈',
+        awayTeamName: awayShortName?.trim() || '원정',
+      });
+    },
+  );
+
   it('maps columns, ratios, pass accuracy, cards, and latest xG', () => {
     const statistics = createFixtureStatistics();
     statistics.home!.teamStatistics.yellowCards = 2;

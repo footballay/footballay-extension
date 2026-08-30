@@ -44,6 +44,34 @@ function event(
 
 describe('buildLineupViewModel', () => {
   it.each([
+    ['Home Short', 'Home Short'],
+    [null, 'Home'],
+    [undefined as never, 'Home'],
+    ['', 'Home'],
+    ['   ', 'Home'],
+  ])('uses %s as the lineup team display name', (teamShortName, expected) => {
+    const lineup: FixtureLineupDto = {
+      fixtureUid: 'fixture',
+      lineup: {
+        home: {
+          teamUid: 'home',
+          teamName: 'Home',
+          teamShortName,
+          formation: '1',
+          players: [player('starter')],
+          substitutes: [],
+          playerColor: null,
+        },
+        away: null,
+      },
+    };
+
+    expect(
+      buildLineupViewModel(lineup, undefined, undefined).home?.teamName,
+    ).toBe(expected);
+  });
+
+  it.each([
     ['Short Name', 'Short Name'],
     [null, 'starter'],
     ['', 'starter'],
