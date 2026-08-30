@@ -77,6 +77,13 @@ const messages = {
     shotsOutsideBox: 'Shots Outside Box',
     goalkeeperSaves: 'Goalkeeper Saves',
     goalsPrevented: 'Goals Prevented',
+    popupDescription:
+      'An overlay for viewing lineups and match statistics while watching football.',
+    popupNotice:
+      'The overlay is available only on coupangplay.com and is not an official Coupang Play app.',
+    contact: 'Contact',
+    copy: 'Copy',
+    copied: 'Copied',
   },
   ko: {
     league: '리그',
@@ -145,6 +152,13 @@ const messages = {
     shotsOutsideBox: '박스 밖 슈팅',
     goalkeeperSaves: '골키퍼 선방',
     goalsPrevented: '실점 방지',
+    popupDescription:
+      '축구 경기 시청 중 라인업과 경기 통계를 확인할 수 있는 오버레이입니다.',
+    popupNotice:
+      '오버레이는 coupangplay.com에서만 표시되며, 쿠팡플레이의 공식 앱이 아닙니다.',
+    contact: '이메일',
+    copy: '복사',
+    copied: '복사됨',
   },
 } as const;
 
