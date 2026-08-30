@@ -1,6 +1,7 @@
 import { ArrowUp } from 'lucide-react';
 import { useState } from 'react';
 import goalMarker from '../../../../../assets/goal_marker.png';
+import ownGoalMarker from '../../../../../assets/goal_marker_owngoal.png';
 import {
   useMatchPanel,
   type LineupPlayer,
@@ -61,7 +62,7 @@ function PlayerMarkers({
         ))}
         {Array.from({ length: player.ownGoals }, (_, index) => (
           <img
-            src={goalMarker}
+            src={ownGoalMarker}
             alt={t(locale, 'ownGoal')}
             key={`own-goal-${index}`}
           />

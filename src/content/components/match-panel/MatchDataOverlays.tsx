@@ -1,5 +1,6 @@
 import { BarChart3, Flag, Settings, UsersRound, X } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import footballayIcon from '../../../../assets/footballay_icon_small.png';
 import { useMatchPanel } from '@/content/features/match-data';
 import { useSettings } from '@/content/features/settings';
 import { t, useContentLocale } from '@/shared/i18n/content';
@@ -81,7 +82,7 @@ export function MatchDataOverlays() {
             setCollapsed(false);
           }}
         >
-          <UsersRound />
+          <img src={footballayIcon} alt="" />
         </button>
       </aside>
     );

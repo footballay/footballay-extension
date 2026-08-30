@@ -173,10 +173,9 @@
   cursor: pointer;
 }
 
-.footballay-match-panel__expand-button svg {
+.footballay-match-panel__expand-button img {
   width: 22px;
   height: 22px;
-  stroke-width: 2;
 }
 
 .footballay-match-panel__content {

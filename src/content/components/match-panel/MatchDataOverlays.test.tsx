@@ -173,9 +173,11 @@ describe('MatchDataOverlays', () => {
     fireEvent.click(
       screen.getByRole('button', { name: 'Minimize match panel' }),
     );
-    expect(
-      screen.getByRole('button', { name: 'Open match panel' }),
-    ).toBeTruthy();
+    const expandButton = screen.getByRole('button', {
+      name: 'Open match panel',
+    });
+    expect(expandButton).toBeTruthy();
+    expect(expandButton.querySelector('img')?.getAttribute('src')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Open match panel' }));
     expect(screen.getByRole('tab', { name: 'Lineup' })).toBeTruthy();
@@ -346,6 +348,65 @@ describe('MatchDataOverlays', () => {
     );
     expect(lineupTabCss).toMatch(
       /\.footballay-match-panel__goals img \{[\s\S]*width: 15px;[\s\S]*height: 15px;/,
+    );
+  });
+
+  it('renders own goals with a distinct lineup marker style', () => {
+    const lineup = createFixtureLineup();
+    const player = lineup.lineup.home!.players[0]!;
+    matchDataStore.setState({
+      fixtureInfo,
+      status: { loadStatus: 'ready' },
+      lineup: { loadStatus: 'ready', data: lineup },
+      events: {
+        loadStatus: 'ready',
+        data: {
+          fixtureUid: 'fixture-1',
+          events: [
+            {
+              sequence: 1,
+              elapsed: 10,
+              extraTime: null,
+              team: {
+                teamUid: 'home-team',
+                name: '홈',
+                shortName: null,
+                playerColor: null,
+              },
+              player,
+              assist: null,
+              type: 'Goal',
+              detail: 'Normal Goal',
+              comments: null,
+            },
+            {
+              sequence: 2,
+              elapsed: 20,
+              extraTime: null,
+              team: {
+                teamUid: 'home-team',
+                name: '홈',
+                shortName: null,
+                playerColor: null,
+              },
+              player,
+              assist: null,
+              type: 'Goal',
+              detail: 'Own Goal',
+              comments: null,
+            },
+          ],
+        },
+      },
+      statistics: { loadStatus: 'ready', data: createFixtureStatistics() },
+    });
+    render(<MatchDataOverlays />);
+
+    expect(lineupTabSource).toContain(
+      "import ownGoalMarker from '../../../../../assets/goal_marker_owngoal.png';",
+    );
+    expect(screen.getByAltText('Goal').getAttribute('src')).not.toBe(
+      screen.getByAltText('Own goal').getAttribute('src'),
     );
   });
 

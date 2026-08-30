@@ -6,6 +6,7 @@ import {
 import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
 import substituteMarker from '../../../../../assets/events_substitute_marker.png';
 import goalMarker from '../../../../../assets/goal_marker.png';
+import ownGoalMarker from '../../../../../assets/goal_marker_owngoal.png';
 import {
   clusterPositionedEvents,
   clusterTime,
@@ -228,10 +229,18 @@ function EventClusterMarker({
           >
             <span>
               {event.displayTime}{' '}
-              <strong>
+              <strong
+                className={
+                  event.detail === 'Own Goal'
+                    ? 'footballay-match-panel__event-tooltip-title--own-goal'
+                    : undefined
+                }
+              >
                 {event.kind === 'substitution'
                   ? t(locale, 'substitution')
-                  : event.type}
+                  : event.detail === 'Own Goal'
+                    ? t(locale, 'ownGoal')
+                    : event.type}
               </strong>
             </span>
             {event.kind === 'substitution' ? (
@@ -260,7 +269,10 @@ function EventGlyph({ event }: { event: DisplayEvent }) {
   if (event.kind === 'goal') {
     return (
       <span className="footballay-match-panel__event-marker footballay-match-panel__event-marker--goal">
-        <img src={goalMarker} alt="" />
+        <img
+          src={event.detail === 'Own Goal' ? ownGoalMarker : goalMarker}
+          alt=""
+        />
       </span>
     );
   }

@@ -60,4 +60,25 @@ describe('EventsTab', () => {
     expect(screen.queryByText('Assist: substitution assist')).toBeNull();
     expect(screen.getByText('Assist: goal assist')).toBeTruthy();
   });
+
+  it('uses the own-goal marker only for own goals', () => {
+    const ownGoal = event('goal', 2);
+    ownGoal.detail = 'Own Goal';
+    eventView.events.data.events = [event('goal', 1), ownGoal];
+
+    const { container } = render(<EventsTab />);
+
+    const markers = container.querySelectorAll(
+      '.footballay-match-panel__event-marker--goal img',
+    );
+    expect(markers).toHaveLength(2);
+    expect(markers[0]?.getAttribute('src')).not.toBe(
+      markers[1]?.getAttribute('src'),
+    );
+    expect(
+      container.querySelector(
+        '.footballay-match-panel__event-tooltip-title--own-goal',
+      )?.textContent,
+    ).toBe('Own goal');
+  });
 });
