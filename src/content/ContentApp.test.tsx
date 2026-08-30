@@ -184,6 +184,148 @@ describe('ContentApp', () => {
     expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
   });
 
+  it('does not auto-collapse the match selector before a fixture is selected', () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<ContentApp />);
+      const matchSelect = container.querySelector(
+        '[data-footballay-content-app]',
+      );
+
+      act(() => vi.advanceTimersByTime(1_500));
+
+      expect(matchSelect?.className).not.toContain(
+        'footballay-content-panel--collapsed',
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('auto-collapses the match selector after a selected fixture is outside for 1500ms', () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<ContentApp />);
+      const matchSelect = container.querySelector(
+        '[data-footballay-content-app]',
+      );
+
+      act(() =>
+        fixtureSelectionStore.setState({ selectedFixtureUid: 'fixture-1' }),
+      );
+      act(() => vi.advanceTimersByTime(1_499));
+      expect(matchSelect?.className).not.toContain(
+        'footballay-content-panel--collapsed',
+      );
+
+      act(() => vi.advanceTimersByTime(1));
+      expect(matchSelect?.className).toContain(
+        'footballay-content-panel--collapsed',
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('cancels and restarts match selector auto-collapse on pointer entry and leave', () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<ContentApp />);
+      const matchSelect = container.querySelector(
+        '[data-footballay-content-app]',
+      ) as HTMLElement;
+
+      act(() =>
+        fixtureSelectionStore.setState({ selectedFixtureUid: 'fixture-1' }),
+      );
+      act(() => vi.advanceTimersByTime(1_000));
+      fireEvent.pointerEnter(matchSelect);
+      act(() => vi.advanceTimersByTime(1_500));
+      expect(matchSelect.className).not.toContain(
+        'footballay-content-panel--collapsed',
+      );
+
+      fireEvent.pointerLeave(matchSelect);
+      act(() => vi.advanceTimersByTime(1_500));
+      expect(matchSelect.className).toContain(
+        'footballay-content-panel--collapsed',
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('expands the compact match selector and auto-collapses it again after pointer leave', () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<ContentApp />);
+      const matchSelect = container.querySelector(
+        '[data-footballay-content-app]',
+      ) as HTMLElement;
+
+      act(() =>
+        fixtureSelectionStore.setState({ selectedFixtureUid: 'fixture-1' }),
+      );
+      act(() => vi.advanceTimersByTime(1_500));
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Open match selector' }),
+      );
+      expect(matchSelect.className).not.toContain(
+        'footballay-content-panel--collapsed',
+      );
+
+      fireEvent.pointerLeave(matchSelect);
+      act(() => vi.advanceTimersByTime(1_500));
+      expect(matchSelect.className).toContain(
+        'footballay-content-panel--collapsed',
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('expands the match selector and clears its timer when the selected fixture is removed', () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<ContentApp />);
+      const matchSelect = container.querySelector(
+        '[data-footballay-content-app]',
+      );
+
+      act(() =>
+        fixtureSelectionStore.setState({ selectedFixtureUid: 'fixture-1' }),
+      );
+      act(() => vi.advanceTimersByTime(1_500));
+      act(() =>
+        fixtureSelectionStore.setState({ selectedFixtureUid: undefined }),
+      );
+      act(() => vi.advanceTimersByTime(1_500));
+
+      expect(matchSelect?.className).not.toContain(
+        'footballay-content-panel--collapsed',
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('clears pending match selector auto-collapse timers on unmount', () => {
+    vi.useFakeTimers();
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    try {
+      const { unmount } = render(<ContentApp />);
+      act(() =>
+        fixtureSelectionStore.setState({ selectedFixtureUid: 'fixture-1' }),
+      );
+      unmount();
+
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+    } finally {
+      clearTimeoutSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
   it('shows fixture events in the Events tab', async () => {
     const user = userEvent.setup();
     selectFixtureForView('fixture-1');

@@ -1,5 +1,5 @@
 import { CalendarDays, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFixtureSelection } from '@/content/features/fixture-selection';
 import { t, useContentLocale } from '@/shared/i18n/content';
 import { FixturePicker } from './FixturePicker';
@@ -8,25 +8,78 @@ import './match-select.css';
 
 type MatchSelectView = 'League' | 'Match' | 'DatePicker';
 
+const MATCH_SELECT_AUTO_COLLAPSE_DELAY_MS = 1_500;
+
 export function MatchSelect() {
   const locale = useContentLocale();
   const [view, setView] = useState<MatchSelectView>('League');
   const [collapsed, setCollapsed] = useState(false);
-  const { selectedDate, selectedLeagueUid, navigateDate } =
+  const collapseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const containerRef = useRef<HTMLElement | null>(null);
+  const pointerInside = useRef(false);
+  const hadSelectedFixture = useRef(false);
+  const { selectedDate, selectedFixtureUid, selectedLeagueUid, navigateDate } =
     useFixtureSelection();
+
+  const clearCollapseTimer = () => {
+    if (collapseTimer.current === undefined) return;
+    clearTimeout(collapseTimer.current);
+    collapseTimer.current = undefined;
+  };
+
+  const scheduleCollapse = () => {
+    clearCollapseTimer();
+    collapseTimer.current = setTimeout(() => {
+      collapseTimer.current = undefined;
+      if (pointerInside.current || containerRef.current?.matches(':hover')) {
+        return;
+      }
+      setCollapsed(true);
+    }, MATCH_SELECT_AUTO_COLLAPSE_DELAY_MS);
+  };
+
+  useEffect(() => () => clearCollapseTimer(), []);
+
+  useEffect(() => {
+    if (!selectedFixtureUid) {
+      clearCollapseTimer();
+      if (hadSelectedFixture.current) setCollapsed(false);
+      hadSelectedFixture.current = false;
+      return;
+    }
+
+    hadSelectedFixture.current = true;
+    if (collapsed) return;
+    pointerInside.current = containerRef.current?.matches(':hover') ?? false;
+    if (!pointerInside.current) scheduleCollapse();
+  }, [collapsed, selectedFixtureUid]);
 
   return (
     <aside
       className={`footballay-content-panel footballay-content-panel--${view.toLowerCase()}${collapsed ? ' footballay-content-panel--collapsed' : ''}`}
       data-footballay-content-app=""
       aria-label="Footballay"
+      ref={containerRef}
+      onPointerEnter={() => {
+        pointerInside.current = true;
+        clearCollapseTimer();
+      }}
+      onPointerLeave={() => {
+        pointerInside.current = false;
+        if (selectedFixtureUid && !collapsed) scheduleCollapse();
+      }}
     >
       {collapsed ? (
         <button
           className="footballay-match-select-expand-button"
           type="button"
           aria-label={t(locale, 'openMatchSelector')}
-          onClick={() => setCollapsed(false)}
+          onClick={() => {
+            clearCollapseTimer();
+            setCollapsed(false);
+          }}
         >
           <CalendarDays />
         </button>
@@ -37,7 +90,10 @@ export function MatchSelect() {
               className="footballay-close-button"
               type="button"
               aria-label={t(locale, 'close')}
-              onClick={() => setCollapsed(true)}
+              onClick={() => {
+                clearCollapseTimer();
+                setCollapsed(true);
+              }}
             >
               <X />
             </button>
