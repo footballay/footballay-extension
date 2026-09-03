@@ -74,7 +74,16 @@ class MatchDataManager {
     ++this.latestRequestId;
     ++this.localizedGeneration;
     matchDataStore.setState(createMatchDataState(fixtureInfo));
-    this.startPolling();
+    if (getSettings().enabled !== false) this.startPolling();
+  }
+
+  setEnabled(enabled: boolean): void {
+    if (!enabled) {
+      this.stopPolling();
+      return;
+    }
+
+    if (matchDataStore.getState().fixtureInfo) this.startPolling();
   }
 
   updateFixtureInfo(fixtureInfo: FixtureDto): void {

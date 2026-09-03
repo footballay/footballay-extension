@@ -153,6 +153,7 @@ class SettingsManager {
     }
 
     settingsStore.setState({ settings: nextSettings });
+    if (enabledChanged) matchData.setEnabled(nextSettings.enabled);
     if (
       !settingsStore.getState().hydrated ||
       (!localeChanged && !timezoneChanged)

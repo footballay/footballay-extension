@@ -9,7 +9,7 @@ const requestFixtureLineup = vi.hoisted(() => vi.fn());
 const requestFixtureEvents = vi.hoisted(() => vi.fn());
 const requestFixtureStatistics = vi.hoisted(() => vi.fn());
 const settings = vi.hoisted(() => {
-  let value = { locale: 'default', timezone: 'default' };
+  let value = { enabled: true, locale: 'default', timezone: 'default' };
   return {
     getSettings: () => value,
     set(next: typeof value) {
@@ -66,7 +66,7 @@ describe('MatchDataManager', () => {
     requestFixtureLineup.mockReset();
     requestFixtureEvents.mockReset();
     requestFixtureStatistics.mockReset();
-    settings.set({ locale: 'en', timezone: 'default' });
+    settings.set({ enabled: true, locale: 'en', timezone: 'default' });
   });
 
   afterEach(() => {
@@ -136,10 +136,10 @@ describe('MatchDataManager', () => {
     requestFixtureEvents.mockResolvedValue(updated({ events: [] }, 'e2'));
     requestFixtureStatistics.mockResolvedValue(updated({}, 't2'));
     matchDataStore.setState(createMatchDataState(fixture('fixture-1')));
-    settings.set({ locale: 'ko', timezone: 'default' });
+    settings.set({ enabled: true, locale: 'ko', timezone: 'default' });
 
     const oldReload = matchDataManager.reloadLocalized();
-    settings.set({ locale: 'en', timezone: 'default' });
+    settings.set({ enabled: true, locale: 'en', timezone: 'default' });
     await matchDataManager.reloadLocalized();
     resolveOldLineup(updated({ fixtureUid: 'ko', lineup: {} }, 'l1'));
     await oldReload;
@@ -195,6 +195,61 @@ describe('MatchDataManager', () => {
     await act(async () => vi.advanceTimersByTimeAsync(20_000));
     await act(async () => vi.advanceTimersByTimeAsync(20_000));
     expect(requestFixtureStatus).toHaveBeenCalledTimes(4);
+  });
+
+  it('stops polling while disabled and resumes with the current fixture data', async () => {
+    requestFixtureStatus.mockResolvedValue(
+      updated({ liveStatus: { shortStatus: '1H' } }, 's1'),
+    );
+    requestFixtureLineup.mockResolvedValue(notModified());
+    requestFixtureEvents.mockResolvedValue(notModified());
+    requestFixtureStatistics.mockResolvedValue(notModified());
+
+    matchDataManager.activateFixture(fixture('fixture-1'));
+    await act(async () => undefined);
+    matchDataStore.setState({
+      events: {
+        loadStatus: 'ready',
+        data: { fixtureUid: 'fixture-1', events: [] },
+        etag: 'e1',
+      },
+    });
+
+    settings.set({ enabled: false, locale: 'en', timezone: 'default' });
+    matchDataManager.setEnabled(false);
+    await act(async () => vi.advanceTimersByTimeAsync(40_000));
+
+    expect(requestFixtureStatus).toHaveBeenCalledOnce();
+    expect(matchDataStore.getState()).toMatchObject({
+      fixtureInfo: { uid: 'fixture-1' },
+      events: { etag: 'e1' },
+    });
+
+    settings.set({ enabled: true, locale: 'en', timezone: 'default' });
+    matchDataManager.setEnabled(true);
+    await act(async () => undefined);
+
+    expect(requestFixtureStatus).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not poll an activated fixture until enabled', async () => {
+    requestFixtureStatus.mockResolvedValue(notModified());
+    requestFixtureLineup.mockResolvedValue(notModified());
+    requestFixtureEvents.mockResolvedValue(notModified());
+    requestFixtureStatistics.mockResolvedValue(notModified());
+    settings.set({ enabled: false, locale: 'en', timezone: 'default' });
+
+    matchDataManager.activateFixture(fixture('fixture-1'));
+    await act(async () => vi.advanceTimersByTimeAsync(40_000));
+
+    expect(requestFixtureStatus).not.toHaveBeenCalled();
+    expect(matchDataStore.getState().fixtureInfo?.uid).toBe('fixture-1');
+
+    settings.set({ enabled: true, locale: 'en', timezone: 'default' });
+    matchDataManager.setEnabled(true);
+    await act(async () => undefined);
+
+    expect(requestFixtureStatus).toHaveBeenCalledOnce();
   });
 
   it('keeps same-fixture data and ignores an old fixture response after switching', async () => {

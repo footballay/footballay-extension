@@ -28,6 +28,7 @@ export const matchData = Object.freeze({
     matchDataManager.activateFixture(fixtureInfo),
   updateFixtureInfo: (fixtureInfo: FixtureDto) =>
     matchDataManager.updateFixtureInfo(fixtureInfo),
+  setEnabled: (enabled: boolean) => matchDataManager.setEnabled(enabled),
   clearFixture: () => matchDataManager.clearFixture(),
   refresh: () => matchDataManager.refresh(),
   reloadLocalized: () => matchDataManager.reloadLocalized(),

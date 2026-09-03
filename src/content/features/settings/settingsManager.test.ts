@@ -29,6 +29,7 @@ const fixtureSelection = vi.hoisted(() => ({
   reloadForSettings: vi.fn(async () => undefined),
 }));
 const matchData = vi.hoisted(() => ({
+  setEnabled: vi.fn(),
   reloadLocalized: vi.fn(async () => undefined),
 }));
 
@@ -66,6 +67,7 @@ describe('SettingsManager', () => {
       storage.notify(settings);
     });
     fixtureSelection.reloadForSettings.mockClear();
+    matchData.setEnabled.mockClear();
     matchData.reloadLocalized.mockClear();
     settingsStore.setState({
       settings: {
@@ -282,8 +284,8 @@ describe('SettingsManager', () => {
     expect(matchData.reloadLocalized).not.toHaveBeenCalled();
   });
 
-  it('applies enabled state without reloading match data', async () => {
-    await settingsManager.updateSettings({
+  it('applies an external enabled state without reloading match data', async () => {
+    storage.notify({
       enabled: false,
       locale: 'default',
       timezone: 'default',
@@ -293,6 +295,8 @@ describe('SettingsManager', () => {
     await flushReactions();
 
     expect(settingsStore.getState().settings.enabled).toBe(false);
+    expect(matchData.setEnabled).toHaveBeenCalledOnce();
+    expect(matchData.setEnabled).toHaveBeenCalledWith(false);
     expect(fixtureSelection.reloadForSettings).not.toHaveBeenCalled();
     expect(matchData.reloadLocalized).not.toHaveBeenCalled();
   });
