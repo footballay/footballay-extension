@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { RestoreState } from '@/shared/restore/protocol';
 
 const lifecycle = vi.hoisted(() => {
   let resolveSettings: (() => void) | undefined;
@@ -19,6 +20,11 @@ const lifecycle = vi.hoisted(() => {
     initializeFixtureSelection: vi.fn(async () => {
       lifecycle.calls.push('fixtureSelection.initialize');
     }),
+    selectLeague: vi.fn(async () => undefined),
+    selectFixture: vi.fn(),
+    loadRestoreState: vi.fn<() => Promise<RestoreState | undefined>>(
+      async () => undefined,
+    ),
     disposeFixtureSelection: vi.fn(() =>
       lifecycle.calls.push('fixtureSelection.dispose'),
     ),
@@ -40,8 +46,13 @@ vi.mock('@/content/features/settings', () => ({
 vi.mock('@/content/features/fixture-selection', () => ({
   fixtureSelection: {
     initialize: lifecycle.initializeFixtureSelection,
+    selectLeague: lifecycle.selectLeague,
+    selectFixture: lifecycle.selectFixture,
     dispose: lifecycle.disposeFixtureSelection,
   },
+}));
+vi.mock('@/content/features/restore/restoreManager', () => ({
+  restoreManager: { load: lifecycle.loadRestoreState },
 }));
 vi.mock('@/content/features/match-data', () => ({
   matchData: { dispose: lifecycle.disposeMatchData },
@@ -62,6 +73,10 @@ beforeEach(() => {
   lifecycle.initializeSettings.mockClear();
   lifecycle.disposeSettings.mockClear();
   lifecycle.initializeFixtureSelection.mockClear();
+  lifecycle.selectLeague.mockClear();
+  lifecycle.selectFixture.mockClear();
+  lifecycle.loadRestoreState.mockReset();
+  lifecycle.loadRestoreState.mockResolvedValue(undefined);
   lifecycle.disposeFixtureSelection.mockClear();
   lifecycle.disposeMatchData.mockClear();
 });
@@ -75,6 +90,9 @@ describe('ContentApp lifecycle', () => {
 
     await act(async () => lifecycle.resolveSettings());
     expect(lifecycle.initializeFixtureSelection).toHaveBeenCalledOnce();
+    await waitFor(() =>
+      expect(lifecycle.loadRestoreState).toHaveBeenCalledOnce(),
+    );
 
     view.unmount();
     expect(lifecycle.calls).toEqual([
@@ -95,5 +113,23 @@ describe('ContentApp lifecycle', () => {
     expect(lifecycle.disposeFixtureSelection).toHaveBeenCalledOnce();
     expect(lifecycle.disposeMatchData).toHaveBeenCalledOnce();
     expect(lifecycle.disposeSettings).toHaveBeenCalledOnce();
+  });
+
+  it('restores the saved league and fixture once after initialization', async () => {
+    lifecycle.loadRestoreState.mockResolvedValue({
+      leagueUid: 'league-1',
+      fixtureUid: 'fixture-1',
+      updatedAt: Date.now(),
+    });
+    render(<ContentApp />);
+
+    await act(async () => lifecycle.resolveSettings());
+    await waitFor(() => expect(lifecycle.selectFixture).toHaveBeenCalledOnce());
+
+    expect(lifecycle.selectLeague).toHaveBeenCalledWith('league-1');
+    expect(lifecycle.selectFixture).toHaveBeenCalledWith('fixture-1');
+    expect(lifecycle.selectLeague.mock.invocationCallOrder[0]!).toBeLessThan(
+      lifecycle.selectFixture.mock.invocationCallOrder[0]!,
+    );
   });
 });

@@ -79,8 +79,7 @@ const messages = {
     goalsPrevented: 'Goals Prevented',
     popupDescription:
       'An overlay for viewing lineups and match statistics while watching football.',
-    popupNotice:
-      'The overlay is available only on coupangplay.com and is not an official Coupang Play app.',
+    runOnThisPage: 'Run on this page',
     contact: 'Contact',
     copy: 'Copy',
     copied: 'Copied',
@@ -99,7 +98,7 @@ const messages = {
     default: '기본값(Default)',
     korean: '한국어',
     english: 'English',
-    customTimezone: '사용자 시간대',
+    customTimezone: '시간대 직접 입력',
     loading: '데이터 불러오는 중',
     leagueLoading: '리그를 불러오는 중입니다.',
     leagueError: '리그를 불러오지 못했습니다: {error}',
@@ -154,9 +153,8 @@ const messages = {
     goalsPrevented: '실점 방지',
     popupDescription:
       '축구 경기 시청 중 라인업과 경기 통계를 확인할 수 있는 오버레이입니다.',
-    popupNotice:
-      '오버레이는 coupangplay.com에서만 표시되며, 쿠팡플레이의 공식 앱이 아닙니다.',
-    contact: '이메일',
+    runOnThisPage: '현재 페이지에서 실행',
+    contact: '문의',
     copy: '복사',
     copied: '복사됨',
   },

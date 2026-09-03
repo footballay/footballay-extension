@@ -12,11 +12,22 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Popup } from './Popup';
 
-const popupCss = readFileSync('src/entrypoints/popup/style.css', 'utf8');
+const popupCss = readFileSync('src/popup/style.css', 'utf8');
 
 const loadExtensionSettings = vi.hoisted(() => vi.fn());
 const saveExtensionSettings = vi.hoisted(() => vi.fn(async () => undefined));
 const writeText = vi.hoisted(() => vi.fn(async () => undefined));
+const queryTabs = vi.hoisted(() => vi.fn());
+const insertCSS = vi.hoisted(() => vi.fn(async () => undefined));
+const executeScript = vi.hoisted(() =>
+  vi.fn<
+    (injection: {
+      target: { tabId: number };
+      func?: () => boolean;
+      files?: string[];
+    }) => Promise<Array<{ result?: boolean }>>
+  >(async () => []),
+);
 
 vi.mock('@/shared/settings/settings', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/settings/settings')>()),
@@ -28,9 +39,18 @@ beforeEach(() => {
   loadExtensionSettings.mockResolvedValue({ locale: 'en' });
   saveExtensionSettings.mockClear();
   writeText.mockClear();
+  queryTabs.mockReset();
+  queryTabs.mockResolvedValue([{ id: 7 }]);
+  insertCSS.mockClear();
+  executeScript.mockReset();
+  executeScript.mockImplementation(async ({ func }) =>
+    func ? [{ result: false }] : [],
+  );
   vi.stubGlobal('chrome', {
     i18n: { getAcceptLanguages: vi.fn(async () => ['en-US']) },
     runtime: { getManifest: () => ({ version: '1.2.3' }) },
+    tabs: { query: queryTabs },
+    scripting: { insertCSS, executeScript },
   });
   Object.defineProperty(navigator, 'clipboard', {
     configurable: true,
@@ -54,11 +74,6 @@ describe('Popup', () => {
     expect(
       await screen.findByText(
         'An overlay for viewing lineups and match statistics while watching football.',
-      ),
-    ).toBeTruthy();
-    expect(
-      screen.getByText(
-        'The overlay is available only on coupangplay.com and is not an official Coupang Play app.',
       ),
     ).toBeTruthy();
     expect(screen.getByText('Contact')).toBeTruthy();
@@ -93,16 +108,12 @@ describe('Popup', () => {
         '축구 경기 시청 중 라인업과 경기 통계를 확인할 수 있는 오버레이입니다.',
       ),
     ).toBeTruthy();
-    expect(
-      screen.getByText(
-        '오버레이는 coupangplay.com에서만 표시되며, 쿠팡플레이의 공식 앱이 아닙니다.',
-      ),
-    ).toBeTruthy();
-    expect(screen.getByText('이메일')).toBeTruthy();
+    expect(screen.getByText('문의')).toBeTruthy();
     expect(screen.getByRole('button', { name: '복사' })).toBeTruthy();
   });
 
   it('toggles the content UI setting with a compact switch', async () => {
+    executeScript.mockResolvedValueOnce([{ result: true }]);
     render(<Popup />);
 
     const toggle = await screen.findByRole('switch', { name: 'Footballay' });
@@ -118,12 +129,87 @@ describe('Popup', () => {
     expect(popupCss).toContain('transform: translateX(14px);');
   });
 
-  it('waits for the saved enabled state before rendering the switch', async () => {
-    loadExtensionSettings.mockResolvedValue({ locale: 'en', enabled: false });
+  it('checks the DOM before injecting the content CSS and script', async () => {
     render(<Popup />);
 
-    const toggle = screen.getByRole('switch', { name: 'Footballay' });
-    expect(toggle.getAttribute('disabled')).toBe('');
+    const runButton = await screen.findByRole('button', {
+      name: 'Run on this page',
+    });
+    expect(screen.queryByRole('switch', { name: 'Footballay' })).toBeNull();
+    fireEvent.click(runButton);
+
+    await waitFor(() => expect(executeScript).toHaveBeenCalledTimes(3));
+    expect(queryTabs).toHaveBeenCalledWith({
+      active: true,
+      currentWindow: true,
+    });
+    expect(executeScript).toHaveBeenNthCalledWith(2, {
+      target: { tabId: 7 },
+      func: expect.any(Function),
+    });
+    expect(executeScript.mock.calls[1]![0].func?.name).toBe(
+      'isFootballayAlreadyMounted',
+    );
+    expect(insertCSS).toHaveBeenCalledWith({
+      target: { tabId: 7 },
+      files: ['content-scripts/content.css'],
+    });
+    expect(executeScript).toHaveBeenNthCalledWith(3, {
+      target: { tabId: 7 },
+      files: ['content-scripts/content.js'],
+    });
+    expect(executeScript.mock.invocationCallOrder[1]!).toBeLessThan(
+      insertCSS.mock.invocationCallOrder[0]!,
+    );
+    expect(insertCSS.mock.invocationCallOrder[0]).toBeLessThan(
+      executeScript.mock.invocationCallOrder[2]!,
+    );
+  });
+
+  it('does not inject CSS or content JS when Footballay is mounted', async () => {
+    executeScript
+      .mockResolvedValueOnce([{ result: false }])
+      .mockResolvedValueOnce([{ result: true }]);
+    render(<Popup />);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Run on this page' }),
+    );
+
+    await waitFor(() => expect(executeScript).toHaveBeenCalledTimes(2));
+    expect(executeScript).toHaveBeenNthCalledWith(2, {
+      target: { tabId: 7 },
+      func: expect.any(Function),
+    });
+    expect(insertCSS).not.toHaveBeenCalled();
+    expect(
+      executeScript.mock.calls.some(
+        ([injection]) => injection.files?.[0] === 'content-scripts/content.js',
+      ),
+    ).toBe(false);
+  });
+
+  it('hides the run button when Footballay is already mounted', async () => {
+    executeScript.mockResolvedValueOnce([{ result: true }]);
+
+    render(<Popup />);
+
+    await waitFor(() => expect(executeScript).toHaveBeenCalledOnce());
+    expect(
+      screen.queryByRole('button', { name: 'Run on this page' }),
+    ).toBeNull();
+    expect(
+      await screen.findByRole('switch', { name: 'Footballay' }),
+    ).toBeTruthy();
+    expect(insertCSS).not.toHaveBeenCalled();
+  });
+
+  it('waits for the saved enabled state before rendering the switch', async () => {
+    loadExtensionSettings.mockResolvedValue({ locale: 'en', enabled: false });
+    executeScript.mockResolvedValueOnce([{ result: true }]);
+    render(<Popup />);
+
+    const toggle = await screen.findByRole('switch', { name: 'Footballay' });
     await waitFor(() => expect(toggle.getAttribute('disabled')).toBeNull());
     expect(toggle.getAttribute('aria-checked')).toBe('false');
   });

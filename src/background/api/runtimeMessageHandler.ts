@@ -1,5 +1,11 @@
 import * as footballayApi from './footballayApi';
 import {
+  CLEAR_RESTORE_STATE,
+  LOAD_RESTORE_STATE,
+  SAVE_RESTORE_STATE,
+  type RestoreState,
+} from '@/shared/restore/protocol';
+import {
   GET_AVAILABLE_LEAGUES,
   GET_FIXTURE_DATES,
   GET_FIXTURES,
@@ -16,6 +22,7 @@ import {
 
 export async function handleRuntimeMessage(
   message: unknown,
+  sender?: chrome.runtime.MessageSender,
 ): Promise<FootballayApiResponse<unknown>> {
   const request = parseRequestEnvelope(message);
   if (!request) {
@@ -23,6 +30,20 @@ export async function handleRuntimeMessage(
   }
 
   switch (request.type) {
+    case LOAD_RESTORE_STATE:
+      if (request.payload !== undefined) return invalidRestoreRequest();
+      return loadRestoreState(sender);
+
+    case SAVE_RESTORE_STATE: {
+      const state = parseRestoreState(request.payload);
+      if (!state) return invalidRestoreRequest();
+      return saveRestoreState(sender, state);
+    }
+
+    case CLEAR_RESTORE_STATE:
+      if (request.payload !== undefined) return invalidRestoreRequest();
+      return clearRestoreState(sender);
+
     case GET_AVAILABLE_LEAGUES:
       if (
         request.payload !== undefined &&
@@ -110,6 +131,73 @@ export async function handleRuntimeMessage(
     default:
       return invalidRequest();
   }
+}
+
+const RESTORE_STORAGE_PREFIX = 'footballay-restore-state:';
+
+async function loadRestoreState(
+  sender?: chrome.runtime.MessageSender,
+): Promise<FootballayApiResponse<RestoreState | undefined>> {
+  const key = restoreStorageKey(sender);
+  if (!key) return invalidRestoreRequest();
+
+  const values = await chrome.storage.local.get(key);
+  return { ok: true, data: parseRestoreState(values[key]) };
+}
+
+async function saveRestoreState(
+  sender: chrome.runtime.MessageSender | undefined,
+  state: RestoreState,
+): Promise<FootballayApiResponse<undefined>> {
+  const key = restoreStorageKey(sender);
+  if (!key) return invalidRestoreRequest();
+
+  await chrome.storage.local.set({ [key]: state });
+  return { ok: true, data: undefined };
+}
+
+async function clearRestoreState(
+  sender?: chrome.runtime.MessageSender,
+): Promise<FootballayApiResponse<undefined>> {
+  const key = restoreStorageKey(sender);
+  if (!key) return invalidRestoreRequest();
+
+  await chrome.storage.local.remove(key);
+  return { ok: true, data: undefined };
+}
+
+function restoreStorageKey(
+  sender?: chrome.runtime.MessageSender,
+): string | undefined {
+  if (!sender?.url) return undefined;
+
+  try {
+    const url = new URL(sender.url);
+    return url.protocol === 'http:' || url.protocol === 'https:'
+      ? `${RESTORE_STORAGE_PREFIX}${url.origin}`
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function parseRestoreState(value: unknown): RestoreState | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value))
+    return undefined;
+
+  const state = value as Record<string, unknown>;
+  return hasOnlyFields(state, ['leagueUid', 'fixtureUid', 'updatedAt']) &&
+    isNonEmptyString(state.leagueUid) &&
+    isNonEmptyString(state.fixtureUid) &&
+    typeof state.updatedAt === 'number' &&
+    Number.isFinite(state.updatedAt) &&
+    state.updatedAt >= 0
+    ? {
+        leagueUid: state.leagueUid,
+        fixtureUid: state.fixtureUid,
+        updatedAt: state.updatedAt,
+      }
+    : undefined;
 }
 
 async function requestFixtureData<T>(
@@ -296,4 +384,8 @@ function isDateInputValue(value: unknown): value is string {
 
 function invalidRequest(): FootballayApiResponse<never> {
   return { ok: false, error: 'Invalid Footballay API request' };
+}
+
+function invalidRestoreRequest(): FootballayApiResponse<never> {
+  return { ok: false, error: 'Invalid restore state request' };
 }

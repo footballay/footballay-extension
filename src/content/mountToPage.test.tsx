@@ -47,4 +47,16 @@ describe('mountToPage', () => {
     act(context.invalidate);
     expect(document.getElementById('footballay-content-root')).toBeNull();
   });
+
+  it('does not mount a second root in the same document', () => {
+    const first = createContext();
+    const second = createContext();
+
+    mountToPage(first.ctx);
+    mountToPage(second.ctx);
+
+    expect(document.querySelectorAll('#footballay-content-root')).toHaveLength(
+      1,
+    );
+  });
 });

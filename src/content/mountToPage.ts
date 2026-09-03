@@ -5,12 +5,12 @@ import { ContentApp } from '@/content/ContentApp';
 
 /** Mounts the React Content App into the current page and removes it on invalidation. */
 export function mountToPage(ctx: ContentScriptContext): void {
+  if (document.getElementById('footballay-content-root')) return;
+
   let root: ReturnType<typeof createRoot> | undefined;
   let rootElement: HTMLDivElement | undefined;
 
   function mount() {
-    if (root) return;
-
     rootElement = document.createElement('div');
     rootElement.id = 'footballay-content-root';
     document.documentElement.append(rootElement);

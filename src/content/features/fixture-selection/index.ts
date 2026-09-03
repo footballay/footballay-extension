@@ -1,6 +1,7 @@
 import { useStore } from 'zustand';
 import { resolveTimezone } from '@/shared/settings/resolution';
 import { useSettings } from '@/content/features/settings';
+import { restoreManager } from '@/content/features/restore/restoreManager';
 import {
   fixtureSelectionManager,
   type FixtureSelectionSettingsChange,
@@ -24,6 +25,18 @@ export const fixtureSelection = Object.freeze({
     fixtureSelectionManager.reloadForSettings(change),
 });
 
+function selectFixtureAndSave(fixtureUid: string): void {
+  const { fixtures, selectedLeagueUid } = fixtureSelectionStore.getState();
+  fixtureSelection.selectFixture(fixtureUid);
+
+  if (
+    selectedLeagueUid &&
+    fixtures.some((fixture) => fixture.uid === fixtureUid)
+  ) {
+    void restoreManager.save(selectedLeagueUid, fixtureUid);
+  }
+}
+
 export function useFixtureSelection() {
   const state = useStore(fixtureSelectionStore);
   const { settings } = useSettings();
@@ -37,6 +50,6 @@ export function useFixtureSelection() {
     navigateDate: fixtureSelection.navigateDate,
     selectDate: fixtureSelection.selectDate,
     loadFixtureDates: fixtureSelection.loadFixtureDates,
-    selectFixture: fixtureSelection.selectFixture,
+    selectFixture: selectFixtureAndSave,
   };
 }

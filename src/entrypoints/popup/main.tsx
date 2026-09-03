@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import '@/styles/fonts.css';
-import './style.css';
-import { Popup } from './Popup';
+import '@/popup/style.css';
+import { Popup } from '@/popup/Popup';
 
 createRoot(document.getElementById('root')!).render(<Popup />);

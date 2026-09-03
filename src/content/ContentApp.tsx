@@ -3,6 +3,7 @@ import { MatchDataOverlays } from '@/content/components/match-panel/MatchDataOve
 import { MatchSelect } from '@/content/components/match-select/MatchSelect';
 import { fixtureSelection } from '@/content/features/fixture-selection';
 import { matchData } from '@/content/features/match-data';
+import { restoreManager } from '@/content/features/restore/restoreManager';
 import { settings, useSettings } from '@/content/features/settings';
 import { ContentI18nProvider } from '@/shared/i18n/content';
 import '@/styles/colors.css';
@@ -15,8 +16,17 @@ export function ContentApp() {
   useEffect(() => {
     let mounted = true;
 
-    void settings.initialize().then(() => {
-      if (mounted) void fixtureSelection.initialize();
+    void settings.initialize().then(async () => {
+      if (!mounted) return;
+
+      await fixtureSelection.initialize();
+      if (!mounted) return;
+
+      const saved = await restoreManager.load();
+      if (!mounted || !saved) return;
+
+      await fixtureSelection.selectLeague(saved.leagueUid);
+      if (mounted) fixtureSelection.selectFixture(saved.fixtureUid);
     });
 
     return () => {

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('./footballayApi', () => ({
   getAvailableLeagues: vi.fn(),
@@ -12,6 +12,8 @@ vi.mock('./footballayApi', () => ({
 
 import { handleRuntimeMessage } from './runtimeMessageHandler';
 import * as footballayApi from './footballayApi';
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe('runtime message handler', () => {
   it('accepts the declared available-leagues operation', async () => {
@@ -175,5 +177,58 @@ describe('runtime message handler', () => {
       ok: false,
       error: 'Invalid Footballay API request',
     });
+  });
+
+  it('stores one restore state per sender origin', async () => {
+    const values = new Map<string, unknown>();
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: vi.fn(async (key: string) => ({ [key]: values.get(key) })),
+          set: vi.fn(async (items: Record<string, unknown>) => {
+            Object.entries(items).forEach(([key, value]) =>
+              values.set(key, value),
+            );
+          }),
+          remove: vi.fn(async (key: string) => values.delete(key)),
+        },
+      },
+    });
+    const originA = { url: 'https://www.coupangplay.com/watch/1' };
+    const originB = { url: 'https://www.youtube.com/watch?v=1' };
+    const stateA = {
+      leagueUid: 'league-a',
+      fixtureUid: 'fixture-a',
+      updatedAt: 1,
+    };
+    const stateB = {
+      leagueUid: 'league-b',
+      fixtureUid: 'fixture-b',
+      updatedAt: 2,
+    };
+
+    await handleRuntimeMessage(
+      { type: 'SAVE_RESTORE_STATE', payload: stateA },
+      originA,
+    );
+    await handleRuntimeMessage(
+      { type: 'SAVE_RESTORE_STATE', payload: stateB },
+      originB,
+    );
+
+    await expect(
+      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, originA),
+    ).resolves.toEqual({ ok: true, data: stateA });
+    await expect(
+      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, originB),
+    ).resolves.toEqual({ ok: true, data: stateB });
+
+    await handleRuntimeMessage({ type: 'CLEAR_RESTORE_STATE' }, originA);
+    await expect(
+      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, originA),
+    ).resolves.toEqual({ ok: true, data: undefined });
+    await expect(
+      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, originB),
+    ).resolves.toEqual({ ok: true, data: stateB });
   });
 });
