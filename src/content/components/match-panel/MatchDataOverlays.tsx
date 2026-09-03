@@ -18,8 +18,9 @@ export function MatchDataOverlays() {
   const locale = useContentLocale();
   const { settings } = useSettings();
   const { fixtureInfo } = useMatchPanel();
+  const fixtureUid = fixtureInfo?.uid;
   const [tab, setTab] = useState<DetailTab>('lineup');
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(!fixtureInfo);
   const [chromeHidden, setChromeHidden] = useState(false);
   const hideChromeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -53,6 +54,10 @@ export function MatchDataOverlays() {
   useEffect(() => () => clearChromeHideTimer(), []);
 
   useEffect(() => {
+    if (fixtureUid) setCollapsed(false);
+  }, [fixtureUid]);
+
+  useEffect(() => {
     if (!fixtureInfo || collapsed) {
       pointerInsidePanel.current = false;
       clearChromeHideTimer();
@@ -63,9 +68,8 @@ export function MatchDataOverlays() {
     pointerInsidePanel.current = panelRef.current?.matches(':hover') ?? false;
     setChromeHidden(false);
     if (!pointerInsidePanel.current) scheduleChromeHide();
-  }, [collapsed, fixtureInfo?.uid]);
+  }, [collapsed, fixtureUid]);
 
-  if (!fixtureInfo) return null;
   if (collapsed) {
     return (
       <aside

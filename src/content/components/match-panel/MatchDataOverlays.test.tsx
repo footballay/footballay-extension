@@ -80,6 +80,35 @@ beforeEach(() => {
 });
 
 describe('MatchDataOverlays', () => {
+  it('opens the match panel settings before a fixture is selected', () => {
+    matchDataStore.setState({ fixtureInfo: undefined });
+
+    render(<MatchDataOverlays />);
+
+    const panel = screen.getByLabelText('Match panel');
+    expect(panel.className).toContain('footballay-match-panel--collapsed');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open match panel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+
+    expect(screen.getByLabelText('Language')).toBeTruthy();
+  });
+
+  it('expands the compact panel when a fixture is selected', () => {
+    matchDataStore.setState({ fixtureInfo: undefined });
+    render(<MatchDataOverlays />);
+
+    expect(screen.getByLabelText('Match panel').className).toContain(
+      'footballay-match-panel--collapsed',
+    );
+
+    act(() => matchDataStore.setState({ fixtureInfo }));
+
+    expect(screen.getByLabelText('Match panel').className).not.toContain(
+      'footballay-match-panel--collapsed',
+    );
+  });
+
   it('shows the loading message in every tab while match data is loading', () => {
     render(<MatchDataOverlays />);
 
