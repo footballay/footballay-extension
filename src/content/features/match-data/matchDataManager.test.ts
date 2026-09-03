@@ -108,6 +108,11 @@ describe('MatchDataManager', () => {
       etag: 'e1',
       localeOverride: 'en',
     });
+    expect(requestFixtureStatistics).toHaveBeenLastCalledWith({
+      fixtureUid: 'fixture-1',
+      etag: 't1',
+      localeOverride: 'en',
+    });
     expect(matchDataStore.getState()).toMatchObject({
       status: { loadStatus: 'ready', etag: 's2' },
       lineup: { loadStatus: 'ready', etag: 'l2' },
@@ -170,7 +175,7 @@ describe('MatchDataManager', () => {
     await act(async () => undefined);
     expect(requestFixtureStatus).toHaveBeenCalledTimes(1);
 
-    await act(async () => vi.advanceTimersByTimeAsync(20_000));
+    await act(async () => vi.advanceTimersByTimeAsync(5_000));
     expect(requestFixtureStatus).toHaveBeenCalledTimes(2);
 
     Object.defineProperty(document, 'hidden', {
@@ -178,7 +183,7 @@ describe('MatchDataManager', () => {
       value: true,
     });
     document.dispatchEvent(new Event('visibilitychange'));
-    await act(async () => vi.advanceTimersByTimeAsync(20_000));
+    await act(async () => vi.advanceTimersByTimeAsync(5_000));
     expect(requestFixtureStatus).toHaveBeenCalledTimes(2);
 
     Object.defineProperty(document, 'hidden', {
@@ -192,9 +197,34 @@ describe('MatchDataManager', () => {
     requestFixtureStatus.mockResolvedValue(
       updated({ liveStatus: { shortStatus: 'FT' } }, 's2'),
     );
-    await act(async () => vi.advanceTimersByTimeAsync(20_000));
-    await act(async () => vi.advanceTimersByTimeAsync(20_000));
+    await act(async () => vi.advanceTimersByTimeAsync(5_000));
+    await act(async () => vi.advanceTimersByTimeAsync(5_000));
     expect(requestFixtureStatus).toHaveBeenCalledTimes(4);
+  });
+
+  it('waits a full interval after a slow refresh without catch-up requests', async () => {
+    let resolveStatus!: (value: unknown) => void;
+    requestFixtureStatus.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveStatus = resolve;
+      }),
+    );
+    requestFixtureStatus.mockResolvedValue(notModified());
+    requestFixtureLineup.mockResolvedValue(notModified());
+    requestFixtureEvents.mockResolvedValue(notModified());
+    requestFixtureStatistics.mockResolvedValue(notModified());
+
+    matchDataManager.activateFixture(fixture('fixture-1'));
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    expect(requestFixtureStatus).toHaveBeenCalledOnce();
+
+    resolveStatus(updated({ liveStatus: { shortStatus: '1H' } }, 's1'));
+    await act(async () => undefined);
+    await act(async () => vi.advanceTimersByTimeAsync(4_999));
+    expect(requestFixtureStatus).toHaveBeenCalledOnce();
+
+    await act(async () => vi.advanceTimersByTimeAsync(1));
+    expect(requestFixtureStatus).toHaveBeenCalledTimes(2);
   });
 
   it('stops polling while disabled and resumes with the current fixture data', async () => {

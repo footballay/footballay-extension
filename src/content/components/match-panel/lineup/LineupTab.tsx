@@ -7,13 +7,23 @@ import {
   type LineupPlayer,
   type LineupTeamView,
 } from '@/content/features/match-data';
+import type { FixtureTeamDto } from '@/shared/api/dto';
 import { t, useContentLocale, type ContentLocale } from '@/shared/i18n/content';
 import './lineup-tab.css';
 
 type TeamSide = 'home' | 'away';
 
-function displayTeamName(team?: LineupTeamView) {
-  return team?.teamShortName?.trim() || team?.teamName || '-';
+function displayTeamName(
+  fixtureTeam: FixtureTeamDto | null | undefined,
+  lineupTeam?: LineupTeamView,
+) {
+  return (
+    lineupTeam?.teamShortName?.trim() ||
+    lineupTeam?.teamName ||
+    fixtureTeam?.shortName?.trim() ||
+    fixtureTeam?.name ||
+    '-'
+  );
 }
 
 function PlayerMarkers({
@@ -74,11 +84,15 @@ function PlayerMarkers({
 
 export function LineupTab() {
   const locale = useContentLocale();
-  const { lineup } = useMatchPanel();
+  const { fixtureInfo, lineup } = useMatchPanel();
   const [teamSide, setTeamSide] = useState<TeamSide>('home');
   const teams = {
     home: lineup.data.home,
     away: lineup.data.away,
+  };
+  const teamNames = {
+    home: displayTeamName(fixtureInfo?.homeTeam, teams.home),
+    away: displayTeamName(fixtureInfo?.awayTeam, teams.away),
   };
   const selectedTeamSide: TeamSide = teams[teamSide]
     ? teamSide
@@ -123,7 +137,7 @@ export function LineupTab() {
                     }
               }
             >
-              {displayTeamName(teams[side])}
+              {teamNames[side]}
             </button>
           ))}
         </div>

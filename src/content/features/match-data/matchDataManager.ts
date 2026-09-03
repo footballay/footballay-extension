@@ -19,7 +19,7 @@ import {
   type MatchDataResource,
 } from './matchDataStore';
 
-const POLLING_INTERVAL_MS = 20_000;
+const POLLING_INTERVAL_MS = 5_000;
 
 type FixtureDataResponse<T> = FootballayApiResponse<EtaggedResponse<T>>;
 

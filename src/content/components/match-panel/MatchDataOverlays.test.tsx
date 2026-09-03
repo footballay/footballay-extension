@@ -121,6 +121,35 @@ describe('MatchDataOverlays', () => {
     expect(screen.getByText('Loading data')).toBeTruthy();
   });
 
+  it('shows fixture team names and fallback colors while lineup is loading', () => {
+    matchDataStore.setState({
+      fixtureInfo: {
+        ...fixtureInfo,
+        homeTeam: {
+          uid: 'home-team',
+          name: 'Fixture Home',
+          shortName: 'FHM',
+          logo: null,
+        },
+        awayTeam: {
+          uid: 'away-team',
+          name: 'Fixture Away',
+          shortName: null,
+          logo: null,
+        },
+      },
+    });
+
+    render(<MatchDataOverlays />);
+
+    expect(
+      screen.getByRole('tab', { name: 'FHM' }).getAttribute('style'),
+    ).toContain('border-left-color: var(--footballay-color-red)');
+    expect(
+      screen.getByRole('tab', { name: 'Fixture Away' }).getAttribute('style'),
+    ).toContain('border-right-color: var(--footballay-color-blue)');
+  });
+
   it('shows only the Statistics resource error in the Statistics tab', () => {
     matchDataStore.setState({
       status: { loadStatus: 'ready' },
@@ -535,9 +564,6 @@ describe('MatchDataOverlays', () => {
 
     expect(screen.getByRole('tab', { name: '홈' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: '원정' })).toBeTruthy();
-    expect(lineupTabSource).toContain(
-      "return team?.teamShortName?.trim() || team?.teamName || '-';",
-    );
   });
 
   it('moves only pass accuracy text down by one pixel', () => {
