@@ -6,6 +6,7 @@ import {
 
 export function useCurrentPageFootballay() {
   const [alreadyMounted, setAlreadyMounted] = useState<boolean>();
+  const [running, setRunning] = useState(false);
 
   useEffect(() => {
     let stale = false;
@@ -23,11 +24,16 @@ export function useCurrentPageFootballay() {
   }, []);
 
   const runOnCurrentPage = () => {
-    void runOnCurrentTab().then(
-      (mounted) => mounted && setAlreadyMounted(true),
-      () => undefined,
-    );
+    if (running) return;
+
+    setRunning(true);
+    void runOnCurrentTab()
+      .then(
+        (mounted) => mounted && setAlreadyMounted(true),
+        () => undefined,
+      )
+      .finally(() => setRunning(false));
   };
 
-  return { alreadyMounted, runOnCurrentPage };
+  return { alreadyMounted, running, runOnCurrentPage };
 }

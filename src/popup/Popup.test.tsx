@@ -129,13 +129,15 @@ describe('Popup', () => {
     expect(popupCss).toContain('transform: translateX(14px);');
   });
 
-  it('checks the DOM before injecting the content CSS and script', async () => {
+  it('prevents duplicate runs and checks the DOM before injecting', async () => {
     render(<Popup />);
 
     const runButton = await screen.findByRole('button', {
       name: 'Run on this page',
     });
     expect(screen.queryByRole('switch', { name: 'Footballay' })).toBeNull();
+    fireEvent.click(runButton);
+    expect(runButton.getAttribute('disabled')).not.toBeNull();
     fireEvent.click(runButton);
 
     await waitFor(() => expect(executeScript).toHaveBeenCalledTimes(3));
@@ -164,6 +166,21 @@ describe('Popup', () => {
     expect(insertCSS.mock.invocationCallOrder[0]).toBeLessThan(
       executeScript.mock.invocationCallOrder[2]!,
     );
+  });
+
+  it('re-enables the run button when injection fails', async () => {
+    executeScript
+      .mockResolvedValueOnce([{ result: false }])
+      .mockRejectedValueOnce(new Error('failed'));
+    render(<Popup />);
+
+    const runButton = await screen.findByRole('button', {
+      name: 'Run on this page',
+    });
+    fireEvent.click(runButton);
+
+    expect(runButton.getAttribute('disabled')).not.toBeNull();
+    await waitFor(() => expect(runButton.getAttribute('disabled')).toBeNull());
   });
 
   it('does not inject CSS or content JS when Footballay is mounted', async () => {

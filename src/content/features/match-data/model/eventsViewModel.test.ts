@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import type { MatchEventDto } from '@/shared/api/dto';
+import type { FixtureDto, MatchEventDto } from '@/shared/api/dto';
 import { buildEventsViewModel } from './eventsViewModel';
+
+const fixtureInfo: FixtureDto = {
+  uid: 'fixture',
+  kickoff: null,
+  round: 'Regular Season',
+  homeTeam: { uid: 'home', name: 'Home', shortName: null, logo: null },
+  awayTeam: { uid: 'away', name: 'Away', shortName: null, logo: null },
+  status: { longStatus: 'Not Started', shortStatus: 'NS', elapsed: null },
+  score: { home: null, away: null },
+  available: true,
+};
 
 function event(
   sequence: number,
@@ -42,6 +53,7 @@ describe('buildEventsViewModel', () => {
         ],
       },
       undefined,
+      fixtureInfo,
     );
 
     expect(view.events.map(({ kind }) => kind)).toEqual([
@@ -60,5 +72,22 @@ describe('buildEventsViewModel', () => {
     expect(view.home).toMatchObject({ teamUid: 'home', name: 'Home' });
     expect(view.away).toMatchObject({ teamUid: 'away', name: 'Away' });
     expect(view.max).toBe(120);
+  });
+
+  it('uses fixture teams when the first event belongs to the away team', () => {
+    const view = buildEventsViewModel(
+      {
+        fixtureUid: 'fixture',
+        events: [
+          event(1, 10, null, 'away', 'Goal', 'Normal Goal'),
+          event(2, 20, null, 'home', 'Card', 'Yellow Card'),
+        ],
+      },
+      undefined,
+      fixtureInfo,
+    );
+
+    expect(view.home).toMatchObject({ teamUid: 'home', name: 'Home' });
+    expect(view.away).toMatchObject({ teamUid: 'away', name: 'Away' });
   });
 });

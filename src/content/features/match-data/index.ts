@@ -54,7 +54,11 @@ export function useMatchPanel() {
       error: state.lineup.error,
     },
     events: {
-      data: buildEventsViewModel(state.events.data, state.statistics.data),
+      data: buildEventsViewModel(
+        state.events.data,
+        state.statistics.data,
+        state.fixtureInfo,
+      ),
       loadStatus: state.events.loadStatus,
       error: state.events.error,
     },

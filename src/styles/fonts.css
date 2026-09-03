@@ -1,5 +1,5 @@
 @font-face {
-  font-family: 'Inter';
+  font-family: 'Footballay Inter';
   src: url('../../assets/font/InterVariable.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
@@ -7,7 +7,7 @@
 }
 
 @font-face {
-  font-family: 'Pretendard';
+  font-family: 'Footballay Pretendard';
   src: url('../../assets/font/PretendardVariable.woff2') format('woff2');
   font-weight: 45 920;
   font-style: normal;
@@ -15,5 +15,6 @@
 }
 
 :root {
-  --footballay-font-family: 'Pretendard', 'Inter', sans-serif;
+  --footballay-font-family:
+    'Footballay Pretendard', 'Footballay Inter', sans-serif;
 }

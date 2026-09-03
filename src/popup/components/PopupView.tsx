@@ -5,11 +5,13 @@ import { PopupFooter } from './PopupFooter';
 export function PopupView({
   enabled,
   alreadyMounted,
+  running,
   onEnabledChange,
   onRun,
 }: {
   enabled: boolean | undefined;
   alreadyMounted: boolean | undefined;
+  running: boolean;
   onEnabledChange: (enabled: boolean) => void;
   onRun: () => void;
 }) {
@@ -26,6 +28,7 @@ export function PopupView({
       <PageAction
         enabled={enabled}
         alreadyMounted={alreadyMounted}
+        running={running}
         onEnabledChange={onEnabledChange}
         onRun={onRun}
       />

@@ -1,5 +1,6 @@
 import type {
   FixtureEventsDto,
+  FixtureDto,
   FixtureStatisticsDto,
   MatchEventDto,
   MatchPlayerColorDto,
@@ -67,6 +68,7 @@ function teamView(
 export function buildEventsViewModel(
   events: FixtureEventsDto | undefined,
   statistics: FixtureStatisticsDto | undefined,
+  fixtureInfo: FixtureDto | undefined,
 ): EventsViewModel {
   const displayEvents = (events?.events ?? []).flatMap((event) => {
     if (event.elapsed < 0) return [];
@@ -84,11 +86,14 @@ export function buildEventsViewModel(
       },
     ];
   });
-  const homeSource = statistics?.home?.team ?? displayEvents[0]?.team;
-  const awaySource =
-    statistics?.away?.team ??
-    displayEvents.find((event) => event.team.teamUid !== homeSource?.teamUid)
-      ?.team;
+  const homeEventTeam = displayEvents.find(
+    (event) => event.team.teamUid === fixtureInfo?.homeTeam?.uid,
+  )?.team;
+  const awayEventTeam = displayEvents.find(
+    (event) => event.team.teamUid === fixtureInfo?.awayTeam?.uid,
+  )?.team;
+  const homeSource = statistics?.home?.team ?? homeEventTeam;
+  const awaySource = statistics?.away?.team ?? awayEventTeam;
   const colors = resolveTeamColors(homeSource, awaySource);
 
   return {

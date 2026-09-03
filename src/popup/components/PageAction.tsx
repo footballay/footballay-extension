@@ -3,11 +3,13 @@ import { t, useContentLocale } from '@/shared/i18n/content';
 export function PageAction({
   enabled,
   alreadyMounted,
+  running,
   onEnabledChange,
   onRun,
 }: {
   enabled: boolean | undefined;
   alreadyMounted: boolean | undefined;
+  running: boolean;
   onEnabledChange: (enabled: boolean) => void;
   onRun: () => void;
 }) {
@@ -19,6 +21,7 @@ export function PageAction({
       <button
         className="footballay-popup__run-button"
         type="button"
+        disabled={running}
         onClick={onRun}
       >
         {t(locale, 'runOnThisPage')}
