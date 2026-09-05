@@ -1,7 +1,0 @@
-.footballay-overlay-divider {
-  width: 100%;
-  height: 1px;
-  flex: 0 0 auto;
-  margin: 10px 0;
-  background: var(--footballay-overlay-border-muted);
-}
