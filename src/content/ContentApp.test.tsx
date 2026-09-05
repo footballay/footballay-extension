@@ -90,13 +90,19 @@ function selectFixtureForView(fixtureUid: string) {
   });
 }
 
+async function openMatchSelector(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(
+    screen.getByRole('button', { name: 'Open match selector' }),
+  );
+}
+
 vi.mock('@/shared/settings/settings', () => ({
   DEFAULT_SETTINGS: {
     enabled: true,
     locale: 'default',
     timezone: 'default',
-    panelOpacity: 90,
-    lineupPlayerCardOpacity: 100,
+    panelOpacity: 30,
+    lineupPlayerCardOpacity: 30,
   },
   loadExtensionSettings: vi.fn(),
   saveExtensionSettings: vi.fn(),
@@ -116,8 +122,8 @@ beforeEach(() => {
       enabled: true,
       locale: 'default',
       timezone: 'default',
-      panelOpacity: 90,
-      lineupPlayerCardOpacity: 100,
+      panelOpacity: 30,
+      lineupPlayerCardOpacity: 30,
     },
     hydrated: true,
   });
@@ -169,6 +175,8 @@ describe('ContentApp', () => {
     const user = userEvent.setup();
     render(<ContentApp />);
 
+    await openMatchSelector(user);
+
     expect(
       screen
         .getByRole('button', { name: '프리미어리그' })
@@ -187,17 +195,14 @@ describe('ContentApp', () => {
     const user = userEvent.setup();
     render(<ContentApp />);
 
-    await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(
       screen.getByRole('button', { name: 'Open match selector' }),
     ).toBeTruthy();
-    await user.click(
-      screen.getByRole('button', { name: 'Open match selector' }),
-    );
+    await openMatchSelector(user);
     expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
   });
 
-  it('does not auto-collapse the match selector before a fixture is selected', () => {
+  it('keeps the match selector collapsed before a fixture is selected', () => {
     vi.useFakeTimers();
     try {
       const { container } = render(<ContentApp />);
@@ -207,7 +212,7 @@ describe('ContentApp', () => {
 
       act(() => vi.advanceTimersByTime(1_500));
 
-      expect(matchSelect?.className).not.toContain(
+      expect(matchSelect?.className).toContain(
         'footballay-content-panel--collapsed',
       );
     } finally {
@@ -221,6 +226,10 @@ describe('ContentApp', () => {
       const { container } = render(<ContentApp />);
       const matchSelect = container.querySelector(
         '[data-footballay-content-app]',
+      );
+
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Open match selector' }),
       );
 
       act(() =>
@@ -247,6 +256,10 @@ describe('ContentApp', () => {
       const matchSelect = container.querySelector(
         '[data-footballay-content-app]',
       ) as HTMLElement;
+
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Open match selector' }),
+      );
 
       act(() =>
         fixtureSelectionStore.setState({ selectedFixtureUid: 'fixture-1' }),
@@ -327,6 +340,9 @@ describe('ContentApp', () => {
     const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
     try {
       const { unmount } = render(<ContentApp />);
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Open match selector' }),
+      );
       act(() =>
         fixtureSelectionStore.setState({ selectedFixtureUid: 'fixture-1' }),
       );
@@ -447,6 +463,8 @@ describe('ContentApp', () => {
     const user = userEvent.setup();
     render(<ContentApp />);
 
+    await openMatchSelector(user);
+
     await user.click(
       screen.getByRole('button', { name: 'Fixture date picker' }),
     );
@@ -460,6 +478,8 @@ describe('ContentApp', () => {
     const user = userEvent.setup();
     render(<ContentApp />);
 
+    await openMatchSelector(user);
+
     await user.click(
       screen.getByRole('button', { name: 'Fixture date picker' }),
     );
@@ -472,6 +492,8 @@ describe('ContentApp', () => {
   it('reloads the open calendar range when the timezone changes', async () => {
     const user = userEvent.setup();
     render(<ContentApp />);
+
+    await openMatchSelector(user);
 
     await user.click(
       screen.getByRole('button', { name: 'Fixture date picker' }),
@@ -496,6 +518,8 @@ describe('ContentApp', () => {
     const user = userEvent.setup();
     render(<ContentApp />);
 
+    await openMatchSelector(user);
+
     await user.click(
       screen.getByRole('button', { name: 'Fixture date picker' }),
     );
@@ -515,6 +539,8 @@ describe('ContentApp', () => {
     const user = userEvent.setup();
     fixtureSelectionStore.setState({ selectedLeagueUid: undefined });
     render(<ContentApp />);
+
+    await openMatchSelector(user);
 
     await user.click(screen.getByRole('button', { name: 'Match' }));
 

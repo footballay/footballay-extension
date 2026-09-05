@@ -13,7 +13,7 @@ const MATCH_SELECT_AUTO_COLLAPSE_DELAY_MS = 1_500;
 export function MatchSelect() {
   const locale = useContentLocale();
   const [view, setView] = useState<MatchSelectView>('League');
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );

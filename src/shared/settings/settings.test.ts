@@ -51,10 +51,10 @@ beforeEach(() => {
 
 describe('settings storage', () => {
   it('uses the default panel opacity constant', () => {
-    expect(DEFAULT_PANEL_OPACITY).toBe(90);
+    expect(DEFAULT_PANEL_OPACITY).toBe(30);
     expect(DEFAULT_SETTINGS.enabled).toBe(true);
     expect(DEFAULT_SETTINGS.panelOpacity).toBe(DEFAULT_PANEL_OPACITY);
-    expect(DEFAULT_LINEUP_PLAYER_CARD_OPACITY).toBe(100);
+    expect(DEFAULT_LINEUP_PLAYER_CARD_OPACITY).toBe(30);
     expect(DEFAULT_SETTINGS.lineupPlayerCardOpacity).toBe(
       DEFAULT_LINEUP_PLAYER_CARD_OPACITY,
     );

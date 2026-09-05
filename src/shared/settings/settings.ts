@@ -11,8 +11,8 @@ export type ExtensionSettings = {
   lineupPlayerCardOpacity: number;
 };
 
-export const DEFAULT_PANEL_OPACITY = 90;
-export const DEFAULT_LINEUP_PLAYER_CARD_OPACITY = 100;
+export const DEFAULT_PANEL_OPACITY = 30;
+export const DEFAULT_LINEUP_PLAYER_CARD_OPACITY = 30;
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
   enabled: true,
