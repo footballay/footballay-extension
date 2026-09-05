@@ -4,16 +4,12 @@ import { PopupFooter } from './PopupFooter';
 
 export function PopupView({
   enabled,
-  alreadyMounted,
-  running,
+  supported,
   onEnabledChange,
-  onRun,
 }: {
   enabled: boolean | undefined;
-  alreadyMounted: boolean | undefined;
-  running: boolean;
+  supported: boolean | undefined;
   onEnabledChange: (enabled: boolean) => void;
-  onRun: () => void;
 }) {
   const locale = useContentLocale();
 
@@ -27,10 +23,8 @@ export function PopupView({
       <h1>Footballay</h1>
       <PageAction
         enabled={enabled}
-        alreadyMounted={alreadyMounted}
-        running={running}
+        supported={supported}
         onEnabledChange={onEnabledChange}
-        onRun={onRun}
       />
       <p className="footballay-popup__description">
         {t(locale, 'popupDescription')}

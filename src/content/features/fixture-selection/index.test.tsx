@@ -38,6 +38,7 @@ beforeEach(() => {
   fixtureSelectionStore.setState({
     ...createFixtureSelectionState(),
     selectedLeagueUid: 'league-1',
+    selectedDate: '2026-09-02',
     fixtures: [fixture],
   });
   selectFixture.mockClear();
@@ -47,12 +48,16 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('useFixtureSelection', () => {
-  it('saves the origin restore state when the user selects a fixture', () => {
+  it('saves the Coupang Play restore state when the user selects a fixture', () => {
     const { result } = renderHook(() => useFixtureSelection());
 
     act(() => result.current.selectFixture('fixture-1'));
 
     expect(selectFixture).toHaveBeenCalledWith('fixture-1');
-    expect(saveRestoreState).toHaveBeenCalledWith('league-1', 'fixture-1');
+    expect(saveRestoreState).toHaveBeenCalledWith(
+      'league-1',
+      '2026-09-02',
+      'fixture-1',
+    );
   });
 });

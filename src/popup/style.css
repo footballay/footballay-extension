@@ -72,18 +72,10 @@ body {
   transition: none;
 }
 
-.footballay-popup__run-button {
-  display: block;
-  margin: 12px auto 0;
-  border: 0;
-  border-radius: 4px;
-  padding: 7px 12px;
-  color: #0a101f;
-  background: #3cbeff;
-  cursor: pointer;
-  font: inherit;
+.footballay-popup__unsupported {
+  margin-top: 10px !important;
+  color: #848484;
   font-size: 12px;
-  font-weight: 600;
 }
 
 .footballay-popup__description {

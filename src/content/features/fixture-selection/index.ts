@@ -26,14 +26,16 @@ export const fixtureSelection = Object.freeze({
 });
 
 function selectFixtureAndSave(fixtureUid: string): void {
-  const { fixtures, selectedLeagueUid } = fixtureSelectionStore.getState();
+  const { fixtures, selectedLeagueUid, selectedDate } =
+    fixtureSelectionStore.getState();
   fixtureSelection.selectFixture(fixtureUid);
 
   if (
     selectedLeagueUid &&
+    selectedDate &&
     fixtures.some((fixture) => fixture.uid === fixtureUid)
   ) {
-    void restoreManager.save(selectedLeagueUid, fixtureUid);
+    void restoreManager.save(selectedLeagueUid, selectedDate, fixtureUid);
   }
 }
 

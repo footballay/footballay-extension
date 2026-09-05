@@ -5,17 +5,14 @@ import { usePopupSettings } from './hooks/usePopupSettings';
 
 export function Popup() {
   const { popupSettings, updateEnabled } = usePopupSettings();
-  const { alreadyMounted, running, runOnCurrentPage } =
-    useCurrentPageFootballay();
+  const { supported } = useCurrentPageFootballay();
 
   return (
     <ContentI18nProvider setting={popupSettings?.locale ?? 'default'}>
       <PopupView
         enabled={popupSettings?.enabled}
-        alreadyMounted={alreadyMounted}
-        running={running}
+        supported={supported}
         onEnabledChange={updateEnabled}
-        onRun={runOnCurrentPage}
       />
     </ContentI18nProvider>
   );

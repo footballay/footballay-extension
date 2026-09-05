@@ -18,15 +18,8 @@ const loadExtensionSettings = vi.hoisted(() => vi.fn());
 const saveExtensionSettings = vi.hoisted(() => vi.fn(async () => undefined));
 const writeText = vi.hoisted(() => vi.fn(async () => undefined));
 const queryTabs = vi.hoisted(() => vi.fn());
-const insertCSS = vi.hoisted(() => vi.fn(async () => undefined));
-const executeScript = vi.hoisted(() =>
-  vi.fn<
-    (injection: {
-      target: { tabId: number };
-      func?: () => boolean;
-      files?: string[];
-    }) => Promise<Array<{ result?: boolean }>>
-  >(async () => []),
+const getContexts = vi.hoisted(() =>
+  vi.fn<() => Promise<chrome.runtime.ExtensionContext[]>>(),
 );
 
 vi.mock('@/shared/settings/settings', async (importOriginal) => ({
@@ -41,16 +34,12 @@ beforeEach(() => {
   writeText.mockClear();
   queryTabs.mockReset();
   queryTabs.mockResolvedValue([{ id: 7 }]);
-  insertCSS.mockClear();
-  executeScript.mockReset();
-  executeScript.mockImplementation(async ({ func }) =>
-    func ? [{ result: false }] : [],
-  );
+  getContexts.mockReset();
+  getContexts.mockResolvedValue([]);
   vi.stubGlobal('chrome', {
     i18n: { getAcceptLanguages: vi.fn(async () => ['en-US']) },
-    runtime: { getManifest: () => ({ version: '1.2.3' }) },
+    runtime: { getManifest: () => ({ version: '1.2.3' }), getContexts },
     tabs: { query: queryTabs },
-    scripting: { insertCSS, executeScript },
   });
   Object.defineProperty(navigator, 'clipboard', {
     configurable: true,
@@ -113,7 +102,9 @@ describe('Popup', () => {
   });
 
   it('toggles the content UI setting with a compact switch', async () => {
-    executeScript.mockResolvedValueOnce([{ result: true }]);
+    getContexts.mockResolvedValue([
+      { frameId: 0 } as chrome.runtime.ExtensionContext,
+    ]);
     render(<Popup />);
 
     const toggle = await screen.findByRole('switch', { name: 'Footballay' });
@@ -129,101 +120,23 @@ describe('Popup', () => {
     expect(popupCss).toContain('transform: translateX(14px);');
   });
 
-  it('prevents duplicate runs and checks the DOM before injecting', async () => {
+  it('shows support information outside Coupang Play', async () => {
     render(<Popup />);
-
-    const runButton = await screen.findByRole('button', {
-      name: 'Run on this page',
-    });
-    expect(screen.queryByRole('switch', { name: 'Footballay' })).toBeNull();
-    fireEvent.click(runButton);
-    expect(runButton.getAttribute('disabled')).not.toBeNull();
-    fireEvent.click(runButton);
-
-    await waitFor(() => expect(executeScript).toHaveBeenCalledTimes(3));
-    expect(queryTabs).toHaveBeenCalledWith({
-      active: true,
-      currentWindow: true,
-    });
-    expect(executeScript).toHaveBeenNthCalledWith(2, {
-      target: { tabId: 7 },
-      func: expect.any(Function),
-    });
-    expect(executeScript.mock.calls[1]![0].func?.name).toBe(
-      'isFootballayAlreadyMounted',
-    );
-    expect(insertCSS).toHaveBeenCalledWith({
-      target: { tabId: 7 },
-      files: ['content-scripts/content.css'],
-    });
-    expect(executeScript).toHaveBeenNthCalledWith(3, {
-      target: { tabId: 7 },
-      files: ['content-scripts/content.js'],
-    });
-    expect(executeScript.mock.invocationCallOrder[1]!).toBeLessThan(
-      insertCSS.mock.invocationCallOrder[0]!,
-    );
-    expect(insertCSS.mock.invocationCallOrder[0]).toBeLessThan(
-      executeScript.mock.invocationCallOrder[2]!,
-    );
-  });
-
-  it('re-enables the run button when injection fails', async () => {
-    executeScript
-      .mockResolvedValueOnce([{ result: false }])
-      .mockRejectedValueOnce(new Error('failed'));
-    render(<Popup />);
-
-    const runButton = await screen.findByRole('button', {
-      name: 'Run on this page',
-    });
-    fireEvent.click(runButton);
-
-    expect(runButton.getAttribute('disabled')).not.toBeNull();
-    await waitFor(() => expect(runButton.getAttribute('disabled')).toBeNull());
-  });
-
-  it('does not inject CSS or content JS when Footballay is mounted', async () => {
-    executeScript
-      .mockResolvedValueOnce([{ result: false }])
-      .mockResolvedValueOnce([{ result: true }]);
-    render(<Popup />);
-
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'Run on this page' }),
-    );
-
-    await waitFor(() => expect(executeScript).toHaveBeenCalledTimes(2));
-    expect(executeScript).toHaveBeenNthCalledWith(2, {
-      target: { tabId: 7 },
-      func: expect.any(Function),
-    });
-    expect(insertCSS).not.toHaveBeenCalled();
     expect(
-      executeScript.mock.calls.some(
-        ([injection]) => injection.files?.[0] === 'content-scripts/content.js',
-      ),
-    ).toBe(false);
-  });
-
-  it('hides the run button when Footballay is already mounted', async () => {
-    executeScript.mockResolvedValueOnce([{ result: true }]);
-
-    render(<Popup />);
-
-    await waitFor(() => expect(executeScript).toHaveBeenCalledOnce());
-    expect(
-      screen.queryByRole('button', { name: 'Run on this page' }),
-    ).toBeNull();
-    expect(
-      await screen.findByRole('switch', { name: 'Footballay' }),
+      await screen.findByText('Footballay is available on Coupang Play.'),
     ).toBeTruthy();
-    expect(insertCSS).not.toHaveBeenCalled();
+    expect(screen.queryByRole('switch')).toBeNull();
+    expect(getContexts).toHaveBeenCalledWith({
+      tabIds: [7],
+      documentOrigins: ['https://www.coupangplay.com'],
+    });
   });
 
   it('waits for the saved enabled state before rendering the switch', async () => {
     loadExtensionSettings.mockResolvedValue({ locale: 'en', enabled: false });
-    executeScript.mockResolvedValueOnce([{ result: true }]);
+    getContexts.mockResolvedValue([
+      { frameId: 0 } as chrome.runtime.ExtensionContext,
+    ]);
     render(<Popup />);
 
     const toggle = await screen.findByRole('switch', { name: 'Footballay' });

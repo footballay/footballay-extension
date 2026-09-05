@@ -2,32 +2,22 @@ import { t, useContentLocale } from '@/shared/i18n/content';
 
 export function PageAction({
   enabled,
-  alreadyMounted,
-  running,
+  supported,
   onEnabledChange,
-  onRun,
 }: {
   enabled: boolean | undefined;
-  alreadyMounted: boolean | undefined;
-  running: boolean;
+  supported: boolean | undefined;
   onEnabledChange: (enabled: boolean) => void;
-  onRun: () => void;
 }) {
   const locale = useContentLocale();
 
-  if (alreadyMounted === undefined) return null;
-  if (!alreadyMounted) {
+  if (supported === undefined) return null;
+  if (!supported)
     return (
-      <button
-        className="footballay-popup__run-button"
-        type="button"
-        disabled={running}
-        onClick={onRun}
-      >
-        {t(locale, 'runOnThisPage')}
-      </button>
+      <p className="footballay-popup__unsupported">
+        {t(locale, 'popupUnsupportedSite')}
+      </p>
     );
-  }
 
   const toggleReady = enabled !== undefined;
   return (

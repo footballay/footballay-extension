@@ -21,6 +21,7 @@ const lifecycle = vi.hoisted(() => {
       lifecycle.calls.push('fixtureSelection.initialize');
     }),
     selectLeague: vi.fn(async () => undefined),
+    selectDate: vi.fn(async () => undefined),
     selectFixture: vi.fn(),
     loadRestoreState: vi.fn<() => Promise<RestoreState | undefined>>(
       async () => undefined,
@@ -47,6 +48,7 @@ vi.mock('@/content/features/fixture-selection', () => ({
   fixtureSelection: {
     initialize: lifecycle.initializeFixtureSelection,
     selectLeague: lifecycle.selectLeague,
+    selectDate: lifecycle.selectDate,
     selectFixture: lifecycle.selectFixture,
     dispose: lifecycle.disposeFixtureSelection,
   },
@@ -74,6 +76,7 @@ beforeEach(() => {
   lifecycle.disposeSettings.mockClear();
   lifecycle.initializeFixtureSelection.mockClear();
   lifecycle.selectLeague.mockClear();
+  lifecycle.selectDate.mockClear();
   lifecycle.selectFixture.mockClear();
   lifecycle.loadRestoreState.mockReset();
   lifecycle.loadRestoreState.mockResolvedValue(undefined);
@@ -118,6 +121,7 @@ describe('ContentApp lifecycle', () => {
   it('restores the saved league and fixture once after initialization', async () => {
     lifecycle.loadRestoreState.mockResolvedValue({
       leagueUid: 'league-1',
+      selectedDate: '2026-09-02',
       fixtureUid: 'fixture-1',
       updatedAt: Date.now(),
     });
@@ -127,8 +131,12 @@ describe('ContentApp lifecycle', () => {
     await waitFor(() => expect(lifecycle.selectFixture).toHaveBeenCalledOnce());
 
     expect(lifecycle.selectLeague).toHaveBeenCalledWith('league-1');
+    expect(lifecycle.selectDate).toHaveBeenCalledWith('2026-09-02');
     expect(lifecycle.selectFixture).toHaveBeenCalledWith('fixture-1');
     expect(lifecycle.selectLeague.mock.invocationCallOrder[0]!).toBeLessThan(
+      lifecycle.selectDate.mock.invocationCallOrder[0]!,
+    );
+    expect(lifecycle.selectDate.mock.invocationCallOrder[0]!).toBeLessThan(
       lifecycle.selectFixture.mock.invocationCallOrder[0]!,
     );
   });

@@ -26,6 +26,9 @@ export function ContentApp() {
       if (!mounted || !saved) return;
 
       await fixtureSelection.selectLeague(saved.leagueUid);
+      if (!mounted) return;
+
+      await fixtureSelection.selectDate(saved.selectedDate);
       if (mounted) fixtureSelection.selectFixture(saved.fixtureUid);
     });
 

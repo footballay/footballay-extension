@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  CLEAR_RESTORE_STATE,
   LOAD_RESTORE_STATE,
   SAVE_RESTORE_STATE,
 } from '@/shared/restore/protocol';
@@ -21,11 +20,12 @@ afterEach(() => {
 });
 
 describe('RestoreManager', () => {
-  it('loads a restore state within six hours', async () => {
+  it('returns the restore state supplied by Background', async () => {
     const state = {
       leagueUid: 'league-1',
+      selectedDate: '2026-09-02',
       fixtureUid: 'fixture-1',
-      updatedAt: Date.now() - 6 * 60 * 60 * 1_000,
+      updatedAt: Date.now(),
     };
     sendMessage.mockResolvedValueOnce({ ok: true, data: state });
 
@@ -33,33 +33,16 @@ describe('RestoreManager', () => {
     expect(sendMessage).toHaveBeenCalledWith({ type: LOAD_RESTORE_STATE });
   });
 
-  it('clears and ignores an expired restore state', async () => {
-    sendMessage
-      .mockResolvedValueOnce({
-        ok: true,
-        data: {
-          leagueUid: 'league-1',
-          fixtureUid: 'fixture-1',
-          updatedAt: Date.now() - 6 * 60 * 60 * 1_000 - 1,
-        },
-      })
-      .mockResolvedValueOnce({ ok: true, data: undefined });
-
-    await expect(restoreManager.load()).resolves.toBeUndefined();
-    expect(sendMessage).toHaveBeenNthCalledWith(2, {
-      type: CLEAR_RESTORE_STATE,
-    });
-  });
-
-  it('saves only league, fixture, and the current timestamp', async () => {
+  it('saves league, date, fixture, and the current timestamp', async () => {
     sendMessage.mockResolvedValueOnce({ ok: true, data: undefined });
 
-    await restoreManager.save('league-1', 'fixture-1');
+    await restoreManager.save('league-1', '2026-09-02', 'fixture-1');
 
     expect(sendMessage).toHaveBeenCalledWith({
       type: SAVE_RESTORE_STATE,
       payload: {
         leagueUid: 'league-1',
+        selectedDate: '2026-09-02',
         fixtureUid: 'fixture-1',
         updatedAt: Date.now(),
       },

@@ -1,5 +1,4 @@
 import {
-  CLEAR_RESTORE_STATE,
   LOAD_RESTORE_STATE,
   SAVE_RESTORE_STATE,
   type RestoreResponse,
@@ -20,11 +19,5 @@ export function saveRestoreState(
   return chrome.runtime.sendMessage({
     type: SAVE_RESTORE_STATE,
     payload: state,
-  }) as Promise<RestoreResponse>;
-}
-
-export function clearRestoreState(): Promise<RestoreResponse> {
-  return chrome.runtime.sendMessage({
-    type: CLEAR_RESTORE_STATE,
   }) as Promise<RestoreResponse>;
 }

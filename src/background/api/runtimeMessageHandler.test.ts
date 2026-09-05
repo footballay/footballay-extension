@@ -13,7 +13,17 @@ vi.mock('./footballayApi', () => ({
 import { handleRuntimeMessage } from './runtimeMessageHandler';
 import * as footballayApi from './footballayApi';
 
-afterEach(() => vi.unstubAllGlobals());
+function coupangSender(tabId: number): chrome.runtime.MessageSender {
+  return {
+    tab: { id: tabId } as chrome.tabs.Tab,
+    url: `https://www.coupangplay.com/watch/${tabId}`,
+  };
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe('runtime message handler', () => {
   it('accepts the declared available-leagues operation', async () => {
@@ -179,56 +189,88 @@ describe('runtime message handler', () => {
     });
   });
 
-  it('stores one restore state per sender origin', async () => {
-    const values = new Map<string, unknown>();
+  it('prefers the current tab restore state and falls back to the last Coupang Play selection', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-03T00:00:00Z'));
+    const local = new Map<string, unknown>();
+    const session = new Map<string, unknown>();
     vi.stubGlobal('chrome', {
       storage: {
         local: {
-          get: vi.fn(async (key: string) => ({ [key]: values.get(key) })),
+          get: vi.fn(async (key: string) => ({ [key]: local.get(key) })),
           set: vi.fn(async (items: Record<string, unknown>) => {
             Object.entries(items).forEach(([key, value]) =>
-              values.set(key, value),
+              local.set(key, value),
             );
           }),
-          remove: vi.fn(async (key: string) => values.delete(key)),
+        },
+        session: {
+          get: vi.fn(async (key: string) => ({ [key]: session.get(key) })),
+          set: vi.fn(async (items: Record<string, unknown>) => {
+            Object.entries(items).forEach(([key, value]) =>
+              session.set(key, value),
+            );
+          }),
         },
       },
     });
-    const originA = { url: 'https://www.coupangplay.com/watch/1' };
-    const originB = { url: 'https://www.youtube.com/watch?v=1' };
+    const tabA = coupangSender(1);
+    const tabB = coupangSender(2);
+    const tabC = coupangSender(3);
     const stateA = {
       leagueUid: 'league-a',
+      selectedDate: '2026-09-02',
       fixtureUid: 'fixture-a',
-      updatedAt: 1,
+      updatedAt: Date.now(),
     };
     const stateB = {
       leagueUid: 'league-b',
+      selectedDate: '2026-09-03',
       fixtureUid: 'fixture-b',
-      updatedAt: 2,
+      updatedAt: Date.now(),
     };
 
     await handleRuntimeMessage(
       { type: 'SAVE_RESTORE_STATE', payload: stateA },
-      originA,
+      tabA,
     );
     await handleRuntimeMessage(
       { type: 'SAVE_RESTORE_STATE', payload: stateB },
-      originB,
+      tabB,
     );
 
     await expect(
-      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, originA),
+      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, tabA),
     ).resolves.toEqual({ ok: true, data: stateA });
     await expect(
-      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, originB),
+      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, tabC),
     ).resolves.toEqual({ ok: true, data: stateB });
+    expect(session.get('footballay-restore-tab:3')).toEqual(stateB);
+  });
 
-    await handleRuntimeMessage({ type: 'CLEAR_RESTORE_STATE' }, originA);
+  it('does not restore selections older than four hours', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-03T00:00:00Z'));
+    const expired = {
+      leagueUid: 'league-1',
+      selectedDate: '2026-09-02',
+      fixtureUid: 'fixture-1',
+      updatedAt: Date.now() - 4 * 60 * 60 * 1_000 - 1,
+    };
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: vi.fn(async () => ({ 'footballay-restore-state': expired })),
+        },
+        session: {
+          get: vi.fn(async () => ({ 'footballay-restore-tab:1': expired })),
+          set: vi.fn(),
+        },
+      },
+    });
+
     await expect(
-      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, originA),
+      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, coupangSender(1)),
     ).resolves.toEqual({ ok: true, data: undefined });
-    await expect(
-      handleRuntimeMessage({ type: 'LOAD_RESTORE_STATE' }, originB),
-    ).resolves.toEqual({ ok: true, data: stateB });
   });
 });

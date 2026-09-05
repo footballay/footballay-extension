@@ -1,39 +1,30 @@
 import { useEffect, useState } from 'react';
-import {
-  getActiveTabMountStatus,
-  runOnCurrentTab,
-} from '../currentPageFootballay';
 
 export function useCurrentPageFootballay() {
-  const [alreadyMounted, setAlreadyMounted] = useState<boolean>();
-  const [running, setRunning] = useState(false);
+  const [supported, setSupported] = useState<boolean>();
 
   useEffect(() => {
     let stale = false;
+    void (async () => {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      if (tab?.id === undefined) return false;
 
-    void getActiveTabMountStatus().then(
-      (status) => {
-        if (!stale) setAlreadyMounted(status?.mounted);
-      },
-      () => undefined,
+      const contexts = await chrome.runtime.getContexts({
+        tabIds: [tab.id],
+        documentOrigins: ['https://www.coupangplay.com'],
+      });
+      return contexts.some((context) => context.frameId === 0);
+    })().then(
+      (value) => !stale && setSupported(value),
+      () => !stale && setSupported(false),
     );
 
     return () => {
       stale = true;
     };
   }, []);
-
-  const runOnCurrentPage = () => {
-    if (running) return;
-
-    setRunning(true);
-    void runOnCurrentTab()
-      .then(
-        (mounted) => mounted && setAlreadyMounted(true),
-        () => undefined,
-      )
-      .finally(() => setRunning(false));
-  };
-
-  return { alreadyMounted, running, runOnCurrentPage };
+  return { supported };
 }

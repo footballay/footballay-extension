@@ -1,6 +1,5 @@
 import * as footballayApi from './footballayApi';
 import {
-  CLEAR_RESTORE_STATE,
   LOAD_RESTORE_STATE,
   SAVE_RESTORE_STATE,
   type RestoreState,
@@ -39,10 +38,6 @@ export async function handleRuntimeMessage(
       if (!state) return invalidRestoreRequest();
       return saveRestoreState(sender, state);
     }
-
-    case CLEAR_RESTORE_STATE:
-      if (request.payload !== undefined) return invalidRestoreRequest();
-      return clearRestoreState(sender);
 
     case GET_AVAILABLE_LEAGUES:
       if (
@@ -133,52 +128,71 @@ export async function handleRuntimeMessage(
   }
 }
 
-const RESTORE_STORAGE_PREFIX = 'footballay-restore-state:';
+const RESTORE_LAST_SELECTION_KEY = 'footballay-restore-state';
+const RESTORE_TAB_SELECTION_PREFIX = 'footballay-restore-tab:';
+const RESTORE_TTL_MS = 4 * 60 * 60 * 1_000;
 
 async function loadRestoreState(
   sender?: chrome.runtime.MessageSender,
 ): Promise<FootballayApiResponse<RestoreState | undefined>> {
-  const key = restoreStorageKey(sender);
-  if (!key) return invalidRestoreRequest();
+  const tabId = restoreTabId(sender);
+  if (tabId === undefined) return invalidRestoreRequest();
 
-  const values = await chrome.storage.local.get(key);
-  return { ok: true, data: parseRestoreState(values[key]) };
+  const tabKey = restoreTabKey(tabId);
+  const tabValues = await chrome.storage.session.get(tabKey);
+  const tabState = parseRestoreState(tabValues[tabKey]);
+  if (tabState && !isRestoreExpired(tabState)) {
+    return { ok: true, data: tabState };
+  }
+
+  const localValues = await chrome.storage.local.get(
+    RESTORE_LAST_SELECTION_KEY,
+  );
+  const localState = parseRestoreState(localValues[RESTORE_LAST_SELECTION_KEY]);
+  if (!localState || isRestoreExpired(localState)) {
+    return { ok: true, data: undefined };
+  }
+
+  await chrome.storage.session.set({ [tabKey]: localState });
+  return { ok: true, data: localState };
 }
 
 async function saveRestoreState(
   sender: chrome.runtime.MessageSender | undefined,
   state: RestoreState,
 ): Promise<FootballayApiResponse<undefined>> {
-  const key = restoreStorageKey(sender);
-  if (!key) return invalidRestoreRequest();
+  const tabId = restoreTabId(sender);
+  if (tabId === undefined) return invalidRestoreRequest();
 
-  await chrome.storage.local.set({ [key]: state });
+  await Promise.all([
+    chrome.storage.local.set({ [RESTORE_LAST_SELECTION_KEY]: state }),
+    chrome.storage.session.set({ [restoreTabKey(tabId)]: state }),
+  ]);
   return { ok: true, data: undefined };
 }
 
-async function clearRestoreState(
+function restoreTabId(
   sender?: chrome.runtime.MessageSender,
-): Promise<FootballayApiResponse<undefined>> {
-  const key = restoreStorageKey(sender);
-  if (!key) return invalidRestoreRequest();
-
-  await chrome.storage.local.remove(key);
-  return { ok: true, data: undefined };
-}
-
-function restoreStorageKey(
-  sender?: chrome.runtime.MessageSender,
-): string | undefined {
-  if (!sender?.url) return undefined;
+): number | undefined {
+  if (sender?.tab?.id === undefined || !sender.url) return undefined;
 
   try {
     const url = new URL(sender.url);
-    return url.protocol === 'http:' || url.protocol === 'https:'
-      ? `${RESTORE_STORAGE_PREFIX}${url.origin}`
+    return url.origin === 'https://www.coupangplay.com'
+      ? sender.tab.id
       : undefined;
   } catch {
     return undefined;
   }
+}
+
+function restoreTabKey(tabId: number): string {
+  return `${RESTORE_TAB_SELECTION_PREFIX}${tabId}`;
+}
+
+function isRestoreExpired(state: RestoreState): boolean {
+  const age = Date.now() - state.updatedAt;
+  return age < 0 || age > RESTORE_TTL_MS;
 }
 
 function parseRestoreState(value: unknown): RestoreState | undefined {
@@ -186,14 +200,21 @@ function parseRestoreState(value: unknown): RestoreState | undefined {
     return undefined;
 
   const state = value as Record<string, unknown>;
-  return hasOnlyFields(state, ['leagueUid', 'fixtureUid', 'updatedAt']) &&
+  return hasOnlyFields(state, [
+    'leagueUid',
+    'selectedDate',
+    'fixtureUid',
+    'updatedAt',
+  ]) &&
     isNonEmptyString(state.leagueUid) &&
+    isDateInputValue(state.selectedDate) &&
     isNonEmptyString(state.fixtureUid) &&
     typeof state.updatedAt === 'number' &&
     Number.isFinite(state.updatedAt) &&
     state.updatedAt >= 0
     ? {
         leagueUid: state.leagueUid,
+        selectedDate: state.selectedDate,
         fixtureUid: state.fixtureUid,
         updatedAt: state.updatedAt,
       }
