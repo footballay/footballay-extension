@@ -91,9 +91,7 @@ function selectFixtureForView(fixtureUid: string) {
 }
 
 async function openMatchSelector(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(
-    screen.getByRole('button', { name: 'Open match selector' }),
-  );
+  await user.click(screen.getByRole('button', { name: 'Open match selector' }));
 }
 
 vi.mock('@/shared/settings/settings', () => ({

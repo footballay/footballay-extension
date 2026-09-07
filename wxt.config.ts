@@ -7,6 +7,7 @@ export default defineConfig({
     startUrls: ['https://www.coupangplay.com/'],
   },
   manifest: {
+    minimum_chrome_version: '116',
     permissions: ['storage'],
     default_locale: 'ko',
     name: '__MSG_extension_name__',
