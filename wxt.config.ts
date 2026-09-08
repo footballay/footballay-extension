@@ -26,6 +26,9 @@ export default defineConfig({
         128: 'footballay_icon.png',
       },
     },
-    host_permissions: ['https://api.footballay.com/*'],
+    host_permissions: [
+      'https://api.footballay.com/*',
+      'https://www.coupangplay.com/*',
+    ],
   },
 });

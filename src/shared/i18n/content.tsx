@@ -153,7 +153,7 @@ const messages = {
     goalsPrevented: '실점 방지',
     popupDescription:
       '축구 경기 시청 중 라인업과 경기 통계를 확인할 수 있는 오버레이입니다.',
-    popupUnsupportedSite: 'Footballay는 쿠팡플레이에서 사용할 수 있습니다.',
+    popupUnsupportedSite: '쿠팡플레이에서 사용할 수 있습니다.',
     contact: '문의',
     copy: '복사',
     copied: '복사됨',

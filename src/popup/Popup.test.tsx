@@ -18,9 +18,6 @@ const loadExtensionSettings = vi.hoisted(() => vi.fn());
 const saveExtensionSettings = vi.hoisted(() => vi.fn(async () => undefined));
 const writeText = vi.hoisted(() => vi.fn(async () => undefined));
 const queryTabs = vi.hoisted(() => vi.fn());
-const getContexts = vi.hoisted(() =>
-  vi.fn<() => Promise<chrome.runtime.ExtensionContext[]>>(),
-);
 
 vi.mock('@/shared/settings/settings', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/settings/settings')>()),
@@ -33,12 +30,10 @@ beforeEach(() => {
   saveExtensionSettings.mockClear();
   writeText.mockClear();
   queryTabs.mockReset();
-  queryTabs.mockResolvedValue([{ id: 7 }]);
-  getContexts.mockReset();
-  getContexts.mockResolvedValue([]);
+  queryTabs.mockResolvedValue([]);
   vi.stubGlobal('chrome', {
     i18n: { getAcceptLanguages: vi.fn(async () => ['en-US']) },
-    runtime: { getManifest: () => ({ version: '1.2.3' }), getContexts },
+    runtime: { getManifest: () => ({ version: '1.2.3' }) },
     tabs: { query: queryTabs },
   });
   Object.defineProperty(navigator, 'clipboard', {
@@ -102,9 +97,7 @@ describe('Popup', () => {
   });
 
   it('toggles the content UI setting with a compact switch', async () => {
-    getContexts.mockResolvedValue([
-      { frameId: 0 } as chrome.runtime.ExtensionContext,
-    ]);
+    queryTabs.mockResolvedValue([{ id: 7 }]);
     render(<Popup />);
 
     const toggle = await screen.findByRole('switch', { name: 'Footballay' });
@@ -122,21 +115,21 @@ describe('Popup', () => {
 
   it('shows support information outside Coupang Play', async () => {
     render(<Popup />);
+
     expect(
       await screen.findByText('Footballay is available on Coupang Play.'),
     ).toBeTruthy();
     expect(screen.queryByRole('switch')).toBeNull();
-    expect(getContexts).toHaveBeenCalledWith({
-      tabIds: [7],
-      documentOrigins: ['https://www.coupangplay.com'],
+    expect(queryTabs).toHaveBeenCalledWith({
+      active: true,
+      currentWindow: true,
+      url: ['https://www.coupangplay.com/*'],
     });
   });
 
   it('waits for the saved enabled state before rendering the switch', async () => {
     loadExtensionSettings.mockResolvedValue({ locale: 'en', enabled: false });
-    getContexts.mockResolvedValue([
-      { frameId: 0 } as chrome.runtime.ExtensionContext,
-    ]);
+    queryTabs.mockResolvedValue([{ id: 7 }]);
     render(<Popup />);
 
     const toggle = await screen.findByRole('switch', { name: 'Footballay' });
