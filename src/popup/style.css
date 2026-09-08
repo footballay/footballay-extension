@@ -78,6 +78,27 @@ body {
   font-size: 12px;
 }
 
+.footballay-popup__supported-sites {
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: help;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.footballay-popup__supported-sites-tooltip {
+  z-index: 1;
+  padding: 4px 6px;
+  border-radius: 3px;
+  color: #f4f7fb;
+  background: #444953;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 .footballay-popup__description {
   margin-top: 10px !important;
   color: #f4f7fb;

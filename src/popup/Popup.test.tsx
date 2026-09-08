@@ -116,9 +116,14 @@ describe('Popup', () => {
   it('shows support information outside Coupang Play', async () => {
     render(<Popup />);
 
-    expect(
-      await screen.findByText('Footballay is available on Coupang Play.'),
-    ).toBeTruthy();
+    const supportedSites = await screen.findByRole('button', {
+      name: 'supported sites',
+    });
+    expect(supportedSites.className).toBe('footballay-popup__supported-sites');
+    fireEvent.pointerMove(supportedSites);
+    expect((await screen.findByRole('tooltip')).textContent).toBe(
+      'Coupang Play',
+    );
     expect(screen.queryByRole('switch')).toBeNull();
     expect(queryTabs).toHaveBeenCalledWith({
       active: true,
