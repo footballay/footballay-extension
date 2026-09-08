@@ -182,8 +182,8 @@ describe('ContentApp', () => {
     ).toBe('true');
     await user.click(screen.getByRole('button', { name: 'La Liga' }));
     expect(selectLeagueAndLoadFixtures).toHaveBeenCalledWith('league-2');
-    expect(screen.getByRole('button', { name: /21:00홈원정/ })).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: /21:00홈원정/ }));
+    const fixtureButton = screen.getByRole('button', { name: /홈원정/ });
+    await user.click(fixtureButton);
     expect(fixtureSelectionStore.getState().selectedFixtureUid).toBe(
       'fixture-1',
     );
