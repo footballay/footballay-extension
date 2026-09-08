@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "wxt",
+    "dev:en": "wxt -c wxt.en.config.ts",
     "dev:demo": "wxt -c wxt.demo.config.ts",
     "dev:edge": "wxt -b edge",
     "build": "wxt build",
@@ -13,8 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write src package.json tsconfig.json wxt.config.ts wxt.demo.config.ts .vscode/settings.json",
-    "format:check": "prettier --check src package.json tsconfig.json wxt.config.ts wxt.demo.config.ts .vscode/settings.json",
+    "format": "prettier --write src package.json tsconfig.json wxt.config.ts wxt.demo.config.ts wxt.en.config.ts .vscode/settings.json",
+    "format:check": "prettier --check src package.json tsconfig.json wxt.config.ts wxt.demo.config.ts wxt.en.config.ts .vscode/settings.json",
     "prepare": "wxt prepare"
   },
   "dependencies": {
