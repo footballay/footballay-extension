@@ -48,7 +48,6 @@
   display: flex;
   height: 5px;
   margin-top: 2px;
-  background: var(--footballay-color-border);
 }
 .footballay-match-panel__stat i.footballay-match-panel__stat-track--empty {
   background: var(--footballay-color-disabled);

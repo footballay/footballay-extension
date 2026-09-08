@@ -468,6 +468,37 @@ describe('MatchDataOverlays', () => {
     );
   });
 
+  it.each(['0', '0.0', '-1', 'invalid'])(
+    'does not render an invalid player rating: %s',
+    (rating) => {
+      const lineup = createFixtureLineup();
+      const player = lineup.lineup.home!.players[0]!;
+      const statistics = createFixtureStatistics();
+      statistics.home!.playerStatistics = [
+        {
+          player: { ...player, photo: null, position: null },
+          statistics: { rating },
+        } as never,
+      ];
+      matchDataStore.setState({
+        fixtureInfo,
+        status: { loadStatus: 'ready' },
+        lineup: { loadStatus: 'ready', data: lineup },
+        events: {
+          loadStatus: 'ready',
+          data: { fixtureUid: 'fixture-1', events: [] },
+        },
+        statistics: { loadStatus: 'ready', data: statistics },
+      });
+
+      render(<MatchDataOverlays />);
+
+      expect(
+        document.querySelector('.footballay-match-panel__rating'),
+      ).toBeNull();
+    },
+  );
+
   it('keeps full player names available on lineup hover', () => {
     expect(lineupTabSource).toContain(
       "index < columns.length / 2 ? 'right' : 'left'",

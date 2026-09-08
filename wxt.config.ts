@@ -7,6 +7,7 @@ export default defineConfig({
     startUrls: ['https://www.coupangplay.com/'],
   },
   manifest: {
+    minimum_chrome_version: '116',
     permissions: ['storage'],
     default_locale: 'ko',
     name: '__MSG_extension_name__',
@@ -25,6 +26,9 @@ export default defineConfig({
         128: 'footballay_icon.png',
       },
     },
-    host_permissions: ['https://api.footballay.com/*'],
+    host_permissions: [
+      'https://api.footballay.com/*',
+      'https://www.coupangplay.com/*',
+    ],
   },
 });

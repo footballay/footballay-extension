@@ -34,6 +34,7 @@ function PlayerMarkers({
   locale: ContentLocale;
 }) {
   const rating = Number(player.rating);
+  const hasRating = Number.isFinite(rating) && rating > 0;
   return (
     <div className="footballay-match-panel__markers">
       {player.subInTime && (
@@ -43,7 +44,7 @@ function PlayerMarkers({
           />
         </span>
       )}
-      {player.rating && (
+      {hasRating && (
         <span
           className={`footballay-match-panel__rating footballay-match-panel__rating--${rating >= 7 ? 'good' : 'low'}`}
         >

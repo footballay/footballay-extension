@@ -79,7 +79,10 @@ const messages = {
     goalsPrevented: 'Goals Prevented',
     popupDescription:
       'An overlay for viewing lineups and match statistics while watching football.',
-    popupUnsupportedSite: 'Footballay is available on Coupang Play.',
+    popupUnsupportedSitePrefix: 'The overlay is displayed only on ',
+    popupSupportedSites: 'supported sites',
+    popupUnsupportedSiteSuffix: '.',
+    popupSupportedSitesTooltip: 'Coupang Play',
     contact: 'Contact',
     copy: 'Copy',
     copied: 'Copied',
@@ -153,7 +156,10 @@ const messages = {
     goalsPrevented: '실점 방지',
     popupDescription:
       '축구 경기 시청 중 라인업과 경기 통계를 확인할 수 있는 오버레이입니다.',
-    popupUnsupportedSite: 'Footballay는 쿠팡플레이에서 사용할 수 있습니다.',
+    popupUnsupportedSitePrefix: '오버레이는 ',
+    popupSupportedSites: '지정된 사이트',
+    popupUnsupportedSiteSuffix: '에서만 표시됩니다.',
+    popupSupportedSitesTooltip: 'Coupang Play',
     contact: '문의',
     copy: '복사',
     copied: '복사됨',

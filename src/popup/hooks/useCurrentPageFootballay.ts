@@ -5,26 +5,22 @@ export function useCurrentPageFootballay() {
 
   useEffect(() => {
     let stale = false;
-    void (async () => {
-      const [tab] = await chrome.tabs.query({
+
+    void chrome.tabs
+      .query({
         active: true,
         currentWindow: true,
-      });
-      if (tab?.id === undefined) return false;
-
-      const contexts = await chrome.runtime.getContexts({
-        tabIds: [tab.id],
-        documentOrigins: ['https://www.coupangplay.com'],
-      });
-      return contexts.some((context) => context.frameId === 0);
-    })().then(
-      (value) => !stale && setSupported(value),
-      () => !stale && setSupported(false),
-    );
+        url: ['https://www.coupangplay.com/*'],
+      })
+      .then(
+        (tabs) => !stale && setSupported(tabs.length > 0),
+        () => !stale && setSupported(false),
+      );
 
     return () => {
       stale = true;
     };
   }, []);
+
   return { supported };
 }

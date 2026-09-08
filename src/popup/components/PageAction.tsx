@@ -1,3 +1,4 @@
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { t, useContentLocale } from '@/shared/i18n/content';
 
 export function PageAction({
@@ -15,7 +16,29 @@ export function PageAction({
   if (!supported)
     return (
       <p className="footballay-popup__unsupported">
-        {t(locale, 'popupUnsupportedSite')}
+        {t(locale, 'popupUnsupportedSitePrefix')}
+        <Tooltip.Provider delayDuration={0}>
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <button
+                className="footballay-popup__supported-sites"
+                type="button"
+              >
+                {t(locale, 'popupSupportedSites')}
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content
+                className="footballay-popup__supported-sites-tooltip"
+                side="top"
+                sideOffset={5}
+              >
+                {t(locale, 'popupSupportedSitesTooltip')}
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Tooltip.Provider>
+        {t(locale, 'popupUnsupportedSiteSuffix')}
       </p>
     );
 
